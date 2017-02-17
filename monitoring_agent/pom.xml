@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.tuwien.aop</groupId>
-	<artifactId>sigar_test</artifactId>
+	<artifactId>monitoring_agent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
-		<main.class>com.tuwien.agent.monitoring.Main</main.class>
+		<main.class>com.tuwien.agent.monitoring.MonitoringAgent</main.class>
 	</properties>
 
 	<dependencies>
@@ -79,6 +79,28 @@
 						<goals>
 							<goal>single</goal>
 						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.2</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/sigarnatives</outputDirectory>
+							<resources>
+								<resource>
+									<directory>sigarnatives</directory>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
