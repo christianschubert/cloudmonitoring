@@ -1,4 +1,4 @@
-package com.tuwien.agent.monitoring;
+package com.tuwien.monitoring.agent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
