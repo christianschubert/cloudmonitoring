@@ -10,19 +10,20 @@ public class MonitoringServer {
 
 	private final static Logger logger = Logger.getLogger(MonitoringServer.class);
 
-	private static String jmsBrokerURL;
-
 	private JmsService jmsService;
 
-	public MonitoringServer() {
+	private boolean init(String jmsBrokerURL) {
 		jmsService = new JmsService(jmsBrokerURL);
 		jmsService.start();
 
 		if (!jmsService.isConnected()) {
 			logger.error("Error creating JMS service.");
-			return;
+			return false;
 		}
+		return true;
+	}
 
+	private void start() {
 		logger.info("Monitoring server running. Press any key to exit.");
 		try {
 			System.in.read();
@@ -34,6 +35,7 @@ public class MonitoringServer {
 	}
 
 	public static void main(String[] args) {
+		String jmsBrokerURL = null;
 		if (args.length > 1) {
 			logger.error("Invalid number of arguments.");
 			return;
@@ -41,6 +43,9 @@ public class MonitoringServer {
 			jmsBrokerURL = args[0];
 		}
 
-		new MonitoringServer();
+		MonitoringServer server = new MonitoringServer();
+		if (server.init(jmsBrokerURL)) {
+			server.start();
+		}
 	}
 }

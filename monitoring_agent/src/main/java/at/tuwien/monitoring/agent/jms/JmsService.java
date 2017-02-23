@@ -113,7 +113,7 @@ public class JmsService {
 
 			// append IP address of sender as a property
 			if (publicIPAddress != null) {
-				textMessage.setStringProperty("SENDER_IP", publicIPAddress);
+				textMessage.setStringProperty(Constants.IP_ADDRESS_PROPERTY, publicIPAddress);
 			}
 
 			// Tell the producer to send the message

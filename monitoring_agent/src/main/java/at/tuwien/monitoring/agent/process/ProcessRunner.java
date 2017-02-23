@@ -4,16 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-
-import com.sun.jna.Pointer;
-import com.sun.jna.platform.win32.Kernel32;
-import com.sun.jna.platform.win32.WinNT;
 
 public class ProcessRunner {
 
@@ -39,7 +34,7 @@ public class ProcessRunner {
 			processBuilder.redirectErrorStream(true);
 			process = processBuilder.start();
 
-			pid = getProcessIdFromProcess(process);
+			pid = ProcessTools.getProcessIdFromProcess(process);
 			if (pid == -1) {
 				logger.error("Error retrieving PID");
 				stop();
@@ -74,46 +69,6 @@ public class ProcessRunner {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	private long getProcessIdFromProcess(Process process) {
-		long pid = -1;
-
-		if (process.getClass().getName().equals("java.lang.Win32Process")
-				|| process.getClass().getName().equals("java.lang.ProcessImpl")) {
-
-			// Windows
-
-			try {
-				Field f = process.getClass().getDeclaredField("handle");
-				f.setAccessible(true);
-				long handl = f.getLong(process);
-				f.setAccessible(false);
-
-				Kernel32 kernel = Kernel32.INSTANCE;
-				WinNT.HANDLE handle = new WinNT.HANDLE();
-				handle.setPointer(Pointer.createConstant(handl));
-
-				pid = kernel.GetProcessId(handle);
-			} catch (NoSuchFieldException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-
-		} else if (process.getClass().getName().equals("java.lang.UNIXProcess")) {
-
-			// MacOS or Linux
-
-			try {
-				Field f = process.getClass().getDeclaredField("pid");
-				f.setAccessible(true);
-				pid = f.getLong(process);
-				f.setAccessible(false);
-			} catch (NoSuchFieldException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		}
-
-		return pid;
 	}
 
 	public boolean isRunning() {
