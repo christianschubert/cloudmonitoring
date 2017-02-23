@@ -23,6 +23,8 @@ public class JmsService {
 
 	private String brokerURL = ActiveMQConnection.DEFAULT_BROKER_URL;
 
+	private String publicIPAddress;
+
 	private ActiveMQConnectionFactory connectionFactory;
 	private Connection connection;
 	private Session session;
@@ -32,13 +34,21 @@ public class JmsService {
 
 	public JmsService() {
 		// use default broker URL
+		// do not append public IP address with the messages
+		this(null);
 	}
 
-	public JmsService(String brokerURL) {
+	public JmsService(String publicIPAddress) {
+		// use default broker URL
+		this(null, publicIPAddress);
+	}
+
+	public JmsService(String brokerURL, String publicIPAddress) {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
 		}
+		this.publicIPAddress = publicIPAddress;
 	}
 
 	public void start() {
@@ -76,6 +86,12 @@ public class JmsService {
 		try {
 			// Create a messages
 			ObjectMessage objectMessage = session.createObjectMessage(object);
+
+			// append IP address of sender as a property
+			if (publicIPAddress != null) {
+				objectMessage.setStringProperty(Constants.IP_ADDRESS_PROPERTY, publicIPAddress);
+			}
+
 			// Tell the producer to send the message
 			producer.send(objectMessage);
 			return true;
@@ -94,6 +110,12 @@ public class JmsService {
 		try {
 			// Create a message
 			TextMessage textMessage = session.createTextMessage(message);
+
+			// append IP address of sender as a property
+			if (publicIPAddress != null) {
+				textMessage.setStringProperty("SENDER_IP", publicIPAddress);
+			}
+
 			// Tell the producer to send the message
 			producer.send(textMessage);
 			return true;

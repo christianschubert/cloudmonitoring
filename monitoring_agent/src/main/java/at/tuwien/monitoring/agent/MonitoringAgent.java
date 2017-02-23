@@ -1,6 +1,10 @@
 package at.tuwien.monitoring.agent;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +33,12 @@ public class MonitoringAgent {
 			return;
 		}
 
-		jmsService = new JmsService(jmsBrokerURL);
+		String publicIPAddress = lookupPublicIPAddress();
+		if (publicIPAddress == null) {
+			return;
+		}
+
+		jmsService = new JmsService(jmsBrokerURL, publicIPAddress);
 		jmsService.start();
 		if (!jmsService.isConnected()) {
 			logger.error("Error creating JMS service.");
@@ -37,6 +46,27 @@ public class MonitoringAgent {
 		}
 
 		startMonitoring();
+	}
+
+	private String lookupPublicIPAddress() {
+		BufferedReader reader = null;
+		try {
+			URL checkIP = new URL("http://checkip.amazonaws.com");
+			reader = new BufferedReader(new InputStreamReader(checkIP.openStream()));
+			return reader.readLine();
+		} catch (IOException e) {
+			logger.error("Error looking up public IP address.");
+			e.printStackTrace();
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return null;
 	}
 
 	private boolean initSigar() {

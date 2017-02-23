@@ -44,6 +44,9 @@ public class JmsService implements MessageListener {
 	@Override
 	public void onMessage(Message message) {
 		try {
+
+			String senderIP = message.getStringProperty(Constants.IP_ADDRESS_PROPERTY);
+
 			if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
 				String text = textMessage.getText();
