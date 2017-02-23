@@ -1,24 +1,27 @@
-package com.tuwien.monitoring.agent;
+package at.tuwien.monitoring.server;
 
 import javax.jms.Connection;
-import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MessageProducer;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-public class JmsService {
+import at.tuwien.monitoring.server.constants.Constants;
+
+public class JmsService implements MessageListener {
 
 	private String brokerURL = ActiveMQConnection.DEFAULT_BROKER_URL;
 
 	private ActiveMQConnectionFactory connectionFactory;
 	private Connection connection;
 	private Session session;
-	private MessageProducer producer;
+	private MessageConsumer consumer;
 
 	private boolean connected = false;
 
@@ -30,6 +33,19 @@ public class JmsService {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
+		}
+	}
+
+	@Override
+	public void onMessage(Message message) {
+		if (message instanceof TextMessage) {
+			TextMessage textMessage = (TextMessage) message;
+			try {
+				String text = textMessage.getText();
+				System.out.println("Received: " + text);
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -48,9 +64,10 @@ public class JmsService {
 			// Create the destination (Topic or Queue)
 			Destination destination = session.createQueue(Constants.QUEUE_AGENTS);
 
-			// Create a MessageProducer from the Session to the Topic or Queue
-			producer = session.createProducer(destination);
-			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			// Create a MessageConsumer from the Session to the Topic or Queue
+			consumer = session.createConsumer(destination);
+
+			consumer.setMessageListener(this);
 
 			connected = true;
 
@@ -60,27 +77,10 @@ public class JmsService {
 		}
 	}
 
-	public boolean sendTextMessage(String message) {
-		if (!connected) {
-			return false;
-		}
-		try {
-			// Create a messages
-			TextMessage textMessage = session.createTextMessage(message);
-			// Tell the producer to send the message
-			producer.send(textMessage);
-			return true;
-
-		} catch (JMSException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
 	public void stop() {
-		if (producer != null) {
+		if (consumer != null) {
 			try {
-				producer.close();
+				consumer.close();
 			} catch (JMSException e) {
 				e.printStackTrace();
 			}

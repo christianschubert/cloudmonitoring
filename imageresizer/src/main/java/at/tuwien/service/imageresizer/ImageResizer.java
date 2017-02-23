@@ -1,4 +1,4 @@
-package com.tuwien.service.imageresizer;
+package at.tuwien.service.imageresizer;
 
 import java.io.IOException;
 import java.net.URI;
@@ -12,7 +12,7 @@ import org.glassfish.jersey.server.ResourceConfig;
  * Main class.
  *
  */
-public class Main {
+public class ImageResizer {
 	// Base URI the Grizzly HTTP server will listen on
 	public static final String BASE_URI = "http://0.0.0.0:8080/imageresizer/";
 
@@ -25,8 +25,8 @@ public class Main {
 	public static HttpServer startServer() {
 		// create a resource config that scans for JAX-RS resources and
 		// providers
-		// in com.tuwien.service.imageresizer package
-		final ResourceConfig rc = new ResourceConfig().packages("com.tuwien.service.imageresizer");
+		// in at.tuwien.service.imageresizer package
+		final ResourceConfig rc = new ResourceConfig().packages("at.tuwien.service.imageresizer");
 		rc.register(MultiPartFeature.class);
 
 		// create and start a new instance of grizzly http server

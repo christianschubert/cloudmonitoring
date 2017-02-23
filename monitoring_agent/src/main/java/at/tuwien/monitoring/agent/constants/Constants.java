@@ -1,4 +1,4 @@
-package com.tuwien.monitoring.agent;
+package at.tuwien.monitoring.agent.constants;
 
 public class Constants {
 

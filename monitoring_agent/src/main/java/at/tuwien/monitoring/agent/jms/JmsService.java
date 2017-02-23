@@ -1,25 +1,26 @@
-package com.tuwien.monitoring.server;
+package at.tuwien.monitoring.agent.jms;
 
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-public class JmsService implements MessageListener {
+import at.tuwien.monitoring.agent.constants.Constants;
+
+public class JmsService {
 
 	private String brokerURL = ActiveMQConnection.DEFAULT_BROKER_URL;
 
 	private ActiveMQConnectionFactory connectionFactory;
 	private Connection connection;
 	private Session session;
-	private MessageConsumer consumer;
+	private MessageProducer producer;
 
 	private boolean connected = false;
 
@@ -31,19 +32,6 @@ public class JmsService implements MessageListener {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
-		}
-	}
-
-	@Override
-	public void onMessage(Message message) {
-		if (message instanceof TextMessage) {
-			TextMessage textMessage = (TextMessage) message;
-			try {
-				String text = textMessage.getText();
-				System.out.println("Received: " + text);
-			} catch (JMSException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
@@ -62,10 +50,9 @@ public class JmsService implements MessageListener {
 			// Create the destination (Topic or Queue)
 			Destination destination = session.createQueue(Constants.QUEUE_AGENTS);
 
-			// Create a MessageConsumer from the Session to the Topic or Queue
-			consumer = session.createConsumer(destination);
-
-			consumer.setMessageListener(this);
+			// Create a MessageProducer from the Session to the Topic or Queue
+			producer = session.createProducer(destination);
+			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
 			connected = true;
 
@@ -75,10 +62,27 @@ public class JmsService implements MessageListener {
 		}
 	}
 
+	public boolean sendTextMessage(String message) {
+		if (!connected) {
+			return false;
+		}
+		try {
+			// Create a messages
+			TextMessage textMessage = session.createTextMessage(message);
+			// Tell the producer to send the message
+			producer.send(textMessage);
+			return true;
+
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
 	public void stop() {
-		if (consumer != null) {
+		if (producer != null) {
 			try {
-				consumer.close();
+				producer.close();
 			} catch (JMSException e) {
 				e.printStackTrace();
 			}

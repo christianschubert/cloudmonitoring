@@ -1,4 +1,4 @@
-package com.tuwien.service.imageresizer;
+package at.tuwien.service.imageresizer;
 
 import static org.junit.Assert.assertEquals;
 
@@ -25,6 +25,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import at.tuwien.service.imageresizer.ImageResizer;
+
 public class ShrinkTest {
 
 	private static final String UPLOAD_PATH = "upload/";
@@ -38,12 +40,12 @@ public class ShrinkTest {
 	@Before
 	public void setUp() throws Exception {
 		// start the server
-		server = Main.startServer();
+		server = ImageResizer.startServer();
 
 		// create the client
 		client = ClientBuilder.newClient();
 		client.register(MultiPartFeature.class);
-		target = client.target(Main.BASE_URI);
+		target = client.target(ImageResizer.BASE_URI);
 	}
 
 	@After

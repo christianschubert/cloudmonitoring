@@ -1,4 +1,4 @@
-package com.tuwien.monitoring.server;
+package at.tuwien.monitoring.server;
 
 import java.io.IOException;
 

@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.tuwien.monitoring</groupId>
+	<groupId>at.tuwien.monitoring</groupId>
 	<artifactId>monitoring_agent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
@@ -11,7 +11,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
-		<main.class>com.tuwien.monitoring.agent.MonitoringAgent</main.class>
+		<main.class>at.tuwien.monitoring.agent.MonitoringAgent</main.class>
 		<activemq.broker>tcp://localhost:61616</activemq.broker>
 		<!-- <activemq.broker>tcp://ec2-52-41-245-4.us-west-2.compute.amazonaws.com:61616</activemq.broker> -->
 	</properties>

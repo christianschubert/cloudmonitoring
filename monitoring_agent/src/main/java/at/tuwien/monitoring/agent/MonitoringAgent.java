@@ -1,4 +1,4 @@
-package com.tuwien.monitoring.agent;
+package at.tuwien.monitoring.agent;
 
 import java.io.File;
 import java.util.HashSet;
@@ -8,6 +8,10 @@ import org.apache.log4j.Logger;
 import org.hyperic.sigar.ProcState;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
+
+import at.tuwien.monitoring.agent.constants.Constants;
+import at.tuwien.monitoring.agent.jms.JmsService;
+import at.tuwien.monitoring.agent.process.ProcessRunner;
 
 public class MonitoringAgent {
 

@@ -1,4 +1,4 @@
-package com.tuwien.service.imageresizer;
+package at.tuwien.service.imageresizer;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -20,7 +20,7 @@ import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Mode;
 import org.imgscalr.Scalr.Rotation;
 
-import com.tuwien.service.imageresizer.pojo.Message;
+import at.tuwien.service.imageresizer.pojo.Message;
 
 /**
  * Root resource (exposed at "shrink" path)
