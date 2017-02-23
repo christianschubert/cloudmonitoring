@@ -47,7 +47,7 @@ public class ProcessRunner {
 			}
 
 			running = true;
-			logger.debug("New Process \"" + getProcessName() + "\" started. PID of process is " + pid);
+			logger.info("New Process \"" + getProcessName() + "\" started. PID of process is " + pid);
 
 			pool.submit(new ProcessReader(process.getInputStream()));
 
@@ -150,7 +150,7 @@ public class ProcessRunner {
 			String line = null;
 			try {
 				while (isRunning() && (line = reader.readLine()) != null) {
-					logger.debug("Process \"" + getProcessName() + "\": " + line);
+					logger.info("Process \"" + getProcessName() + "\": " + line);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

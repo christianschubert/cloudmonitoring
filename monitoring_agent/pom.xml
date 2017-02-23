@@ -13,7 +13,7 @@
 		<java.version>1.8</java.version>
 		<main.class>com.tuwien.monitoring.agent.MonitoringAgent</main.class>
 		<activemq.broker>tcp://localhost:61616</activemq.broker>
-<!-- 		<activemq.broker>tcp://ec2-52-41-245-4.us-west-2.compute.amazonaws.com:61616</activemq.broker> -->
+		<!-- <activemq.broker>tcp://ec2-52-41-245-4.us-west-2.compute.amazonaws.com:61616</activemq.broker> -->
 	</properties>
 
 	<dependencies>
@@ -32,6 +32,16 @@
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna-platform</artifactId>
 			<version>4.3.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-client</artifactId>
+			<version>5.14.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.13</version>
 		</dependency>
 	</dependencies>
 

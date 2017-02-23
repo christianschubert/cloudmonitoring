@@ -13,12 +13,24 @@ public class MonitoringAgent {
 
 	private final static Logger logger = Logger.getLogger(MonitoringAgent.class);
 
+	private static String jmsBrokerURL;
+
 	private Sigar sigar;
+	private JmsService jmsService;
 
 	public MonitoringAgent() {
-		if (initSigar()) {
-			startMonitoring();
+		if (!initSigar()) {
+			return;
 		}
+
+		jmsService = new JmsService(jmsBrokerURL);
+		jmsService.start();
+		if (!jmsService.isConnected()) {
+			logger.error("Error creating JMS service.");
+			return;
+		}
+
+		startMonitoring();
 	}
 
 	private boolean initSigar() {
@@ -46,7 +58,14 @@ public class MonitoringAgent {
 		while (true) {
 
 			Set<Long> processesToMonitor = findProcessesToMonitor(pid);
-			System.out.println(processesToMonitor);
+			// System.out.println(processesToMonitor);
+
+			try {
+				jmsService.sendTextMessage(String.valueOf(sigar.getProcCpu(pid).getPercent()));
+			} catch (SigarException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 
 			try {
 				Thread.sleep(1000);
@@ -54,8 +73,6 @@ public class MonitoringAgent {
 				e.printStackTrace();
 			}
 		}
-
-		// processRunner.stop();
 	}
 
 	/**
@@ -110,6 +127,13 @@ public class MonitoringAgent {
 	}
 
 	public static void main(String[] args) {
+		if (args.length > 1) {
+			logger.error("Invalid number of arguments.");
+			return;
+		} else if (args.length == 1) {
+			jmsBrokerURL = args[0];
+		}
+
 		new MonitoringAgent();
 	}
 }
