@@ -5,18 +5,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.Date;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.hyperic.sigar.Sigar;
-import org.hyperic.sigar.SigarException;
 
-import at.tuwien.monitoring.agent.constants.Constants;
+import at.tuwien.monitoring.agent.constants.MonitorTask;
 import at.tuwien.monitoring.agent.jms.JmsService;
-import at.tuwien.monitoring.agent.process.ProcessRunner;
 import at.tuwien.monitoring.agent.process.ProcessTools;
-import at.tuwien.monitoring.jms.messages.CpuLoadMessage;
 
 public class MonitoringAgent {
 
@@ -24,6 +22,8 @@ public class MonitoringAgent {
 
 	private Sigar sigar;
 	private JmsService jmsService;
+
+	private List<ApplicationMonitor> applicationList = new ArrayList<ApplicationMonitor>();
 
 	private boolean init(String jmsBrokerURL) {
 		if (!initSigar()) {
@@ -85,28 +85,10 @@ public class MonitoringAgent {
 		return null;
 	}
 
-	private void start() {
-		ProcessRunner processRunner = new ProcessRunner("java", "-jar", Constants.RESIZER_PATH);
-		long pid = processRunner.start();
-
-		while (true) {
-
-			Set<Long> processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
-			// System.out.println(processesToMonitor);
-
-			try {
-				jmsService.sendObjectMessage(
-						new CpuLoadMessage("java", new Date().getTime(), sigar.getProcCpu(pid).getPercent()));
-			} catch (SigarException e1) {
-				e1.printStackTrace();
-			}
-
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+	private void startMonitoring(String[] applicationWithParams, List<MonitorTask> monitorTasks) {
+		ApplicationMonitor applicationMonitor = new ApplicationMonitor(sigar, applicationWithParams, monitorTasks);
+		applicationMonitor.start();
+		applicationList.add(applicationMonitor);
 	}
 
 	public static void main(String[] args) {
@@ -120,7 +102,13 @@ public class MonitoringAgent {
 
 		MonitoringAgent agent = new MonitoringAgent();
 		if (agent.init(jmsBrokerURL)) {
-			agent.start();
+
+			// for test purposes monitor imageresizer application only
+			String applicationPath = "../imageresizer/target/imageresizer-0.0.1-SNAPSHOT-jar-with-dependencies.jar";
+			String[] applicationWithParams = new String[] { "java", "-jar", applicationPath };
+
+			// monitor cpu load of application
+			agent.startMonitoring(applicationWithParams, Arrays.asList(MonitorTask.CpuLoad));
 		}
 	}
 }

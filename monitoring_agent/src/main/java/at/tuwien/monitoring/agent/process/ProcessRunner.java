@@ -115,6 +115,7 @@ public class ProcessRunner {
 		}
 
 		private void cleanup() {
+			running = false;
 			if (reader != null) {
 				try {
 					reader.close();
