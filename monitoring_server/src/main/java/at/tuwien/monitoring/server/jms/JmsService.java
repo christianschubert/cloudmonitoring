@@ -1,4 +1,7 @@
-package at.tuwien.monitoring.server;
+package at.tuwien.monitoring.server.jms;
+
+import java.io.Serializable;
+import java.util.Arrays;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -6,12 +9,14 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
+import at.tuwien.monitoring.jms.messages.CpuLoadMessage;
 import at.tuwien.monitoring.server.constants.Constants;
 
 public class JmsService implements MessageListener {
@@ -38,14 +43,23 @@ public class JmsService implements MessageListener {
 
 	@Override
 	public void onMessage(Message message) {
-		if (message instanceof TextMessage) {
-			TextMessage textMessage = (TextMessage) message;
-			try {
+		try {
+			if (message instanceof TextMessage) {
+				TextMessage textMessage = (TextMessage) message;
 				String text = textMessage.getText();
 				System.out.println("Received: " + text);
-			} catch (JMSException e) {
-				e.printStackTrace();
+
+			} else if (message instanceof ObjectMessage) {
+				ObjectMessage objectMessage = (ObjectMessage) message;
+				Serializable serializable = objectMessage.getObject();
+
+				if (serializable instanceof CpuLoadMessage) {
+					CpuLoadMessage cpuLoadMessage = (CpuLoadMessage) serializable;
+					System.out.println(cpuLoadMessage);
+				}
 			}
+		} catch (JMSException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -53,6 +67,7 @@ public class JmsService implements MessageListener {
 		try {
 			// Create a ConnectionFactory
 			connectionFactory = new ActiveMQConnectionFactory(brokerURL);
+			connectionFactory.setTrustedPackages(Arrays.asList("at.tuwien.monitoring.jms.messages"));
 
 			// Create a Connection
 			connection = connectionFactory.createConnection();

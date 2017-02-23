@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import at.tuwien.monitoring.server.jms.JmsService;
+
 public class MonitoringServer {
 
 	private final static Logger logger = Logger.getLogger(MonitoringServer.class);

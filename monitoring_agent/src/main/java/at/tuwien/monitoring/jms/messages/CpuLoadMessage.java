@@ -1,4 +1,4 @@
-package at.tuwien.monitoring.agent.jms.messages;
+package at.tuwien.monitoring.jms.messages;
 
 import java.util.Date;
 
@@ -8,7 +8,7 @@ public class CpuLoadMessage extends MetricMessage {
 
 	private double cpuLoad;
 
-	public CpuLoadMessage(String application, Date timestamp, double cpuLoad) {
+	public CpuLoadMessage(String application, long timestamp, double cpuLoad) {
 		super(application, timestamp);
 		this.setCpuLoad(cpuLoad);
 	}
@@ -19,5 +19,11 @@ public class CpuLoadMessage extends MetricMessage {
 
 	public void setCpuLoad(double cpuLoad) {
 		this.cpuLoad = cpuLoad;
+	}
+
+	@Override
+	public String toString() {
+		return "CpuLoadMessage [Application=" + getApplication() + ", Timestamp=" + new Date(getTimestamp())
+				+ ", CPULoad=" + getCpuLoad() + "]";
 	}
 }

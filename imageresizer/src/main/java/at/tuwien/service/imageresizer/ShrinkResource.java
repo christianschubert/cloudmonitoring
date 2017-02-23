@@ -20,7 +20,7 @@ import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Mode;
 import org.imgscalr.Scalr.Rotation;
 
-import at.tuwien.service.imageresizer.pojo.Message;
+import at.tuwien.service.imageresizer.message.Message;
 
 /**
  * Root resource (exposed at "shrink" path)

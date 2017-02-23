@@ -1,4 +1,4 @@
-package at.tuwien.service.imageresizer.pojo;
+package at.tuwien.service.imageresizer.message;
 
 public class Message {
 	private String message;

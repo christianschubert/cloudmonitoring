@@ -1,25 +1,24 @@
-package at.tuwien.monitoring.agent.jms.messages;
+package at.tuwien.monitoring.jms.messages;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public abstract class MetricMessage implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private Date timestamp;
+	private long timestamp;
 	private String application;
 
-	public MetricMessage(String application, Date timestamp) {
+	public MetricMessage(String application, long timestamp) {
 		this.timestamp = timestamp;
 		this.application = application;
 	}
 
-	public Date getTimestamp() {
+	public long getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(Date timestamp) {
+	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
 

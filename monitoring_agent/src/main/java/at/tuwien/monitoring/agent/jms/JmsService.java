@@ -1,19 +1,25 @@
 package at.tuwien.monitoring.agent.jms;
 
+import java.io.Serializable;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.log4j.Logger;
 
 import at.tuwien.monitoring.agent.constants.Constants;
 
 public class JmsService {
+
+	private final static Logger logger = Logger.getLogger(JmsService.class);
 
 	private String brokerURL = ActiveMQConnection.DEFAULT_BROKER_URL;
 
@@ -62,12 +68,31 @@ public class JmsService {
 		}
 	}
 
-	public boolean sendTextMessage(String message) {
-		if (!connected) {
+	public boolean sendObjectMessage(Serializable object) {
+		if (!connected || object == null) {
+			logger.error("Cannot send message. Not connected or message is null");
 			return false;
 		}
 		try {
 			// Create a messages
+			ObjectMessage objectMessage = session.createObjectMessage(object);
+			// Tell the producer to send the message
+			producer.send(objectMessage);
+			return true;
+
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	public boolean sendTextMessage(String message) {
+		if (!connected || message == null) {
+			logger.error("Cannot send message. Not connected or message is null");
+			return false;
+		}
+		try {
+			// Create a message
 			TextMessage textMessage = session.createTextMessage(message);
 			// Tell the producer to send the message
 			producer.send(textMessage);

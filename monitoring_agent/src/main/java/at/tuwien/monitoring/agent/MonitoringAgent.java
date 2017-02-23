@@ -1,6 +1,7 @@
 package at.tuwien.monitoring.agent;
 
 import java.io.File;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,6 +13,7 @@ import org.hyperic.sigar.SigarException;
 import at.tuwien.monitoring.agent.constants.Constants;
 import at.tuwien.monitoring.agent.jms.JmsService;
 import at.tuwien.monitoring.agent.process.ProcessRunner;
+import at.tuwien.monitoring.jms.messages.CpuLoadMessage;
 
 public class MonitoringAgent {
 
@@ -65,9 +67,9 @@ public class MonitoringAgent {
 			// System.out.println(processesToMonitor);
 
 			try {
-				jmsService.sendTextMessage(String.valueOf(sigar.getProcCpu(pid).getPercent()));
+				jmsService.sendObjectMessage(
+						new CpuLoadMessage("java", new Date().getTime(), sigar.getProcCpu(pid).getPercent()));
 			} catch (SigarException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 
