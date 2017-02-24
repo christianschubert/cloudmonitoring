@@ -7,9 +7,14 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.hyperic.sigar.Sigar;
@@ -28,9 +33,14 @@ public class MonitoringAgent {
 
 	private Sigar sigar;
 	private int cpuCount;
+
 	private JmsService jmsService;
 
-	private List<ApplicationMonitor> applicationList = new ArrayList<ApplicationMonitor>();
+	private ScheduledExecutorService scheduler;
+	private ScheduledFuture<?> scheduledJmsSender;
+
+	private List<ApplicationMonitor> applicationList = Collections
+			.synchronizedList(new ArrayList<ApplicationMonitor>());
 
 	private boolean init(String jmsBrokerURL) {
 		if (!initSigar()) {
@@ -49,6 +59,7 @@ public class MonitoringAgent {
 			return false;
 		}
 
+		scheduler = Executors.newScheduledThreadPool(1);
 		return true;
 	}
 
@@ -115,6 +126,11 @@ public class MonitoringAgent {
 	}
 
 	private void start() {
+		scheduledJmsSender = scheduler.scheduleAtFixedRate(new JmsMetricSenderTask(), 0,
+				Constants.JMS_SEND_METRIC_MESSAGES_INTERVAL, TimeUnit.MILLISECONDS);
+
+		logger.info("Agent started");
+
 		// for test purposes monitor imageresizer application only
 		String applicationPath = "../imageresizer/target/imageresizer-0.0.1-SNAPSHOT-jar-with-dependencies.jar";
 		String[] applicationWithParams = new String[] { "java", "-jar", applicationPath };
@@ -122,27 +138,37 @@ public class MonitoringAgent {
 		// monitor cpu load of application
 		startMonitoring(applicationWithParams, Arrays.asList(MonitorTask.CpuLoad));
 
-		while (true) {
-			try {
-				Thread.sleep(Constants.JMS_SEND_METRIC_MESSAGES_INTERVAL);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		// monitor till user hits RETURN
+		try {
+			System.in.read();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
+		stopAll();
+	}
+
+	public class JmsMetricSenderTask implements Runnable {
+		@Override
+		public void run() {
 			MetricAggregationMessage aggregationMessage = new MetricAggregationMessage();
 
-			Iterator<ApplicationMonitor> itAppList = applicationList.iterator();
-			while (itAppList.hasNext()) {
-				ApplicationMonitor applicationMonitor = itAppList.next();
-				if (applicationMonitor.isMonitoring()) {
-					Queue<MetricMessage> metrics = applicationMonitor.getCollectedMetrics();
-					MetricMessage message = null;
-					while ((message = metrics.poll()) != null) {
-						aggregationMessage.addMetricMessage(message);
+			// aggregate all messages into one message -> collect all queues
+			// from the running applications
+			synchronized (applicationList) {
+				Iterator<ApplicationMonitor> itAppList = applicationList.iterator();
+				while (itAppList.hasNext()) {
+					ApplicationMonitor applicationMonitor = itAppList.next();
+					if (applicationMonitor.isMonitoring()) {
+						Queue<MetricMessage> metrics = applicationMonitor.getCollectedMetrics();
+						MetricMessage message = null;
+						while ((message = metrics.poll()) != null) {
+							aggregationMessage.addMetricMessage(message);
+						}
+					} else {
+						// Monitoring stopped -> remove from watchlist
+						itAppList.remove();
 					}
-				} else {
-					// Monitoring stopped -> remove from watchlist
-					itAppList.remove();
 				}
 			}
 
@@ -151,15 +177,6 @@ public class MonitoringAgent {
 			}
 			aggregationMessage = null;
 		}
-
-		// monitor till user hits RETURN
-		// try {
-		// System.in.read();
-		// } catch (IOException e) {
-		// e.printStackTrace();
-		// }
-		//
-		// stopAll();
 	}
 
 	private void startMonitoring(String[] applicationWithParams, List<MonitorTask> monitorTasks) {
@@ -170,13 +187,32 @@ public class MonitoringAgent {
 	}
 
 	private void stopAll() {
-		// stop all monitorings and their processes
-		for (ApplicationMonitor applicationMonitor : applicationList) {
-			applicationMonitor.stop();
+		logger.info("Shutting down agent...");
+
+		if (scheduledJmsSender != null) {
+			scheduledJmsSender.cancel(true);
+		}
+		if (scheduler != null) {
+			scheduler.shutdown();
+			try {
+				scheduler.awaitTermination(1, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				scheduler.shutdownNow();
+			}
 		}
 
 		jmsService.stop();
+
+		// stop all monitorings and their processes
+		synchronized (applicationList) {
+			for (ApplicationMonitor applicationMonitor : applicationList) {
+				applicationMonitor.stop();
+			}
+		}
+
 		closeSigar();
+
+		logger.info("Shut down success");
 	}
 
 	public static void main(String[] args) {

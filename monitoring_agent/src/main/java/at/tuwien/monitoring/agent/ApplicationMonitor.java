@@ -30,12 +30,11 @@ public class ApplicationMonitor {
 
 	private ProcessRunner processRunner;
 
-	private ScheduledFuture<?> scheduledFuture;
+	private ScheduledExecutorService scheduler;
+	private ScheduledFuture<?> scheduledMonitor;
 
 	private List<MonitorTask> monitorTasks;
 	private Queue<MetricMessage> collectedMetrics = new ConcurrentLinkedQueue<MetricMessage>();
-
-	private ScheduledExecutorService scheduler;
 
 	private boolean monitoring;
 
@@ -56,7 +55,7 @@ public class ApplicationMonitor {
 			return;
 		}
 
-		scheduledFuture = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
+		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
 				Constants.PROCESS_MONITOR_START_DELAY, Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
 
 		monitoring = true;
@@ -74,8 +73,8 @@ public class ApplicationMonitor {
 
 		monitoring = false;
 
-		if (scheduledFuture != null) {
-			scheduledFuture.cancel(true);
+		if (scheduledMonitor != null) {
+			scheduledMonitor.cancel(true);
 		}
 		if (scheduler != null) {
 			scheduler.shutdown();
