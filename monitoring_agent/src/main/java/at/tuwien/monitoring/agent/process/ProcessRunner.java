@@ -66,7 +66,7 @@ public class ProcessRunner {
 			try {
 				pool.awaitTermination(1, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				pool.shutdownNow();
 			}
 		}
 	}

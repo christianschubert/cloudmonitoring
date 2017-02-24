@@ -10,6 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Logger;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 
@@ -22,6 +23,8 @@ import at.tuwien.monitoring.jms.messages.MetricMessage;
 
 public class ApplicationMonitor {
 
+	private final static Logger logger = Logger.getLogger(ApplicationMonitor.class);
+
 	private Sigar sigar;
 	private int cpuCount;
 
@@ -33,6 +36,8 @@ public class ApplicationMonitor {
 	private Queue<MetricMessage> collectedMetrics = new ConcurrentLinkedQueue<MetricMessage>();
 
 	private ScheduledExecutorService scheduler;
+
+	private boolean monitoring;
 
 	public ApplicationMonitor(Sigar sigar, int cpuCount, String[] applicationWithParams,
 			List<MonitorTask> monitorTasks) {
@@ -53,9 +58,22 @@ public class ApplicationMonitor {
 
 		scheduledFuture = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
 				Constants.PROCESS_MONITOR_START_DELAY, Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
+
+		monitoring = true;
+
+		logger.info("Started monitoring of application \"" + processRunner.getProcessName() + "\"");
+	}
+
+	public boolean isMonitoring() {
+		return monitoring;
 	}
 
 	public void stop() {
+
+		logger.info("Shutting down monitoring of application \"" + processRunner.getProcessName() + "\"...");
+
+		monitoring = false;
+
 		if (scheduledFuture != null) {
 			scheduledFuture.cancel(true);
 		}
@@ -64,7 +82,7 @@ public class ApplicationMonitor {
 			try {
 				scheduler.awaitTermination(1, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				scheduler.shutdownNow();
 			}
 		}
 		if (processRunner != null) {
@@ -103,7 +121,8 @@ public class ApplicationMonitor {
 				try {
 					sumCpuLoad += sigar.getProcCpu(pidToMonitor).getPercent() * 100 / cpuCount;
 				} catch (SigarException e) {
-					e.printStackTrace();
+					logger.error("Error retrieving CPU info from application");
+					stop();
 				}
 			}
 

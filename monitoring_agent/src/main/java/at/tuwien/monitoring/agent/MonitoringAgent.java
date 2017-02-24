@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 
@@ -130,15 +131,25 @@ public class MonitoringAgent {
 
 			MetricAggregationMessage aggregationMessage = new MetricAggregationMessage();
 
-			for (ApplicationMonitor applicationMonitor : applicationList) {
-				Queue<MetricMessage> metrics = applicationMonitor.getCollectedMetrics();
-				MetricMessage message = null;
-				while ((message = metrics.poll()) != null) {
-					aggregationMessage.addMetricMessage(message);
+			Iterator<ApplicationMonitor> itAppList = applicationList.iterator();
+			while (itAppList.hasNext()) {
+				ApplicationMonitor applicationMonitor = itAppList.next();
+				if (applicationMonitor.isMonitoring()) {
+					Queue<MetricMessage> metrics = applicationMonitor.getCollectedMetrics();
+					MetricMessage message = null;
+					while ((message = metrics.poll()) != null) {
+						aggregationMessage.addMetricMessage(message);
+					}
+				} else {
+					// Monitoring stopped -> remove from watchlist
+					itAppList.remove();
 				}
 			}
 
-			jmsService.sendObjectMessage(aggregationMessage);
+			if (!aggregationMessage.getMessageList().isEmpty()) {
+				jmsService.sendObjectMessage(aggregationMessage);
+			}
+			aggregationMessage = null;
 		}
 
 		// monitor till user hits RETURN
