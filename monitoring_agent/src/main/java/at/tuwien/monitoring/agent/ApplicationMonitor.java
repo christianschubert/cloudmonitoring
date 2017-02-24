@@ -98,10 +98,13 @@ public class ApplicationMonitor {
 
 		private long pid;
 		private Set<Long> processesToMonitor;
+		private long lastTime = 0;
+		private long lastUpdatedPidList = 0;
 
 		public MonitorTimerTask(long pid) {
 			this.pid = pid;
 			processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
+			lastTime = System.currentTimeMillis();
 		}
 
 		@Override
@@ -111,6 +114,16 @@ public class ApplicationMonitor {
 			} else if (monitorTasks.contains(MonitorTask.Memory)) {
 				// TODO
 			}
+
+			// check if the child process list should be updated
+			long currentTime = System.currentTimeMillis();
+			lastUpdatedPidList += (currentTime - lastTime);
+			if (lastUpdatedPidList > Constants.PROCESS_CHILDREN_UPDATE_INTERVAL) {
+				// update child process list
+				processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
+				lastUpdatedPidList = 0;
+			}
+			lastTime = currentTime;
 		}
 
 		private void monitorCpuLoad() {
