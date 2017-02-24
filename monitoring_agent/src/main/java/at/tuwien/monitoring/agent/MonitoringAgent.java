@@ -8,14 +8,18 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Queue;
 
 import org.apache.log4j.Logger;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 
+import at.tuwien.monitoring.agent.constants.Constants;
 import at.tuwien.monitoring.agent.constants.MonitorTask;
 import at.tuwien.monitoring.agent.jms.JmsService;
 import at.tuwien.monitoring.agent.process.ProcessTools;
+import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
+import at.tuwien.monitoring.jms.messages.MetricMessage;
 
 public class MonitoringAgent {
 
@@ -109,14 +113,49 @@ public class MonitoringAgent {
 		return null;
 	}
 
+	private void start() {
+		// for test purposes monitor imageresizer application only
+		String applicationPath = "../imageresizer/target/imageresizer-0.0.1-SNAPSHOT-jar-with-dependencies.jar";
+		String[] applicationWithParams = new String[] { "java", "-jar", applicationPath };
+
+		// monitor cpu load of application
+		startMonitoring(applicationWithParams, Arrays.asList(MonitorTask.CpuLoad));
+
+		while (true) {
+			try {
+				Thread.sleep(Constants.JMS_SEND_METRIC_MESSAGES_INTERVAL);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			MetricAggregationMessage aggregationMessage = new MetricAggregationMessage();
+
+			for (ApplicationMonitor applicationMonitor : applicationList) {
+				Queue<MetricMessage> metrics = applicationMonitor.getCollectedMetrics();
+				MetricMessage message = null;
+				while ((message = metrics.poll()) != null) {
+					aggregationMessage.addMetricMessage(message);
+				}
+			}
+
+			jmsService.sendObjectMessage(aggregationMessage);
+		}
+
+		// monitor till user hits RETURN
+		// try {
+		// System.in.read();
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
+		//
+		// stopAll();
+	}
+
 	private void startMonitoring(String[] applicationWithParams, List<MonitorTask> monitorTasks) {
 		ApplicationMonitor applicationMonitor = new ApplicationMonitor(sigar, cpuCount, applicationWithParams,
 				monitorTasks);
 		applicationMonitor.start();
 		applicationList.add(applicationMonitor);
-
-		// jmsService.sendObjectMessage(
-		// new CpuLoadMessage("java", new Date().getTime(),
 	}
 
 	private void stopAll() {
@@ -140,13 +179,7 @@ public class MonitoringAgent {
 
 		MonitoringAgent agent = new MonitoringAgent();
 		if (agent.init(jmsBrokerURL)) {
-
-			// for test purposes monitor imageresizer application only
-			String applicationPath = "../imageresizer/target/imageresizer-0.0.1-SNAPSHOT-jar-with-dependencies.jar";
-			String[] applicationWithParams = new String[] { "java", "-jar", applicationPath };
-
-			// monitor cpu load of application
-			agent.startMonitoring(applicationWithParams, Arrays.asList(MonitorTask.CpuLoad));
+			agent.start();
 		}
 	}
 }

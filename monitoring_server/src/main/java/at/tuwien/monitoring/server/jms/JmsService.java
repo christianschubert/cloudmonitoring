@@ -1,7 +1,6 @@
 package at.tuwien.monitoring.server.jms;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -16,7 +15,7 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import at.tuwien.monitoring.jms.messages.CpuLoadMessage;
+import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
 import at.tuwien.monitoring.server.constants.Constants;
 
 public class JmsService implements MessageListener {
@@ -56,9 +55,9 @@ public class JmsService implements MessageListener {
 				ObjectMessage objectMessage = (ObjectMessage) message;
 				Serializable serializable = objectMessage.getObject();
 
-				if (serializable instanceof CpuLoadMessage) {
-					CpuLoadMessage cpuLoadMessage = (CpuLoadMessage) serializable;
-					System.out.println(cpuLoadMessage);
+				if (serializable instanceof MetricAggregationMessage) {
+					MetricAggregationMessage metricAggregationMessage = (MetricAggregationMessage) serializable;
+					System.out.println(metricAggregationMessage);
 				}
 			}
 		} catch (JMSException e) {
@@ -70,7 +69,8 @@ public class JmsService implements MessageListener {
 		try {
 			// Create a ConnectionFactory
 			connectionFactory = new ActiveMQConnectionFactory(brokerURL);
-			connectionFactory.setTrustedPackages(Arrays.asList("at.tuwien.monitoring.jms.messages"));
+			connectionFactory.setTrustAllPackages(true);
+			// connectionFactory.setTrustedPackages(Arrays.asList("at.tuwien.monitoring.jms.messages"));
 
 			// Create a Connection
 			connection = connectionFactory.createConnection();

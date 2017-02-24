@@ -24,7 +24,7 @@ public class MonitoringServer {
 	}
 
 	private void start() {
-		logger.info("Monitoring server running. Press any key to exit.");
+		logger.info("Monitoring server running. Press RETURN to exit.");
 		try {
 			System.in.read();
 		} catch (IOException e) {

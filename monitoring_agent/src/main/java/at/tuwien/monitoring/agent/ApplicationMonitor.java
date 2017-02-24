@@ -1,5 +1,6 @@
 package at.tuwien.monitoring.agent;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -16,6 +17,7 @@ import at.tuwien.monitoring.agent.constants.Constants;
 import at.tuwien.monitoring.agent.constants.MonitorTask;
 import at.tuwien.monitoring.agent.process.ProcessRunner;
 import at.tuwien.monitoring.agent.process.ProcessTools;
+import at.tuwien.monitoring.jms.messages.CpuLoadMessage;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
 
 public class ApplicationMonitor {
@@ -45,11 +47,33 @@ public class ApplicationMonitor {
 		long pid = processRunner.start();
 		if (pid == -1) {
 			// Error starting process and retreiving pid
+			stop();
 			return;
 		}
 
 		scheduledFuture = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
 				Constants.PROCESS_MONITOR_START_DELAY, Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
+	}
+
+	public void stop() {
+		if (scheduledFuture != null) {
+			scheduledFuture.cancel(true);
+		}
+		if (scheduler != null) {
+			scheduler.shutdown();
+			try {
+				scheduler.awaitTermination(1, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		if (processRunner != null) {
+			processRunner.stop();
+		}
+	}
+
+	public Queue<MetricMessage> getCollectedMetrics() {
+		return collectedMetrics;
 	}
 
 	public class MonitorTimerTask implements Runnable {
@@ -64,26 +88,27 @@ public class ApplicationMonitor {
 
 		@Override
 		public void run() {
-			try {
-				System.out.println(sigar.getProcCpu(pid).getPercent() * 100 / cpuCount);
-			} catch (SigarException e) {
-				e.printStackTrace();
+			if (monitorTasks.contains(MonitorTask.CpuLoad)) {
+				monitorCpuLoad();
+			} else if (monitorTasks.contains(MonitorTask.Memory)) {
+				// TODO
 			}
 		}
-	}
 
-	public void stop() {
-		scheduledFuture.cancel(true);
+		private void monitorCpuLoad() {
 
-		if (scheduler != null) {
-			scheduler.shutdown();
-			try {
-				scheduler.awaitTermination(1, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			double sumCpuLoad = 0.0d;
+
+			for (Long pidToMonitor : processesToMonitor) {
+				try {
+					sumCpuLoad += sigar.getProcCpu(pidToMonitor).getPercent() * 100 / cpuCount;
+				} catch (SigarException e) {
+					e.printStackTrace();
+				}
 			}
+
+			collectedMetrics
+					.offer(new CpuLoadMessage(processRunner.getProcessName(), new Date().getTime(), sumCpuLoad));
 		}
-		scheduler.shutdown();
-		processRunner.stop();
 	}
 }
