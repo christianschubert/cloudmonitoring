@@ -18,7 +18,7 @@ public class MetricAggregationMessage implements Serializable {
 	}
 
 	public void setMessageList(List<MetricMessage> messageList) {
-		this.messageList = messageList;
+		this.messageList = new ArrayList<>(messageList);
 	}
 
 	public void addMetricMessage(MetricMessage metricMessage) {

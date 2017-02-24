@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarException;
 
 import at.tuwien.monitoring.agent.constants.MonitorTask;
 import at.tuwien.monitoring.agent.jms.JmsService;
@@ -21,6 +22,7 @@ public class MonitoringAgent {
 	private final static Logger logger = Logger.getLogger(MonitoringAgent.class);
 
 	private Sigar sigar;
+	private int cpuCount;
 	private JmsService jmsService;
 
 	private List<ApplicationMonitor> applicationList = new ArrayList<ApplicationMonitor>();
@@ -57,11 +59,33 @@ public class MonitoringAgent {
 
 		if (sigar.getNativeLibrary() == null) {
 			logger.error("Error loading sigar native library.");
+			closeSigar();
+			return false;
+		}
+
+		try {
+			cpuCount = sigar.getCpuList().length;
+			if (cpuCount < 1) {
+				throw new SigarException();
+			}
+
+			logger.info("CPU count: " + cpuCount);
+
+		} catch (SigarException e) {
+			logger.error("Error retrieving cpu count.");
+			closeSigar();
 			return false;
 		}
 
 		ProcessTools.setSigar(sigar);
 		return true;
+	}
+
+	private void closeSigar() {
+		if (sigar != null) {
+			sigar.close();
+			sigar = null;
+		}
 	}
 
 	private String lookupPublicIPAddress() {
@@ -86,9 +110,23 @@ public class MonitoringAgent {
 	}
 
 	private void startMonitoring(String[] applicationWithParams, List<MonitorTask> monitorTasks) {
-		ApplicationMonitor applicationMonitor = new ApplicationMonitor(sigar, applicationWithParams, monitorTasks);
+		ApplicationMonitor applicationMonitor = new ApplicationMonitor(sigar, cpuCount, applicationWithParams,
+				monitorTasks);
 		applicationMonitor.start();
 		applicationList.add(applicationMonitor);
+
+		// jmsService.sendObjectMessage(
+		// new CpuLoadMessage("java", new Date().getTime(),
+	}
+
+	private void stopAll() {
+		// stop all monitorings and their processes
+		for (ApplicationMonitor applicationMonitor : applicationList) {
+			applicationMonitor.stop();
+		}
+
+		jmsService.stop();
+		closeSigar();
 	}
 
 	public static void main(String[] args) {
