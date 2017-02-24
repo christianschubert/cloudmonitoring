@@ -19,6 +19,7 @@ import at.tuwien.monitoring.agent.constants.MonitorTask;
 import at.tuwien.monitoring.agent.process.ProcessRunner;
 import at.tuwien.monitoring.agent.process.ProcessTools;
 import at.tuwien.monitoring.jms.messages.CpuLoadMessage;
+import at.tuwien.monitoring.jms.messages.MemoryMessage;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
 
 public class ApplicationMonitor {
@@ -110,8 +111,9 @@ public class ApplicationMonitor {
 		public void run() {
 			if (monitorTasks.contains(MonitorTask.CpuLoad)) {
 				monitorCpuLoad();
-			} else if (monitorTasks.contains(MonitorTask.Memory)) {
-				// TODO
+			}
+			if (monitorTasks.contains(MonitorTask.Memory)) {
+				monitorMemory();
 			}
 
 			// check if the child process list should be updated
@@ -123,6 +125,25 @@ public class ApplicationMonitor {
 				lastUpdatedPidList = 0;
 			}
 			lastTime = currentTime;
+		}
+
+		private void monitorMemory() {
+
+			long sumTotalMemory = 0;
+			long sumResidentMemory = 0;
+
+			for (Long pidToMonitor : processesToMonitor) {
+				try {
+					sumTotalMemory += sigar.getProcMem(pidToMonitor).getSize();
+					sumResidentMemory += sigar.getProcMem(pidToMonitor).getResident();
+				} catch (SigarException e) {
+					logger.error("Error retrieving memory info from application");
+					stop();
+				}
+			}
+
+			collectedMetrics.offer(new MemoryMessage(processRunner.getProcessName(), new Date().getTime(),
+					sumTotalMemory, sumResidentMemory));
 		}
 
 		private void monitorCpuLoad() {
