@@ -89,7 +89,7 @@ public class ProcessTools {
 		}
 
 		for (int i = 0; i < pids.length; i++) {
-			if (isChildProcessOf(pids[i], pid, evaluatedProcesses)) {
+			if (isChildProcessOf(pids[i], pid, evaluatedProcesses, processesToMonitor)) {
 				processesToMonitor.add(pids[i]);
 			}
 		}
@@ -97,10 +97,11 @@ public class ProcessTools {
 		return processesToMonitor;
 	}
 
-	private static boolean isChildProcessOf(long pid, long parentId, Set<Long> evaluatedProcesses) {
+	private static boolean isChildProcessOf(long pid, long parentId, Set<Long> evaluatedProcesses,
+			Set<Long> processesToMonitor) {
 		if (evaluatedProcesses.contains(pid)) {
-			// already evaluated - ignore
-			return false;
+			// already checked -> return result
+			return processesToMonitor.contains(pid);
 		}
 		evaluatedProcesses.add(pid);
 
@@ -113,7 +114,7 @@ public class ProcessTools {
 			if (state.getPpid() == parentId) {
 				return true;
 			} else {
-				return isChildProcessOf(state.getPpid(), parentId, evaluatedProcesses);
+				return isChildProcessOf(state.getPpid(), parentId, evaluatedProcesses, processesToMonitor);
 			}
 
 		} catch (SigarException e) {
