@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>imageresizer</artifactId>
+	<artifactId>monitoring_service</artifactId>
 	<packaging>jar</packaging>
 	
 	<parent>
@@ -13,7 +13,7 @@
 
 	<properties>
 		<jersey.version>2.25.1</jersey.version>
-		<main.class>at.tuwien.service.imageresizer.ImageResizer</main.class>
+		<main.class>at.tuwien.monitoring.service.MonitoringService</main.class>
 	</properties>
 
 	<dependencyManagement>
