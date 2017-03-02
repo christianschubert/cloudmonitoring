@@ -132,7 +132,7 @@ public class MonitoringAgent {
 		logger.info("Agent started");
 
 		// for test purposes monitor imageresizer application only
-		String applicationPath = "../imageresizer/target/imageresizer-0.0.1-SNAPSHOT-jar-with-dependencies.jar";
+		String applicationPath = "../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar";
 		String[] applicationWithParams = new String[] { "java", "-jar", applicationPath };
 
 		// monitor cpu load of application
