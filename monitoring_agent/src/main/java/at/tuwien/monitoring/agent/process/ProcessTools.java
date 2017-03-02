@@ -75,8 +75,10 @@ public class ProcessTools {
 	 */
 	public static Set<Long> findProcessesToMonitor(long pid) {
 
-		HashSet<Long> processesToMonitor = new HashSet<Long>();
+		Set<Long> processesToMonitor = new HashSet<>();
+		Set<Long> evaluatedProcesses = new HashSet<>();
 		processesToMonitor.add(pid);
+		evaluatedProcesses.add(pid);
 
 		long[] pids;
 		try {
@@ -87,7 +89,7 @@ public class ProcessTools {
 		}
 
 		for (int i = 0; i < pids.length; i++) {
-			if (isChildProcessOf(pids[i], pid)) {
+			if (isChildProcessOf(pids[i], pid, evaluatedProcesses)) {
 				processesToMonitor.add(pids[i]);
 			}
 		}
@@ -95,7 +97,13 @@ public class ProcessTools {
 		return processesToMonitor;
 	}
 
-	private static boolean isChildProcessOf(long pid, long parentId) {
+	private static boolean isChildProcessOf(long pid, long parentId, Set<Long> evaluatedProcesses) {
+		if (evaluatedProcesses.contains(pid)) {
+			// already evaluated - ignore
+			return false;
+		}
+		evaluatedProcesses.add(pid);
+
 		try {
 			ProcState state = sigar.getProcState(pid);
 			if (state.getPpid() == 0) {
@@ -105,7 +113,7 @@ public class ProcessTools {
 			if (state.getPpid() == parentId) {
 				return true;
 			} else {
-				return isChildProcessOf(state.getPpid(), parentId);
+				return isChildProcessOf(state.getPpid(), parentId, evaluatedProcesses);
 			}
 
 		} catch (SigarException e) {
