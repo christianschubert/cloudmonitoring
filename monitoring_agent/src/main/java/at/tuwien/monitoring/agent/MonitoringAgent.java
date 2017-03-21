@@ -180,8 +180,7 @@ public class MonitoringAgent {
 	}
 
 	private void startMonitoring(String[] applicationWithParams, List<MonitorTask> monitorTasks) {
-		ApplicationMonitor applicationMonitor = new ApplicationMonitor(sigar, cpuCount, applicationWithParams,
-				monitorTasks);
+		ApplicationMonitor applicationMonitor = new ApplicationMonitor(cpuCount, applicationWithParams, monitorTasks);
 		applicationMonitor.start();
 		applicationList.add(applicationMonitor);
 	}

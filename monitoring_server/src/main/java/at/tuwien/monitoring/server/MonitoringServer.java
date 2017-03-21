@@ -12,8 +12,8 @@ public class MonitoringServer {
 
 	private JmsService jmsService;
 
-	private boolean init(String jmsBrokerURL) {
-		jmsService = new JmsService(jmsBrokerURL);
+	private boolean init(String jmsBrokerURL, boolean embeddedJmsBroker) {
+		jmsService = new JmsService(jmsBrokerURL, embeddedJmsBroker);
 		jmsService.start();
 
 		if (!jmsService.isConnected()) {
@@ -36,15 +36,23 @@ public class MonitoringServer {
 
 	public static void main(String[] args) {
 		String jmsBrokerURL = null;
-		if (args.length > 1) {
+		boolean embeddedJmsBroker = true;
+
+		if (args.length > 2) {
 			logger.error("Invalid number of arguments.");
 			return;
-		} else if (args.length == 1) {
-			jmsBrokerURL = args[0];
+		}
+
+		for (int i = 0; i < args.length; i++) {
+			if (args[i].contains("-prod")) {
+				embeddedJmsBroker = false;
+			} else {
+				jmsBrokerURL = args[i];
+			}
 		}
 
 		MonitoringServer server = new MonitoringServer();
-		if (server.init(jmsBrokerURL)) {
+		if (server.init(jmsBrokerURL, embeddedJmsBroker)) {
 			server.start();
 		}
 	}

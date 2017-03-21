@@ -5,24 +5,29 @@
 
 	<artifactId>monitoring_server</artifactId>
 	<packaging>jar</packaging>
-	
+
 	<parent>
-        <groupId>at.tuwien.monitoring</groupId>
-        <artifactId>cloudmonitoring</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-    </parent>
+		<groupId>at.tuwien.monitoring</groupId>
+		<artifactId>cloudmonitoring</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
 
 	<properties>
 		<main.class>at.tuwien.monitoring.server.MonitoringServer</main.class>
-		<activemq.broker>tcp://localhost:61616</activemq.broker>
-<!-- 		<activemq.broker>tcp://ec2-52-41-245-4.us-west-2.compute.amazonaws.com:61616</activemq.broker> -->
+		<activemq.broker.url>tcp://localhost:61616</activemq.broker.url>
+		<!-- <activemq.broker.url>tcp://ec2-52-41-245-4.us-west-2.compute.amazonaws.com:61616</activemq.broker.url> -->
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-client</artifactId>
-			<version>5.14.3</version>
+			<version>5.14.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-broker</artifactId>
+			<version>5.14.4</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -53,7 +58,8 @@
 				<configuration>
 					<mainClass>${main.class}</mainClass>
 					<arguments>
-						<argument>${activemq.broker}</argument>
+<!-- 						<argument>-prod</argument> -->
+						<argument>${activemq.broker.url}</argument>
 					</arguments>
 				</configuration>
 			</plugin>

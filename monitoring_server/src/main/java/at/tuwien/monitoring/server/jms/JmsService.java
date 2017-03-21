@@ -12,32 +12,37 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
 
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
 import at.tuwien.monitoring.server.constants.Constants;
 
 public class JmsService implements MessageListener {
 
-	private String brokerURL = ActiveMQConnection.DEFAULT_BROKER_URL;
+	private String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
 
+	private BrokerService broker;
 	private ActiveMQConnectionFactory connectionFactory;
 	private Connection connection;
 	private Session session;
 	private MessageConsumer consumer;
 
+	private boolean embeddedJmsBroker;
 	private boolean connected = false;
 
-	public JmsService() {
+	public JmsService(boolean embeddedJmsBroker) {
 		// use default broker URL
+		this(null, embeddedJmsBroker);
 	}
 
-	public JmsService(String brokerURL) {
+	public JmsService(String brokerURL, boolean embeddedJmsBroker) {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
 		}
+
+		this.embeddedJmsBroker = embeddedJmsBroker;
 	}
 
 	@Override
@@ -67,6 +72,16 @@ public class JmsService implements MessageListener {
 
 	public void start() {
 		try {
+			if (embeddedJmsBroker) {
+				// Start a new broker
+				broker = new BrokerService();
+
+				// Configure the broker
+				broker.addConnector(brokerURL);
+				broker.setPersistent(false);
+				broker.start();
+			}
+
 			// Create a ConnectionFactory
 			connectionFactory = new ActiveMQConnectionFactory(brokerURL);
 			connectionFactory.setTrustAllPackages(true);
@@ -92,6 +107,9 @@ public class JmsService implements MessageListener {
 		} catch (JMSException e) {
 			e.printStackTrace();
 			stop();
+		} catch (Exception e) {
+			e.printStackTrace();
+			stop();
 		}
 	}
 
@@ -114,6 +132,13 @@ public class JmsService implements MessageListener {
 			try {
 				connection.close();
 			} catch (JMSException e) {
+				e.printStackTrace();
+			}
+		}
+		if (broker != null && !broker.isStopped()) {
+			try {
+				broker.stop();
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

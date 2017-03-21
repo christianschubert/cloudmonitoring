@@ -14,8 +14,8 @@
 
 	<properties>
 		<main.class>at.tuwien.monitoring.agent.MonitoringAgent</main.class>
-		<activemq.broker>tcp://localhost:61616</activemq.broker>
-		<!-- <activemq.broker>tcp://ec2-52-41-245-4.us-west-2.compute.amazonaws.com:61616</activemq.broker> -->
+		<activemq.broker.url>tcp://localhost:61616</activemq.broker.url>
+		<!-- <activemq.broker.url>tcp://ec2-52-41-245-4.us-west-2.compute.amazonaws.com:61616</activemq.broker.url> -->
 	</properties>
 
 	<dependencies>
@@ -63,7 +63,7 @@
 				<configuration>
 					<mainClass>${main.class}</mainClass>
 					<arguments>
-						<argument>${activemq.broker}</argument>
+						<argument>${activemq.broker.url}</argument>
 					</arguments>
 				</configuration>
 			</plugin>

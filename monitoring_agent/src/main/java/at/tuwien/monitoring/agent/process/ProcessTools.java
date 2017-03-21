@@ -23,6 +23,10 @@ public class ProcessTools {
 		ProcessTools.sigar = sigar;
 	}
 
+	public static Sigar getSigar() {
+		return ProcessTools.sigar;
+	}
+
 	public static long getProcessIdFromProcess(Process process) {
 		long pid = -1;
 

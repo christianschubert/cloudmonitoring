@@ -26,7 +26,6 @@ public class ApplicationMonitor {
 
 	private final static Logger logger = Logger.getLogger(ApplicationMonitor.class);
 
-	private Sigar sigar;
 	private int cpuCount;
 
 	private ProcessRunner processRunner;
@@ -39,9 +38,7 @@ public class ApplicationMonitor {
 
 	private boolean monitoring;
 
-	public ApplicationMonitor(Sigar sigar, int cpuCount, String[] applicationWithParams,
-			List<MonitorTask> monitorTasks) {
-		this.sigar = sigar;
+	public ApplicationMonitor(int cpuCount, String[] applicationWithParams, List<MonitorTask> monitorTasks) {
 		this.cpuCount = cpuCount;
 		this.monitorTasks = monitorTasks;
 		processRunner = new ProcessRunner(applicationWithParams);
@@ -100,9 +97,11 @@ public class ApplicationMonitor {
 		private Set<Long> processesToMonitor;
 		private long lastTime = 0;
 		private long lastUpdatedPidList = 0;
+		private Sigar sigar;
 
 		public MonitorTimerTask(long pid) {
 			this.pid = pid;
+			this.sigar = ProcessTools.getSigar();
 			processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
 			lastTime = System.currentTimeMillis();
 		}
