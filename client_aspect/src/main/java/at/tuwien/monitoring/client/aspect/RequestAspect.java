@@ -1,4 +1,4 @@
-package at.tuwien.monitoring.aspect;
+package at.tuwien.monitoring.client.aspect;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
