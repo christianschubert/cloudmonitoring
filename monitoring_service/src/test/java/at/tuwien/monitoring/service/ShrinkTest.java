@@ -25,13 +25,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import at.tuwien.monitoring.service.MonitoringService;
-
 public class ShrinkTest {
 
 	private static final String UPLOAD_PATH = "upload/";
 	private static final String DOWNLOAD_PATH = "download/";
-	private static final String IMAGE = "image.jpg";
+	private static final String IMAGE = "image_medium.jpg";
 
 	private HttpServer server;
 	private WebTarget target;
