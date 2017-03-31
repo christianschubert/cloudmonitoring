@@ -1,23 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>client_aspect</artifactId>
+	<artifactId>common</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
-		<artifactId>cloudmonitoring</artifactId>
 		<groupId>at.tuwien.monitoring</groupId>
+		<artifactId>cloudmonitoring</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.aspectj</groupId>
-			<artifactId>aspectjrt</artifactId>
-			<version>1.8.10</version>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-client</artifactId>
@@ -27,11 +21,6 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.13</version>
-		</dependency>
-		<dependency>
-			<groupId>at.tuwien.monitoring</groupId>
-			<artifactId>common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -1,4 +1,4 @@
-package at.tuwien.monitoring.agent.jms;
+package at.tuwien.monitoring.jms;
 
 import java.io.Serializable;
 
@@ -15,15 +15,16 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.log4j.Logger;
 
-import at.tuwien.monitoring.agent.constants.Constants;
+import at.tuwien.common.GlobalConstants;
 
-public class JmsService {
+public class JmsSenderService {
 
-	private final static Logger logger = Logger.getLogger(JmsService.class);
+	private final static Logger logger = Logger.getLogger(JmsSenderService.class);
 
 	private String brokerURL = ActiveMQConnection.DEFAULT_BROKER_URL;
 
 	private String publicIPAddress;
+	private String queue;
 
 	private ActiveMQConnectionFactory connectionFactory;
 	private Connection connection;
@@ -32,23 +33,24 @@ public class JmsService {
 
 	private boolean connected = false;
 
-	public JmsService() {
+	public JmsSenderService(String queue) {
 		// use default broker URL
 		// do not append public IP address with the messages
-		this(null);
+		this(null, queue);
 	}
 
-	public JmsService(String publicIPAddress) {
+	public JmsSenderService(String publicIPAddress, String queue) {
 		// use default broker URL
-		this(null, publicIPAddress);
+		this(null, publicIPAddress, queue);
 	}
 
-	public JmsService(String brokerURL, String publicIPAddress) {
+	public JmsSenderService(String brokerURL, String publicIPAddress, String queue) {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
 		}
 		this.publicIPAddress = publicIPAddress;
+		this.queue = queue;
 	}
 
 	public void start() {
@@ -64,7 +66,7 @@ public class JmsService {
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
 			// Create the destination (Topic or Queue)
-			Destination destination = session.createQueue(Constants.QUEUE_AGENTS);
+			Destination destination = session.createQueue(queue);
 
 			// Create a MessageProducer from the Session to the Topic or Queue
 			producer = session.createProducer(destination);
@@ -89,7 +91,7 @@ public class JmsService {
 
 			// append IP address of sender as a property
 			if (publicIPAddress != null) {
-				objectMessage.setStringProperty(Constants.IP_ADDRESS_PROPERTY, publicIPAddress);
+				objectMessage.setStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY, publicIPAddress);
 			}
 
 			// Tell the producer to send the message
@@ -113,7 +115,7 @@ public class JmsService {
 
 			// append IP address of sender as a property
 			if (publicIPAddress != null) {
-				textMessage.setStringProperty(Constants.IP_ADDRESS_PROPERTY, publicIPAddress);
+				textMessage.setStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY, publicIPAddress);
 			}
 
 			// Tell the producer to send the message

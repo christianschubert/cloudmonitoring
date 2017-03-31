@@ -5,12 +5,12 @@
 
 	<artifactId>monitoring_agent</artifactId>
 	<packaging>jar</packaging>
-	
+
 	<parent>
-        <groupId>at.tuwien.monitoring</groupId>
-        <artifactId>cloudmonitoring</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-    </parent>
+		<groupId>at.tuwien.monitoring</groupId>
+		<artifactId>cloudmonitoring</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
 
 	<properties>
 		<main.class>at.tuwien.monitoring.agent.MonitoringAgent</main.class>
@@ -44,6 +44,11 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.13</version>
+		</dependency>
+		<dependency>
+			<groupId>at.tuwien.monitoring</groupId>
+			<artifactId>common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

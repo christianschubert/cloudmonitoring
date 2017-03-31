@@ -19,6 +19,7 @@
 		<module>monitoring_server</module>
 		<module>monitoring_client</module>
 		<module>client_aspect</module>
+		<module>common</module>
 	</modules>
 
 	<build>

@@ -1,10 +1,7 @@
 package at.tuwien.monitoring.agent;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,10 +17,12 @@ import org.apache.log4j.Logger;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 
+import at.tuwien.common.GlobalConstants;
+import at.tuwien.common.Utils;
 import at.tuwien.monitoring.agent.constants.Constants;
 import at.tuwien.monitoring.agent.constants.MonitorTask;
-import at.tuwien.monitoring.agent.jms.JmsService;
 import at.tuwien.monitoring.agent.process.ProcessTools;
+import at.tuwien.monitoring.jms.JmsSenderService;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
 
@@ -34,7 +33,7 @@ public class MonitoringAgent {
 	private Sigar sigar;
 	private int cpuCount;
 
-	private JmsService jmsService;
+	private JmsSenderService jmsService;
 
 	private ScheduledExecutorService scheduler;
 	private ScheduledFuture<?> scheduledJmsSender;
@@ -47,12 +46,12 @@ public class MonitoringAgent {
 			return false;
 		}
 
-		String publicIPAddress = lookupPublicIPAddress();
+		String publicIPAddress = Utils.lookupPublicIPAddress();
 		if (publicIPAddress == null) {
 			return false;
 		}
 
-		jmsService = new JmsService(jmsBrokerURL, publicIPAddress);
+		jmsService = new JmsSenderService(jmsBrokerURL, publicIPAddress, GlobalConstants.QUEUE_AGENTS);
 		jmsService.start();
 		if (!jmsService.isConnected()) {
 			logger.error("Error creating JMS service.");
@@ -102,27 +101,6 @@ public class MonitoringAgent {
 			sigar.close();
 			sigar = null;
 		}
-	}
-
-	private String lookupPublicIPAddress() {
-		BufferedReader reader = null;
-		try {
-			URL checkIP = new URL("http://checkip.amazonaws.com");
-			reader = new BufferedReader(new InputStreamReader(checkIP.openStream()));
-			return reader.readLine();
-		} catch (IOException e) {
-			logger.error("Error looking up public IP address.");
-			e.printStackTrace();
-		} finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return null;
 	}
 
 	private void start() {

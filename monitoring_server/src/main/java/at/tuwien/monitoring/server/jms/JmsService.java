@@ -15,8 +15,8 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 
+import at.tuwien.common.GlobalConstants;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
-import at.tuwien.monitoring.server.constants.Constants;
 
 public class JmsService implements MessageListener {
 
@@ -49,7 +49,7 @@ public class JmsService implements MessageListener {
 	public void onMessage(Message message) {
 		try {
 
-			String senderIP = message.getStringProperty(Constants.IP_ADDRESS_PROPERTY);
+			String senderIP = message.getStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY);
 
 			if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
@@ -95,7 +95,7 @@ public class JmsService implements MessageListener {
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
 			// Create the destination (Topic or Queue)
-			Destination destination = session.createQueue(Constants.QUEUE_AGENTS);
+			Destination destination = session.createQueue(GlobalConstants.QUEUE_AGENTS);
 
 			// Create a MessageConsumer from the Session to the Topic or Queue
 			consumer = session.createConsumer(destination);

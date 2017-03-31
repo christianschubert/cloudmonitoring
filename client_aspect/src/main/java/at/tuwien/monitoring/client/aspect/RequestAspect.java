@@ -1,11 +1,8 @@
 package at.tuwien.monitoring.client.aspect;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
 import java.net.HttpURLConnection;
-import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -14,20 +11,22 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 
-import at.tuwien.monitoring.client.aspect.jms.JmsService;
+import at.tuwien.common.GlobalConstants;
+import at.tuwien.common.Utils;
 import at.tuwien.monitoring.client.constants.Constants;
+import at.tuwien.monitoring.jms.JmsSenderService;
 
 @Aspect
 public class RequestAspect {
 
 	private final static Logger logger = Logger.getLogger(RequestAspect.class);
 
-	private JmsService jmsService;
+	private JmsSenderService jmsService;
 
 	public RequestAspect() {
-		String publicIPAddress = lookupPublicIPAddress();
+		String publicIPAddress = Utils.lookupPublicIPAddress();
 		logger.info("Public IP address of client: " + publicIPAddress);
-		jmsService = new JmsService(Constants.brokerURL, publicIPAddress);
+		jmsService = new JmsSenderService(Constants.brokerURL, publicIPAddress, GlobalConstants.QUEUE_CLIENTS);
 		jmsService.start();
 	}
 
@@ -100,26 +99,5 @@ public class RequestAspect {
 		}
 
 		return response;
-	}
-
-	private String lookupPublicIPAddress() {
-		BufferedReader reader = null;
-		try {
-			URL checkIP = new URL("http://checkip.amazonaws.com");
-			reader = new BufferedReader(new InputStreamReader(checkIP.openStream()));
-			return reader.readLine();
-		} catch (IOException e) {
-			logger.error("Error looking up public IP address.");
-			e.printStackTrace();
-		} finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return null;
 	}
 }
