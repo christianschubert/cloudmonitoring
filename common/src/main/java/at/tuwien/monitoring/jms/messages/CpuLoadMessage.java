@@ -6,11 +6,21 @@ public class CpuLoadMessage extends MetricMessage {
 
 	private static final long serialVersionUID = 1L;
 
+	private String application;
 	private double cpuLoad;
 
 	public CpuLoadMessage(String application, long timestamp, double cpuLoad) {
-		super(application, timestamp);
-		this.setCpuLoad(cpuLoad);
+		super(timestamp);
+		setApplication(application);
+		setCpuLoad(cpuLoad);
+	}
+
+	public String getApplication() {
+		return application;
+	}
+
+	public void setApplication(String application) {
+		this.application = application;
 	}
 
 	public double getCpuLoad() {

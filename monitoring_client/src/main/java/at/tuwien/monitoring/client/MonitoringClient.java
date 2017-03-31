@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 
 import org.apache.log4j.Logger;
 
-import at.tuwien.monitoring.client.aspect.Method;
+import at.tuwien.common.Method;
 import at.tuwien.monitoring.client.aspect.MonitorRequest;
 import at.tuwien.monitoring.client.constants.Constants;
 import at.tuwien.monitoring.client.request.Rotation;

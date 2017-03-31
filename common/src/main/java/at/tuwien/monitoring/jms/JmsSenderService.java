@@ -75,7 +75,7 @@ public class JmsSenderService {
 			connected = true;
 
 		} catch (JMSException e) {
-			e.printStackTrace();
+			logger.error("Error connecting to JMS broker.");
 			stop();
 		}
 	}

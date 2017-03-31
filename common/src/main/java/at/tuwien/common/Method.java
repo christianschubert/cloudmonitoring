@@ -1,4 +1,4 @@
-package at.tuwien.monitoring.client.aspect;
+package at.tuwien.common;
 
 public enum Method {
 	POST, PUT, GET, DELETE, HEAD, OPTIONS, TRACE

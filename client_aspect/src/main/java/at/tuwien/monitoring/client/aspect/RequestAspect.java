@@ -3,6 +3,7 @@ package at.tuwien.monitoring.client.aspect;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.HttpURLConnection;
+import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -12,9 +13,11 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 
 import at.tuwien.common.GlobalConstants;
+import at.tuwien.common.Method;
 import at.tuwien.common.Utils;
 import at.tuwien.monitoring.client.constants.Constants;
 import at.tuwien.monitoring.jms.JmsSenderService;
+import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
 
 @Aspect
 public class RequestAspect {
@@ -54,7 +57,9 @@ public class RequestAspect {
 
 	@Around("hasMonitorRequestAnnotation() && atExecution()")
 	public Object annotationRequest(ProceedingJoinPoint proceedingJoinPoint) throws IOException {
-		long time = System.currentTimeMillis();
+
+		long startTime = System.currentTimeMillis();
+
 		Object response = null;
 		try {
 			response = proceedingJoinPoint.proceed();
@@ -62,15 +67,15 @@ public class RequestAspect {
 			e.printStackTrace();
 			return response;
 		}
-		System.out.println("Time: " + (System.currentTimeMillis() - time));
+
+		long responseTime = System.currentTimeMillis() - startTime;
 
 		MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
 		Annotation[] annotations = signature.getMethod().getAnnotations();
 		for (Annotation annotation : annotations) {
 			if (annotation instanceof MonitorRequest) {
 				MonitorRequest monitorRequest = (MonitorRequest) annotation;
-				System.out.println(monitorRequest.target());
-				System.out.println(monitorRequest.method());
+				sendReponseTime(monitorRequest.target(), monitorRequest.method(), responseTime);
 				break;
 			}
 		}
@@ -80,7 +85,9 @@ public class RequestAspect {
 
 	@Around("callGetResonseCode() && notThisAspect()")
 	public Object callRequest(ProceedingJoinPoint proceedingJoinPoint) throws IOException {
-		long time = System.currentTimeMillis();
+
+		long startTime = System.currentTimeMillis();
+
 		Object response = null;
 		try {
 			response = proceedingJoinPoint.proceed();
@@ -88,16 +95,25 @@ public class RequestAspect {
 			e.printStackTrace();
 			return response;
 		}
-		System.out.println("Time: " + (System.currentTimeMillis() - time));
+
+		long responseTime = System.currentTimeMillis() - startTime;
 
 		Object target = proceedingJoinPoint.getTarget();
 		if (target instanceof HttpURLConnection) {
 			HttpURLConnection httpURLConnection = (HttpURLConnection) target;
-			System.out.println("Target: " + httpURLConnection.getURL().toString());
-			System.out.println("Method: " + Method.valueOf(httpURLConnection.getRequestMethod()));
-			System.out.println("Response Code: " + httpURLConnection.getResponseCode());
+			sendReponseTime(httpURLConnection.getURL().toString(), Method.valueOf(httpURLConnection.getRequestMethod()),
+					responseTime);
+			// System.out.println("Response Code: " +
+			// httpURLConnection.getResponseCode());
 		}
 
 		return response;
+	}
+
+	public void sendReponseTime(String target, Method method, long responseTime) {
+		if (jmsService.isConnected()) {
+			jmsService.sendObjectMessage(
+					new ClientResponseTimeMessage(new Date().getTime(), target, method, responseTime));
+		}
 	}
 }
