@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.server.ManagedAsync;
 import org.imgscalr.AsyncScalr;
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Mode;
@@ -38,6 +39,7 @@ public class ShrinkResource {
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces({ "image/jpg", "image/png", "image/gif", MediaType.APPLICATION_JSON })
+	@ManagedAsync
 	public void uploadImage(@FormDataParam("image") InputStream uploadedInputStream,
 			@FormDataParam("image") FormDataContentDisposition detail, @FormDataParam("size") int size,
 			@FormDataParam("width") int width, @FormDataParam("height") int height,

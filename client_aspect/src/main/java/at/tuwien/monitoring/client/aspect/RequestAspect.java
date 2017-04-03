@@ -31,12 +31,12 @@ public class RequestAspect {
 		logger.info("Public IP address of client: " + publicIPAddress);
 		jmsService = new JmsSenderService(Constants.brokerURL, publicIPAddress, GlobalConstants.QUEUE_CLIENTS);
 		jmsService.start();
-	}
-
-	@Override
-	protected void finalize() throws Throwable {
-		jmsService.stop();
-		super.finalize();
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			@Override
+			public void run() {
+				jmsService.stop();
+			}
+		}));
 	}
 
 	@Pointcut("@annotation(MonitorRequest)")

@@ -16,6 +16,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 
 import at.tuwien.common.GlobalConstants;
+import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
 
 public class JmsService implements MessageListener {
@@ -50,6 +51,7 @@ public class JmsService implements MessageListener {
 		try {
 
 			String senderIP = message.getStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY);
+			System.out.println("message");
 
 			if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
@@ -63,6 +65,9 @@ public class JmsService implements MessageListener {
 				if (serializable instanceof MetricAggregationMessage) {
 					MetricAggregationMessage metricAggregationMessage = (MetricAggregationMessage) serializable;
 					System.out.println(metricAggregationMessage);
+				} else if (serializable instanceof ClientResponseTimeMessage) {
+					ClientResponseTimeMessage clientResponseTimeMessage = (ClientResponseTimeMessage) serializable;
+					System.out.println(clientResponseTimeMessage);
 				}
 			}
 		} catch (JMSException e) {
