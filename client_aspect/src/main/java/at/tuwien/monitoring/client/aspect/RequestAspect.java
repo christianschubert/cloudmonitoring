@@ -18,6 +18,7 @@ import at.tuwien.common.Utils;
 import at.tuwien.monitoring.client.constants.Constants;
 import at.tuwien.monitoring.jms.JmsSenderService;
 import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
+import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
 
 @Aspect
 public class RequestAspect {
@@ -56,14 +57,15 @@ public class RequestAspect {
 	}
 
 	@Around("hasMonitorRequestAnnotation() && atExecution()")
-	public Object annotationRequest(ProceedingJoinPoint proceedingJoinPoint) throws IOException {
+	public Object annotationRequest(final ProceedingJoinPoint proceedingJoinPoint) {
 
 		long startTime = System.currentTimeMillis();
 
 		Object response = null;
 		try {
 			response = proceedingJoinPoint.proceed();
-		} catch (Throwable e) {
+		}
+		catch (Throwable e) {
 			e.printStackTrace();
 			return response;
 		}
@@ -75,7 +77,7 @@ public class RequestAspect {
 		for (Annotation annotation : annotations) {
 			if (annotation instanceof MonitorRequest) {
 				MonitorRequest monitorRequest = (MonitorRequest) annotation;
-				sendReponseTime(monitorRequest.target(), monitorRequest.method(), responseTime);
+				sendReponseTime(monitorRequest.target(), monitorRequest.method(), responseTime, -1);
 				break;
 			}
 		}
@@ -84,14 +86,15 @@ public class RequestAspect {
 	}
 
 	@Around("callGetResonseCode() && notThisAspect()")
-	public Object callRequest(ProceedingJoinPoint proceedingJoinPoint) throws IOException {
+	public Object callRequest(final ProceedingJoinPoint proceedingJoinPoint) {
 
 		long startTime = System.currentTimeMillis();
 
 		Object response = null;
 		try {
 			response = proceedingJoinPoint.proceed();
-		} catch (Throwable e) {
+		}
+		catch (Throwable e) {
 			e.printStackTrace();
 			return response;
 		}
@@ -101,19 +104,26 @@ public class RequestAspect {
 		Object target = proceedingJoinPoint.getTarget();
 		if (target instanceof HttpURLConnection) {
 			HttpURLConnection httpURLConnection = (HttpURLConnection) target;
-			sendReponseTime(httpURLConnection.getURL().toString(), Method.valueOf(httpURLConnection.getRequestMethod()),
-					responseTime);
-			// System.out.println("Response Code: " +
-			// httpURLConnection.getResponseCode());
+
+			int responseCode = -1;
+			try {
+				responseCode = httpURLConnection.getResponseCode();
+			}
+			catch (IOException e) {
+				logger.error("Cannot acquire response code. Ignoring code.");
+			}
+
+			sendReponseTime(httpURLConnection.getURL().toString(), Method.valueOf(httpURLConnection.getRequestMethod()), responseTime, responseCode);
 		}
 
 		return response;
 	}
 
-	public void sendReponseTime(String target, Method method, long responseTime) {
+	public void sendReponseTime(final String target, final Method method, final long responseTime, final int responseCode) {
 		if (jmsService.isConnected()) {
-			jmsService.sendObjectMessage(
-					new ClientResponseTimeMessage(new Date().getTime(), target, method, responseTime));
+			MetricAggregationMessage metricAggregationMessage = new MetricAggregationMessage();
+			metricAggregationMessage.addMetricMessage(new ClientResponseTimeMessage(new Date().getTime(), target, method, responseTime, responseCode));
+			jmsService.sendObjectMessage(metricAggregationMessage);
 		}
 	}
 }

@@ -11,19 +11,21 @@ public class ClientResponseTimeMessage extends MetricMessage {
 	private String target;
 	private Method method;
 	private long responseTime; // milliseconds
+	private int responseCode;
 
-	public ClientResponseTimeMessage(long timestamp, String target, Method method, long responseTime) {
+	public ClientResponseTimeMessage(final long timestamp, final String target, final Method method, final long responseTime, final int responseCode) {
 		super(timestamp);
 		setTarget(target);
 		setMethod(method);
 		setResponseTime(responseTime);
+		setResponseCode(responseCode);
 	}
 
 	public String getTarget() {
 		return target;
 	}
 
-	public void setTarget(String target) {
+	public void setTarget(final String target) {
 		this.target = target;
 	}
 
@@ -31,7 +33,7 @@ public class ClientResponseTimeMessage extends MetricMessage {
 		return method;
 	}
 
-	public void setMethod(Method method) {
+	public void setMethod(final Method method) {
 		this.method = method;
 	}
 
@@ -39,13 +41,21 @@ public class ClientResponseTimeMessage extends MetricMessage {
 		return responseTime;
 	}
 
-	public void setResponseTime(long responseTime) {
+	public void setResponseTime(final long responseTime) {
 		this.responseTime = responseTime;
+	}
+
+	public int getResponseCode() {
+		return responseCode;
+	}
+
+	public void setResponseCode(final int responseCode) {
+		this.responseCode = responseCode;
 	}
 
 	@Override
 	public String toString() {
-		return "ClientResponseTimeMessage [Timestamp=" + new Date(getTimestamp()) + ", Target=" + getTarget()
-				+ ", Method=" + getMethod().toString() + ", ResponseTime=" + getResponseTime() + "]";
+		return "ClientResponseTimeMessage [Timestamp=" + new Date(getTimestamp()) + ", Target=" + getTarget() + ", Method=" + getMethod().toString()
+				+ ", ResponseTime=" + getResponseTime() + ", ResponseCode=" + getResponseCode() + "]";
 	}
 }

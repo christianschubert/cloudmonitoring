@@ -16,7 +16,6 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 
 import at.tuwien.common.GlobalConstants;
-import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
 
 public class JmsService implements MessageListener {
@@ -27,17 +26,19 @@ public class JmsService implements MessageListener {
 	private ActiveMQConnectionFactory connectionFactory;
 	private Connection connection;
 	private Session session;
-	private MessageConsumer consumer;
+
+	private MessageConsumer consumerAgents;
+	private MessageConsumer consumerClients;
 
 	private boolean embeddedJmsBroker;
 	private boolean connected = false;
 
-	public JmsService(boolean embeddedJmsBroker) {
+	public JmsService(final boolean embeddedJmsBroker) {
 		// use default broker URL
 		this(null, embeddedJmsBroker);
 	}
 
-	public JmsService(String brokerURL, boolean embeddedJmsBroker) {
+	public JmsService(final String brokerURL, final boolean embeddedJmsBroker) {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
@@ -47,30 +48,28 @@ public class JmsService implements MessageListener {
 	}
 
 	@Override
-	public void onMessage(Message message) {
+	public void onMessage(final Message message) {
 		try {
 
 			String senderIP = message.getStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY);
-			System.out.println("message");
 
 			if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
 				String text = textMessage.getText();
 				System.out.println("Received: " + text);
 
-			} else if (message instanceof ObjectMessage) {
+			}
+			else if (message instanceof ObjectMessage) {
 				ObjectMessage objectMessage = (ObjectMessage) message;
 				Serializable serializable = objectMessage.getObject();
 
 				if (serializable instanceof MetricAggregationMessage) {
 					MetricAggregationMessage metricAggregationMessage = (MetricAggregationMessage) serializable;
 					System.out.println(metricAggregationMessage);
-				} else if (serializable instanceof ClientResponseTimeMessage) {
-					ClientResponseTimeMessage clientResponseTimeMessage = (ClientResponseTimeMessage) serializable;
-					System.out.println(clientResponseTimeMessage);
 				}
 			}
-		} catch (JMSException e) {
+		}
+		catch (JMSException e) {
 			e.printStackTrace();
 		}
 	}
@@ -100,50 +99,67 @@ public class JmsService implements MessageListener {
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
 			// Create the destination (Topic or Queue)
-			Destination destination = session.createQueue(GlobalConstants.QUEUE_AGENTS);
+			Destination destinationAgents = session.createQueue(GlobalConstants.QUEUE_AGENTS);
+			Destination destinationClients = session.createQueue(GlobalConstants.QUEUE_CLIENTS);
 
 			// Create a MessageConsumer from the Session to the Topic or Queue
-			consumer = session.createConsumer(destination);
+			consumerAgents = session.createConsumer(destinationAgents);
+			consumerClients = session.createConsumer(destinationClients);
 
-			consumer.setMessageListener(this);
+			consumerAgents.setMessageListener(this);
+			consumerClients.setMessageListener(this);
 
 			connected = true;
 
-		} catch (JMSException e) {
+		}
+		catch (JMSException e) {
 			e.printStackTrace();
 			stop();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			stop();
 		}
 	}
 
 	public void stop() {
-		if (consumer != null) {
+		if (consumerAgents != null) {
 			try {
-				consumer.close();
-			} catch (JMSException e) {
+				consumerAgents.close();
+			}
+			catch (JMSException e) {
+				e.printStackTrace();
+			}
+		}
+		if (consumerClients != null) {
+			try {
+				consumerClients.close();
+			}
+			catch (JMSException e) {
 				e.printStackTrace();
 			}
 		}
 		if (session != null) {
 			try {
 				session.close();
-			} catch (JMSException e) {
+			}
+			catch (JMSException e) {
 				e.printStackTrace();
 			}
 		}
 		if (connection != null) {
 			try {
 				connection.close();
-			} catch (JMSException e) {
+			}
+			catch (JMSException e) {
 				e.printStackTrace();
 			}
 		}
 		if (broker != null && !broker.isStopped()) {
 			try {
 				broker.stop();
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
