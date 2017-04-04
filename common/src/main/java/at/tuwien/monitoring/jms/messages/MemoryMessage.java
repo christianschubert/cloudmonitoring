@@ -12,6 +12,7 @@ public class MemoryMessage extends MetricMessage {
 
 	public MemoryMessage(String application, long timestamp, long totalMemory, long residentMemory) {
 		super(timestamp);
+		setApplication(application);
 		setTotalMemory(totalMemory);
 		setResidentMemory(residentMemory);
 	}
