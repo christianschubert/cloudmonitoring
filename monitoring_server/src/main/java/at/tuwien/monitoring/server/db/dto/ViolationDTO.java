@@ -1,14 +1,21 @@
 package at.tuwien.monitoring.server.db.dto;
 
+import java.util.Date;
+
 import at.tuwien.monitoring.server.types.ViolationType;
 
 public class ViolationDTO {
 
+	private int id;
 	private String serviceIP;
 	private String serviceName;
 	private ViolationType violationType;
 	private double monitoredValue;
 	private double requiredValue;
+	private Date violationTime;
+
+	public ViolationDTO() {
+	}
 
 	public ViolationDTO(String serviceIP, String serviceName, ViolationType violationType, double monitoredValue,
 			double requiredValue) {
@@ -18,6 +25,14 @@ public class ViolationDTO {
 		this.violationType = violationType;
 		this.monitoredValue = monitoredValue;
 		this.requiredValue = requiredValue;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public String getServiceIP() {
@@ -60,9 +75,18 @@ public class ViolationDTO {
 		this.requiredValue = requiredValue;
 	}
 
+	public Date getViolationTime() {
+		return violationTime;
+	}
+
+	public void setViolationTime(Date violationTime) {
+		this.violationTime = violationTime;
+	}
+
 	@Override
 	public String toString() {
-		return "ViolationDTO [serviceIP=" + serviceIP + ", serviceName=" + serviceName + ", violationType="
-				+ violationType + ", monitoredValue=" + monitoredValue + ", requiredValue=" + requiredValue + "]";
+		return "ViolationDTO [id=" + id + ", serviceIP=" + serviceIP + ", serviceName=" + serviceName + ", violationType="
+				+ violationType + ", monitoredValue=" + monitoredValue + ", requiredValue=" + requiredValue + ", violationTime="
+				+ violationTime + "]";
 	}
 }

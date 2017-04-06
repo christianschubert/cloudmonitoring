@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import at.tuwien.monitoring.server.http.EmbeddedHttpServer;
 import at.tuwien.monitoring.server.jms.JmsService;
 
 public class MonitoringServer {
@@ -11,6 +12,7 @@ public class MonitoringServer {
 	private final static Logger logger = Logger.getLogger(MonitoringServer.class);
 
 	private JmsService jmsService;
+	private EmbeddedHttpServer httpServer;
 
 	private boolean init(String jmsBrokerURL, boolean embeddedJmsBroker) {
 		jmsService = new JmsService(jmsBrokerURL, embeddedJmsBroker);
@@ -20,6 +22,10 @@ public class MonitoringServer {
 			logger.error("Error creating JMS service.");
 			return false;
 		}
+
+		httpServer = new EmbeddedHttpServer();
+		httpServer.startServer();
+
 		return true;
 	}
 
@@ -31,7 +37,12 @@ public class MonitoringServer {
 			e.printStackTrace();
 		}
 		logger.info("Monitoring server shutdown.");
+		shutdown();
+	}
+
+	private void shutdown() {
 		jmsService.stop();
+		httpServer.stopServer();
 	}
 
 	public static void main(String[] args) {
