@@ -1,0 +1,937 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+		xmlns:wsla="http://www.ibm.com/wsla"
+		targetNamespace="http://www.ibm.com/wsla"
+		elementFormDefault="qualified">
+	<xsd:annotation>
+		<xsd:documentation>
+			Schema for the WSLA Language.
+			Version: wsla-20030127-1
+			Revision: 1.00
+			Authors: Heiko Ludwig (Contact), hludwig@us.ibm.com
+			Alexander Keller
+			Asit Dan
+			Richard P. King
+			Richard Franck
+			Copyright 2001, 2002, 2003 IBM Corp. all rights reserved.
+			Revision Comment:
+			This revision 1.0 is not backward compatible to early versions.
+		</xsd:documentation>
+	</xsd:annotation>
+	<!-- -->
+	<!-- Global WSLA structure -->
+	<!-- -->
+	<xsd:complexType name="WSLAType">
+		<xsd:sequence>
+			<xsd:element ref="wsla:Parties"/>
+			<xsd:element name="ServiceDefinition" type="wsla:ServiceDefinitionType"
+					maxOccurs="unbounded"/>
+			<xsd:element name="Obligations" type="wsla:ObligationsType"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:element name="SLA" type="wsla:WSLAType">
+	</xsd:element>
+	<!-- -->
+	<!-- Party Definitions -->
+	<!-- -->
+	<xsd:complexType name="ContactInformationType">
+		<xsd:sequence>
+			<xsd:element name="Street" type="xsd:string"/>
+			<xsd:element name="City" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="RoleType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="MeasurementService"/>
+			<xsd:enumeration value="ManagementService"/>
+			<xsd:enumeration value="ConditionEvaluationService"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="PartyType" abstract="true">
+		<xsd:sequence>
+			<xsd:element name="Contact" type="wsla:ContactInformationType"
+					minOccurs="0" />
+			<xsd:element name="Action" type="wsla:ActionDescriptionType"
+					minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:complexType name="SignatoryPartyType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PartyType">
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SupportingPartyType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PartyType">
+				<xsd:sequence>
+					<xsd:element name="Sponsor" type="xsd:string" maxOccurs="2"/>
+					<xsd:element name="Role" type="wsla:RoleType" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="PartiesType">
+		<xsd:sequence>
+			<xsd:element name="ServiceProvider" type="wsla:SignatoryPartyType"/>
+			<xsd:element name="ServiceConsumer" type="wsla:SignatoryPartyType"/>
+			<xsd:element name="SupportingParty" type="wsla:SupportingPartyType"
+					minOccurs="0"
+					maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:element name="Parties" type="wsla:PartiesType"/>
+	<!-- Actions -->
+	<xsd:complexType name="ActionDescriptionType" abstract="true">
+		<xsd:attribute name="name" type="xsd:string"/>
+		<xsd:attribute name="partyName" type="xsd:string"/>
+	</xsd:complexType>
+	<!-- -->
+	<!-- Service Definitions -->
+	<!-- -->
+	<xsd:complexType name="ServiceDefinitionType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:ServiceObjectType">
+				<xsd:sequence>
+					<xsd:element ref="wsla:Operation" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element ref="wsla:OperationGroup" minOccurs="0"
+							maxOccurs="unbounded"/>
+					<xsd:element ref="wsla:WebHosting" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<!-- Service Objects -->
+	<xsd:complexType name="ServiceObjectType" abstract="true">
+		<xsd:sequence>
+			<xsd:element ref="wsla:Schedule" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element ref="wsla:Trigger" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element ref="wsla:Constant" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element ref="wsla:MetricMacroDefinition" minOccurs="0"
+					maxOccurs="unbounded"/>
+			<xsd:element ref="wsla:MetricMacroExpansion" minOccurs="0"
+					maxOccurs="unbounded"/>
+			<xsd:element ref="wsla:SLAParameter" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element ref="wsla:Metric" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:element name="Schedule" type="wsla:ScheduleType"/>
+	<xsd:complexType name="ScheduleType">
+		<xsd:sequence>
+			<xsd:element name="Period" type="wsla:PeriodType"/>
+			<xsd:element name="Interval" type="wsla:IntervalType"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:element name="OperationGroup" type="wsla:OperationGroupType"/>
+	<xsd:complexType name="OperationGroupType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:ServiceObjectType">
+				<xsd:sequence>
+					<xsd:element ref="wsla:Operation" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:element name="Operation" type="wsla:OperationDescriptionType"/>
+	<xsd:complexType name="OperationDescriptionType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:ServiceObjectType">
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:element name="WebHosting" type="wsla:WebHostingType"/>
+	<xsd:complexType name="WebHostingType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:ServiceObjectType">
+				<xsd:sequence>
+					<xsd:element name="Coverage" type="xsd:anyURI" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<!-- Parameters and Metrics -->
+	<xsd:element name="SLAParameter" type="wsla:SLAParameterType"/>
+	<xsd:complexType name="SLAParameterType">
+		<xsd:sequence>
+			<xsd:element name="Metric" type="xsd:string"/>
+			<xsd:element name="Communication"
+					type="wsla:SLAParameterCommunicationType"
+					minOccurs="0"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+		<xsd:attribute name="type" type="wsla:Type"/>
+		<xsd:attribute name="unit" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:complexType name="SLAParameterCommunicationType">
+		<xsd:sequence>
+			<xsd:element name="Source" type="xsd:string"/>
+			<xsd:element name="Pull" type="wsla:StringList" minOccurs="0"/>
+			<xsd:element name="Push" type="wsla:StringList" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MetricType">
+		<xsd:sequence>
+			<xsd:element name="Source" type="xsd:string"/>
+			<xsd:element name="MetricURI" type="xsd:anyURI" minOccurs="0"/>
+			<xsd:choice>
+				<xsd:element name="MeasurementDirective"
+						type="wsla:MeasurementDirectiveType"/>
+				<xsd:element name="Function"
+						type="wsla:FunctionType"/>
+				<xsd:element name="MeasurementDirectiveVariable"
+						type="wsla:MDVariableType"/>
+			</xsd:choice>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+		<xsd:attribute name="type" type="wsla:Type"/>
+		<xsd:attribute name="unit" type="xsd:string"/>
+		<xsd:attribute name="counter" type="xsd:boolean" use="optional"/>
+	</xsd:complexType>
+	<xsd:element name="Metric" type="wsla:MetricType"/>
+	<!-- Measurement directives -->
+	<xsd:complexType name="MeasurementDirectiveType" abstract="true">
+		<xsd:sequence>
+			<xsd:element name="ReadingSchedule" type="xsd:string" minOccurs="0"/>
+		</xsd:sequence>
+		<xsd:attribute name="resultType" type="wsla:Type"/>
+	</xsd:complexType>
+	<xsd:complexType name="MDVariableType">
+	</xsd:complexType>
+	<!-- Functions to compute derived metrics -->
+	<xsd:complexType name="FunctionType" abstract="true">
+		<xsd:attribute name="resultType" type="wsla:Type"/>
+	</xsd:complexType>
+	<!-- Metric Macros -->
+	<xsd:complexType name="MetricMacroDefinitionType">
+		<xsd:sequence>
+			<xsd:element name="Metric"
+					type="wsla:MetricType"
+					maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:element name="MetricMacroDefinition"
+			type="wsla:MetricMacroDefinitionType"/>
+	<xsd:complexType name="MDAssignmentType">
+		<xsd:sequence>
+			<xsd:element name="MeasurementDirective"
+					type="wsla:MeasurementDirectiveType"/>
+		</xsd:sequence>
+		<xsd:attribute name="metricName" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:complexType name="MetricMacroExpansionType">
+		<xsd:sequence>
+			<xsd:element name="MeasurementDirectiveAssignment"
+					type="wsla:MDAssignmentType"
+					minOccurs="0"
+					maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="macroName" type="xsd:string"/>
+		<xsd:attribute name="expansionName" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:element name="MetricMacroExpansion" type="wsla:MetricMacroExpansionType"/>
+	<!-- Support Types -->
+	<xsd:element name="Constant" type="wsla:ConstantType"/>
+	<xsd:complexType name="ConstantType">
+		<xsd:choice>
+			<xsd:element name="String" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="Integer" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Float" type="xsd:float" minOccurs="0"/>
+		</xsd:choice>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:element name="Trigger" type="wsla:TriggerType"/>
+	<xsd:complexType name="TriggerType">
+		<xsd:choice>
+			<xsd:element name="Time" type="xsd:dateTime"/>
+		</xsd:choice>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:simpleType name="Type">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Q"/>
+			<xsd:enumeration value="TS"/>
+			<xsd:enumeration value="integer"/>
+			<xsd:enumeration value="float"/>
+			<xsd:enumeration value="double"/>
+			<xsd:enumeration value="long"/>
+			<xsd:enumeration value="byte"/>
+			<xsd:enumeration value="boolean"/>
+			<xsd:enumeration value="string"/>
+			<xsd:enumeration value="time"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StringList">
+		<xsd:list itemType="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="IntegerList">
+		<xsd:list itemType="xsd:integer"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="FloatList">
+		<xsd:list itemType="xsd:float"/>
+	</xsd:simpleType>
+	<xsd:complexType name="IntervalType">
+		<xsd:sequence>
+			<xsd:element name="Years" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Months" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Days" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Hours" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Minutes" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="Seconds" type="xsd:integer" minOccurs="0"/>
+			<xsd:element name="MilliSeconds" type="xsd:integer" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PeriodType">
+		<xsd:choice>
+			<xsd:sequence>
+				<xsd:element name="Start" type="xsd:dateTime"/>
+				<xsd:element name="End" type="xsd:dateTime"/>
+			</xsd:sequence>
+			<xsd:sequence>
+				<xsd:element name="ConditionTime" type="xsd:string"/>
+				<xsd:element name="ConditionMonthOfYearMask" type="xsd:string"/>
+				<xsd:element name="ConditionDayOfMonthMask" type="xsd:string"/>
+				<xsd:element name="ConditionDayOfWeekMask" type="xsd:string"/>
+				<xsd:element name="ConditionTimeOfDayMask" type="xsd:string"/>
+				<xsd:element name="ConditionTimeZone" type="xsd:string"/>
+				<xsd:element name="ConditionLocalOrUtcTime" type="xsd:string"/>
+			</xsd:sequence>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:simpleType name="EvaluationEventType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="NewValue"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ExecutionModalityType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Always"/>
+			<xsd:enumeration value="OnEnteringCondition"/>
+			<xsd:enumeration value="OnEnteringAndOnLeavingCondition"/>
+			<xsd:enumeration value="OnEveryEvaluation"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<!-- -->
+	<!-- Guarantees -->
+	<!-- -->
+	<xsd:complexType name="ObligationObjectType">
+		<xsd:sequence>
+			<xsd:element ref="wsla:Constant"
+					minOccurs="0"
+					maxOccurs="unbounded"/>
+			<xsd:element name="ServiceLevelObjective"
+					type="wsla:ServiceLevelObjectiveType"
+					minOccurs="0"
+					maxOccurs="unbounded"/>
+			<xsd:element name="ActionGuarantee"
+					type="wsla:ActionGuaranteeType"
+					minOccurs="0"
+					maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:complexType name="ObligationsType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:ObligationObjectType">
+				<xsd:sequence>
+					<xsd:element ref="wsla:ObligationGroup" minOccurs="0"
+							maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:element name="ObligationGroup" type="wsla:ObligationGroupType"/>
+	<xsd:complexType name="ObligationGroupType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:ObligationObjectType">
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ActionGuaranteeType">
+		<xsd:sequence>
+			<xsd:element name="Obliged" type="xsd:string" maxOccurs="unbounded"/>
+			<xsd:element name="Expression" type="wsla:LogicExpressionType"/>
+			<xsd:choice>
+				<xsd:element name="EvaluationEvent" type="wsla:EvaluationEventType"/>
+				<xsd:element name="Schedule" type="xsd:string"/>
+			</xsd:choice>
+			<xsd:element ref="wsla:QualifiedAction" maxOccurs="unbounded"/>
+			<xsd:element name="ExecutionModality" type="wsla:ExecutionModalityType"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:complexType name="ServiceLevelObjectiveType">
+		<xsd:sequence>
+			<xsd:element name="Obliged" type="xsd:string" />
+			<xsd:element name="Validity" type="wsla:PeriodType" maxOccurs="unbounded"/>
+			<xsd:element name="Expression" type="wsla:LogicExpressionType"/>
+			<xsd:choice>
+				<xsd:element name="EvaluationEvent" type="wsla:EvaluationEventType"/>
+				<xsd:element name="Schedule" type="xsd:string"/>
+			</xsd:choice>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:element name="QualifiedAction" type="wsla:QualifiedActionType">
+	</xsd:element>
+	<xsd:complexType name="QualifiedActionType">
+		<xsd:sequence>
+			<xsd:element name="Party" type="xsd:string"/>
+			<xsd:element name="Action" type="wsla:ActionInvocationType"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PredicateType" abstract="true"/>
+	<xsd:complexType name="LogicExpressionType">
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="Predicate" type="wsla:PredicateType"/>
+				<xsd:element name="And" type="wsla:BinaryLogicOperatorType"/>
+				<xsd:element name="Or" type="wsla:BinaryLogicOperatorType"/>
+				<xsd:element name="Not" type="wsla:UnaryLogicOperatorType"/>
+				<xsd:element name="Implies" type="wsla:BinaryLogicOperatorType"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="BinaryLogicOperatorType">
+		<xsd:sequence>
+			<xsd:element name="Expression" type="wsla:LogicExpressionType"
+					minOccurs="2" maxOccurs="2"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="UnaryLogicOperatorType">
+		<xsd:sequence>
+			<xsd:element name="Expresssion" type="wsla:LogicExpressionType"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<!-- -->
+	<!-- Standard Extensions -->
+	<!-- -->
+	<!-- Standard Action Types -->
+	<xsd:complexType name="WSDLSOAPActionDescriptionType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:ActionDescriptionType">
+				<xsd:sequence>
+					<xsd:element name="WSDLFile" type="xsd:anyURI"/>
+					<xsd:element name="ServiceName" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="SOAPBindingName" type="xsd:string"/>
+					<xsd:element name="SOAPOperationName" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="WSDLGetPostActionDescriptionType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:ActionDescriptionType">
+				<xsd:sequence>
+					<xsd:element name="ServiceName" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="Address" type="xsd:anyURI"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<!-- Standard Service Object Description Types -->
+	<xsd:complexType name="WSDLSOAPOperationDescriptionType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:OperationDescriptionType">
+				<xsd:sequence>
+					<xsd:element name="WSDLFile" type="xsd:anyURI"/>
+					<xsd:element name="ServiceName" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="SOAPBindingName" type="xsd:string"/>
+					<xsd:element name="SOAPOperationName" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:element name="WSDLSOAPOperation" substitutionGroup="wsla:Operation"
+			type="wsla:WSDLSOAPOperationDescriptionType"/>
+	<xsd:complexType name="StringOperationDescriptionType">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:OperationDescriptionType">
+				<xsd:sequence>
+					<xsd:element name="Description" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<!-- Standard Measurement Directive Types -->
+	<xsd:complexType name="Counter">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:MeasurementDirectiveType">
+				<xsd:sequence>
+					<xsd:element name="MeasurementURI" type="xsd:anyURI"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Gauge">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:MeasurementDirectiveType">
+				<xsd:sequence>
+					<xsd:element name="MeasurementURI" type="xsd:anyURI"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ResponseTime">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:MeasurementDirectiveType">
+				<xsd:sequence>
+					<xsd:element name="MeasurementURI" type="xsd:anyURI"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SumResponseTime">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:MeasurementDirectiveType">
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Status">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:MeasurementDirectiveType">
+				<xsd:sequence>
+					<xsd:element name="MeasurementURI" type="xsd:anyURI"/>
+					<xsd:element name="TimeOut" type="wsla:IntervalType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="InvocationCount">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:MeasurementDirectiveType">
+				<xsd:sequence>
+					<xsd:element name="CounterURI" type="xsd:anyURI" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StatusRequest">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:MeasurementDirectiveType">
+				<xsd:sequence>
+					<xsd:element name="RequestURI" type="xsd:anyURI"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Downtime">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:MeasurementDirectiveType">
+				<xsd:sequence>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MaintenancePeriodQuery">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:MeasurementDirectiveType">
+				<xsd:sequence>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<!-- Standard Functions -->
+	<xsd:complexType name="QConstructor">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Window" type="xsd:long" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TSConstructor">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:element name="Schedule" type="xsd:string"/>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Window" type="xsd:long" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Size">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:element name="Operand" type="wsla:OperandType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TSSelect">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:element name="Operand" type="wsla:OperandType"/>
+					<xsd:element name="Element" type="xsd:long"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Plus">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:element name="Operand" type="wsla:OperandType" minOccurs="2"
+							maxOccurs="2"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Minus">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:element name="Operand" type="wsla:OperandType" minOccurs="2"
+							maxOccurs="2"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Divide">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:element name="Operand" type="wsla:OperandType" minOccurs="2"
+							maxOccurs="2"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Times">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:element name="Operand" type="wsla:OperandType" minOccurs="2"
+							maxOccurs="2"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<!-- For backward compatibility - to be replace by Mean -->
+	<xsd:complexType name="Average">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Mean">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Median">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Mode">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Round">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Digits" type="wsla:OperandType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Max">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Sum">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ValueOccurs">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Value" type="wsla:OperandType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="PercentageGreaterThanThreshold">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Value" type="wsla:OperandType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="PercentageLessThanThreshold">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Value" type="wsla:OperandType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="NumberGreaterThanThreshold">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Value" type="wsla:OperandType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="NumberLessThanThreshold">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Value" type="wsla:OperandType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="RateOfChange">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Interval" type="wsla:IntervalType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Span">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:choice>
+						<xsd:element name="Metric" type="xsd:string"/>
+						<xsd:element name="Function" type="wsla:FunctionType"/>
+					</xsd:choice>
+					<xsd:element name="Value" type="wsla:OperandType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="QualifyMeasurementTimeSeries">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:FunctionType">
+				<xsd:sequence>
+					<xsd:element name="BaseMetric" type="xsd:string"/>
+					<xsd:element name="ValidationMetric" type="xsd:string"/>
+					<xsd:element name="Value" type="wsla:OperandType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="OperandType">
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="Metric" type="xsd:string"/>
+				<xsd:element name="Function" type="wsla:FunctionType"/>
+				<xsd:element name="LongScalar" type="xsd:long"/>
+				<xsd:element name="FloatScalar" type="xsd:float"/>
+				<xsd:element name="StringScalar" type="xsd:string"/>
+				<xsd:element name="Constant" type="xsd:string"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<!-- Standard Predicate Types -->
+	<xsd:complexType name="NewValue">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PredicateType">
+				<xsd:choice>
+					<xsd:element name="SLAParameter" type="xsd:string"/>
+					<xsd:element name="SLAParameterList" type="wsla:StringList"/>
+				</xsd:choice>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Violation">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PredicateType">
+				<xsd:sequence>
+					<xsd:element name="ServiceLevelObjective" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Greater">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PredicateType">
+				<xsd:sequence>
+					<xsd:element name="SLAParameter" type="xsd:string"/>
+					<xsd:element name="Value" type="xsd:double"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Less">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PredicateType">
+				<xsd:sequence>
+					<xsd:element name="SLAParameter" type="xsd:string"/>
+					<xsd:element name="Value" type="xsd:double"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Equal">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PredicateType">
+				<xsd:sequence>
+					<xsd:element name="SLAParameter" type="xsd:string"/>
+					<xsd:element name="Value" type="xsd:double"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="GreaterEqual">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PredicateType">
+				<xsd:sequence>
+					<xsd:element name="SLAParameter" type="xsd:string"/>
+					<xsd:element name="Value" type="xsd:double"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LessEqual">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PredicateType">
+				<xsd:sequence>
+					<xsd:element name="SLAParameter" type="xsd:string"/>
+					<xsd:element name="Value" type="xsd:double"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="True">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PredicateType">
+				<xsd:sequence/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="False">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:PredicateType">
+				<xsd:sequence/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<!-- Action Invocation Types -->
+	<xsd:complexType name="ActionInvocationType">
+		<xsd:attribute name="actionName" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:complexType name="Notification">
+		<xsd:complexContent>
+			<xsd:extension base="wsla:ActionInvocationType">
+				<xsd:sequence>
+					<xsd:element name="NotificationType" type="wsla:NotificationType"/>
+					<xsd:element name="CausingGuarantee" type="xsd:string"/>
+					<xsd:element name="SLAParameter" type="wsla:StringList"/>
+					<!-- Convention: Can be either:
+- "NONE"
+- <enumerated list of SLAParameter IDs>
+It is understood that only the relevant
+subset of parameters are actually sent.
+-->
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="NotificationType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Violation"/>
+			<xsd:enumeration value="Information"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>			

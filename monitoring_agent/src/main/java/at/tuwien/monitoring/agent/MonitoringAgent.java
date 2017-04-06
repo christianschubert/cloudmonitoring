@@ -38,8 +38,7 @@ public class MonitoringAgent {
 	private ScheduledExecutorService scheduler;
 	private ScheduledFuture<?> scheduledJmsSender;
 
-	private List<ApplicationMonitor> applicationList = Collections
-			.synchronizedList(new ArrayList<ApplicationMonitor>());
+	private List<ApplicationMonitor> applicationList = Collections.synchronizedList(new ArrayList<ApplicationMonitor>());
 
 	private boolean init(String jmsBrokerURL) {
 		if (!initSigar()) {
@@ -113,7 +112,7 @@ public class MonitoringAgent {
 		String applicationPath = "../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar";
 		String[] applicationWithParams = new String[] { "java", "-jar", applicationPath };
 
-		// monitor cpu load of application
+		// monitor cpu load and memory of application
 		startMonitoring(applicationWithParams, Arrays.asList(MonitorTask.CpuLoad, MonitorTask.Memory));
 
 		// monitor till user hits RETURN

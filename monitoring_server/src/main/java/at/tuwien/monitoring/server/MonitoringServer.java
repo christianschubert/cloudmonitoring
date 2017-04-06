@@ -4,45 +4,65 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import at.tuwien.monitoring.processing.MetricProcessor;
 import at.tuwien.monitoring.server.http.EmbeddedHttpServer;
-import at.tuwien.monitoring.server.jms.JmsService;
+import at.tuwien.monitoring.server.jms.JmsReceiverService;
 
 public class MonitoringServer {
 
 	private final static Logger logger = Logger.getLogger(MonitoringServer.class);
 
-	private JmsService jmsService;
+	private JmsReceiverService jmsService;
 	private EmbeddedHttpServer httpServer;
+	private MetricProcessor metricProcessor;
 
 	private boolean init(String jmsBrokerURL, boolean embeddedJmsBroker) {
-		jmsService = new JmsService(jmsBrokerURL, embeddedJmsBroker);
-		jmsService.start();
 
+		metricProcessor = new MetricProcessor();
+		if (!metricProcessor.start()) {
+			logger.error("Error creating metric processor.");
+			return false;
+		}
+
+		jmsService = new JmsReceiverService(jmsBrokerURL, embeddedJmsBroker, metricProcessor);
+		jmsService.start();
 		if (!jmsService.isConnected()) {
 			logger.error("Error creating JMS service.");
 			return false;
 		}
 
 		httpServer = new EmbeddedHttpServer();
-		httpServer.startServer();
+		if (!httpServer.start()) {
+			logger.error("Error starting HTTP-Server.");
+			return false;
+		}
 
 		return true;
 	}
 
-	private void start() {
+	private void run() {
 		logger.info("Monitoring server running. Press RETURN to exit.");
 		try {
 			System.in.read();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		logger.info("Monitoring server shutdown.");
+
 		shutdown();
 	}
 
 	private void shutdown() {
-		jmsService.stop();
-		httpServer.stopServer();
+		logger.info("Monitoring server shutdown.");
+
+		if (metricProcessor != null) {
+			metricProcessor.stop();
+		}
+		if (jmsService != null) {
+			jmsService.stop();
+		}
+		if (httpServer != null) {
+			httpServer.stop();
+		}
 	}
 
 	public static void main(String[] args) {
@@ -64,7 +84,7 @@ public class MonitoringServer {
 
 		MonitoringServer server = new MonitoringServer();
 		if (server.init(jmsBrokerURL, embeddedJmsBroker)) {
-			server.start();
+			server.run();
 		}
 	}
 }

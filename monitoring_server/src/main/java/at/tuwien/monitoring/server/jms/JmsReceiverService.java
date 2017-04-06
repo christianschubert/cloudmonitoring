@@ -1,6 +1,7 @@
 package at.tuwien.monitoring.server.jms;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -17,8 +18,10 @@ import org.apache.activemq.broker.BrokerService;
 
 import at.tuwien.common.GlobalConstants;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
+import at.tuwien.monitoring.jms.messages.MetricMessage;
+import at.tuwien.monitoring.processing.MetricProcessor;
 
-public class JmsService implements MessageListener {
+public class JmsReceiverService implements MessageListener {
 
 	private String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
 
@@ -30,46 +33,49 @@ public class JmsService implements MessageListener {
 	private MessageConsumer consumerAgents;
 	private MessageConsumer consumerClients;
 
+	private MetricProcessor metricProcessor;
+
 	private boolean embeddedJmsBroker;
 	private boolean connected = false;
 
-	public JmsService(final boolean embeddedJmsBroker) {
+	public JmsReceiverService(final boolean embeddedJmsBroker, MetricProcessor metricProcessor) {
 		// use default broker URL
-		this(null, embeddedJmsBroker);
+		this(null, embeddedJmsBroker, metricProcessor);
 	}
 
-	public JmsService(final String brokerURL, final boolean embeddedJmsBroker) {
+	public JmsReceiverService(final String brokerURL, final boolean embeddedJmsBroker, MetricProcessor metricProcessor) {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
 		}
 
 		this.embeddedJmsBroker = embeddedJmsBroker;
+		this.metricProcessor = metricProcessor;
 	}
 
 	@Override
 	public void onMessage(final Message message) {
 		try {
 
-			String senderIP = message.getStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY);
+			String sourceIpAddress = message.getStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY);
 
 			if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
 				String text = textMessage.getText();
 				System.out.println("Received: " + text);
 
-			}
-			else if (message instanceof ObjectMessage) {
+			} else if (message instanceof ObjectMessage) {
 				ObjectMessage objectMessage = (ObjectMessage) message;
 				Serializable serializable = objectMessage.getObject();
 
 				if (serializable instanceof MetricAggregationMessage) {
 					MetricAggregationMessage metricAggregationMessage = (MetricAggregationMessage) serializable;
-					System.out.println(metricAggregationMessage);
+					for (MetricMessage metricMessage : metricAggregationMessage.getMessageList()) {
+						metricProcessor.addEvent(sourceIpAddress, metricMessage);
+					}
 				}
 			}
-		}
-		catch (JMSException e) {
+		} catch (JMSException e) {
 			e.printStackTrace();
 		}
 	}
@@ -88,8 +94,7 @@ public class JmsService implements MessageListener {
 
 			// Create a ConnectionFactory
 			connectionFactory = new ActiveMQConnectionFactory(brokerURL);
-			connectionFactory.setTrustAllPackages(true);
-			// connectionFactory.setTrustedPackages(Arrays.asList("at.tuwien.monitoring.jms.messages"));
+			connectionFactory.setTrustedPackages(Arrays.asList("java.util", "at.tuwien"));
 
 			// Create a Connection
 			connection = connectionFactory.createConnection();
@@ -111,12 +116,10 @@ public class JmsService implements MessageListener {
 
 			connected = true;
 
-		}
-		catch (JMSException e) {
+		} catch (JMSException e) {
 			e.printStackTrace();
 			stop();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			stop();
 		}
@@ -126,40 +129,35 @@ public class JmsService implements MessageListener {
 		if (consumerAgents != null) {
 			try {
 				consumerAgents.close();
-			}
-			catch (JMSException e) {
+			} catch (JMSException e) {
 				e.printStackTrace();
 			}
 		}
 		if (consumerClients != null) {
 			try {
 				consumerClients.close();
-			}
-			catch (JMSException e) {
+			} catch (JMSException e) {
 				e.printStackTrace();
 			}
 		}
 		if (session != null) {
 			try {
 				session.close();
-			}
-			catch (JMSException e) {
+			} catch (JMSException e) {
 				e.printStackTrace();
 			}
 		}
 		if (connection != null) {
 			try {
 				connection.close();
-			}
-			catch (JMSException e) {
+			} catch (JMSException e) {
 				e.printStackTrace();
 			}
 		}
 		if (broker != null && !broker.isStopped()) {
 			try {
 				broker.stop();
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

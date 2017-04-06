@@ -26,7 +26,7 @@ public class ViolationResource {
 			queryIP = true;
 		}
 
-		String sql = "SELECT id id, service_ip serviceip, service_name servicename, "
+		String sql = "SELECT id, service_ip serviceip, service_name servicename, "
 				+ "violation_type violationType, violation_time violationTime FROM violation"
 				+ (queryIP ? " WHERE service_ip='" + ipAddress + "'" : "");
 
