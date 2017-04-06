@@ -24,7 +24,7 @@ public class ViolationDAO {
 	}
 
 	public List<ViolationDTO> findByIp(String ipAddress) {
-		String query = SQL_SELECT_ALL + " WHERE service_ip='" + ipAddress + "'";
+		String query = SQL_SELECT_ALL + " WHERE source_ip_address='" + ipAddress + "'";
 		try (Connection con = MysqlDao.INSTANCE.getConn().open()) {
 			return con.createQuery(query).executeAndFetch(ViolationDTO.class);
 		}

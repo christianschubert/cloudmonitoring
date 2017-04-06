@@ -44,6 +44,10 @@ public class WebServiceLevelAgreement {
 		}
 	}
 
+	public WSLAType getWSLA() {
+		return wslaType;
+	}
+
 	public boolean isValid() {
 		return wslaType != null;
 	}

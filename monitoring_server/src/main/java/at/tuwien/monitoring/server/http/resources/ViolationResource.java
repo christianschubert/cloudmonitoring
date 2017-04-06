@@ -20,10 +20,10 @@ public class ViolationResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getViolations(@QueryParam(value = "ipAddress") String ipAddress) {
+	public Response getViolations(@QueryParam(value = "sourceIpAddress") String sourceIpAddress) {
 		List<ViolationDTO> violationDTOs;
-		if (ipAddress != null && !ipAddress.isEmpty()) {
-			violationDTOs = violationDAO.findByIp(ipAddress);
+		if (sourceIpAddress != null && !sourceIpAddress.isEmpty()) {
+			violationDTOs = violationDAO.findByIp(sourceIpAddress);
 		} else {
 			violationDTOs = violationDAO.findAll();
 		}

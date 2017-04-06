@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import at.tuwien.monitoring.server.http.EmbeddedHttpServer;
 import at.tuwien.monitoring.server.jms.JmsReceiverService;
 import at.tuwien.monitoring.server.processing.MetricProcessor;
+import at.tuwien.monitoring.server.processing.Wsla2ExpressionMapper;
 import at.tuwien.monitoring.server.wsla.WebServiceLevelAgreement;
 
 public class MonitoringServer {
@@ -56,12 +57,17 @@ public class MonitoringServer {
 	}
 
 	private void startMonitoring() {
-		WebServiceLevelAgreement wsla = new WebServiceLevelAgreement("src/main/resources/sample_wsla.xml");
+		WebServiceLevelAgreement wsla = new WebServiceLevelAgreement("src/main/resources/image_service_agreement.xml");
 		if (!wsla.isValid()) {
 			return;
 		}
 
-		metricProcessor.addExpression("select * from ClientResponseTimeMessage having responseTime >= 2000", "<2000");
+		String info = String.format("New Agreement \"%s\" [Consumer: %s, Provider: %s]", wsla.getWSLA().getName(),
+				wsla.getWSLA().getParties().getServiceConsumer().getName(),
+				wsla.getWSLA().getParties().getServiceProvider().getName());
+		logger.info(info);
+
+		new Wsla2ExpressionMapper(wsla, metricProcessor);
 	}
 
 	private void shutdown() {
