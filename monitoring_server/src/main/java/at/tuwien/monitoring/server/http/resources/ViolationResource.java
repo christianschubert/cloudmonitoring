@@ -10,30 +10,25 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.sql2o.Connection;
-
-import at.tuwien.monitoring.server.db.MysqlDao;
+import at.tuwien.monitoring.server.db.dao.ViolationDAO;
 import at.tuwien.monitoring.server.db.dto.ViolationDTO;
 
 @Path("violations")
 public class ViolationResource {
 
+	private ViolationDAO violationDAO = new ViolationDAO();
+
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getViolations(@QueryParam(value = "ipAddress") String ipAddress) {
-		boolean queryIP = false;
+		List<ViolationDTO> violationDTOs;
 		if (ipAddress != null && !ipAddress.isEmpty()) {
-			queryIP = true;
+			violationDTOs = violationDAO.findByIp(ipAddress);
+		} else {
+			violationDTOs = violationDAO.findAll();
 		}
 
-		String sql = "SELECT id, service_ip serviceip, service_name servicename, "
-				+ "violation_type violationType, violation_time violationTime FROM violation"
-				+ (queryIP ? " WHERE service_ip='" + ipAddress + "'" : "");
-
-		try (Connection con = MysqlDao.INSTANCE.getConn().open()) {
-			List<ViolationDTO> violationDTOs = con.createQuery(sql).executeAndFetch(ViolationDTO.class);
-			return Response.ok(new GenericEntity<List<ViolationDTO>>(violationDTOs) {
-			}).build();
-		}
+		return Response.ok(new GenericEntity<List<ViolationDTO>>(violationDTOs) {
+		}).build();
 	}
 }

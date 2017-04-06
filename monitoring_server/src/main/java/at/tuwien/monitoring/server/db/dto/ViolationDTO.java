@@ -7,24 +7,25 @@ import at.tuwien.monitoring.server.types.ViolationType;
 public class ViolationDTO {
 
 	private int id;
-	private String serviceIP;
+	private String sourceIpAddress;
 	private String serviceName;
 	private ViolationType violationType;
 	private double monitoredValue;
-	private double requiredValue;
-	private Date violationTime;
+	private String requiredDesc;
+	private Date violationTimestamp;
 
 	public ViolationDTO() {
 	}
 
-	public ViolationDTO(String serviceIP, String serviceName, ViolationType violationType, double monitoredValue,
-			double requiredValue) {
+	public ViolationDTO(String sourceIpAddress, String serviceName, ViolationType violationType, double monitoredValue,
+			String requiredDesc, Date violationTimestamp) {
 		super();
-		this.serviceIP = serviceIP;
+		this.sourceIpAddress = sourceIpAddress;
 		this.serviceName = serviceName;
 		this.violationType = violationType;
 		this.monitoredValue = monitoredValue;
-		this.requiredValue = requiredValue;
+		this.requiredDesc = requiredDesc;
+		this.violationTimestamp = violationTimestamp;
 	}
 
 	public int getId() {
@@ -35,12 +36,12 @@ public class ViolationDTO {
 		this.id = id;
 	}
 
-	public String getServiceIP() {
-		return serviceIP;
+	public String getSourceIpAddress() {
+		return sourceIpAddress;
 	}
 
-	public void setServiceIP(String serviceIP) {
-		this.serviceIP = serviceIP;
+	public void setSourceIpAddress(String sourceIpAddress) {
+		this.sourceIpAddress = sourceIpAddress;
 	}
 
 	public String getServiceName() {
@@ -67,26 +68,26 @@ public class ViolationDTO {
 		this.monitoredValue = monitoredValue;
 	}
 
-	public double getRequiredValue() {
-		return requiredValue;
+	public String getRequiredDesc() {
+		return requiredDesc;
 	}
 
-	public void setRequiredValue(double requiredValue) {
-		this.requiredValue = requiredValue;
+	public void setRequiredDesc(String requiredDesc) {
+		this.requiredDesc = requiredDesc;
 	}
 
-	public Date getViolationTime() {
-		return violationTime;
+	public Date getViolationTimestamp() {
+		return violationTimestamp;
 	}
 
-	public void setViolationTime(Date violationTime) {
-		this.violationTime = violationTime;
+	public void setViolationTimestamp(Date violationTimestamp) {
+		this.violationTimestamp = violationTimestamp;
 	}
 
 	@Override
 	public String toString() {
-		return "ViolationDTO [id=" + id + ", serviceIP=" + serviceIP + ", serviceName=" + serviceName + ", violationType="
-				+ violationType + ", monitoredValue=" + monitoredValue + ", requiredValue=" + requiredValue + ", violationTime="
-				+ violationTime + "]";
+		return "ViolationDTO [id=" + id + ", sourceIpAddress=" + sourceIpAddress + ", serviceName=" + serviceName
+				+ ", violationType=" + violationType + ", monitoredValue=" + monitoredValue + ", requiredDesc=" + requiredDesc
+				+ ", violationTimestamp=" + violationTimestamp + "]";
 	}
 }

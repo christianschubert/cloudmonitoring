@@ -1,5 +1,7 @@
 package at.tuwien.monitoring.jms.messages;
 
+import java.util.Date;
+
 public class CpuLoadMessage extends MetricMessage {
 
 	private static final long serialVersionUID = 1L;
@@ -7,7 +9,7 @@ public class CpuLoadMessage extends MetricMessage {
 	private String application;
 	private double cpuLoad;
 
-	public CpuLoadMessage(final String ipAddress, final long timestamp, String application, double cpuLoad) {
+	public CpuLoadMessage(final String ipAddress, final Date timestamp, String application, double cpuLoad) {
 		super(timestamp, ipAddress);
 		setApplication(application);
 		setCpuLoad(cpuLoad);

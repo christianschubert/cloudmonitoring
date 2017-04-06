@@ -141,8 +141,8 @@ public class ApplicationMonitor {
 				}
 			}
 
-			collectedMetrics.offer(new MemoryMessage(null, new Date().getTime(), processRunner.getProcessName(),
-					sumTotalMemory, sumResidentMemory));
+			collectedMetrics.offer(
+					new MemoryMessage(null, new Date(), processRunner.getProcessName(), sumTotalMemory, sumResidentMemory));
 		}
 
 		private void monitorCpuLoad() {
@@ -158,8 +158,7 @@ public class ApplicationMonitor {
 				}
 			}
 
-			collectedMetrics
-					.offer(new CpuLoadMessage(null, new Date().getTime(), processRunner.getProcessName(), sumCpuLoad));
+			collectedMetrics.offer(new CpuLoadMessage(null, new Date(), processRunner.getProcessName(), sumCpuLoad));
 		}
 	}
 }

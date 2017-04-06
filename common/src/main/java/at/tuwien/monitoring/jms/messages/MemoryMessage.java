@@ -1,5 +1,7 @@
 package at.tuwien.monitoring.jms.messages;
 
+import java.util.Date;
+
 public class MemoryMessage extends MetricMessage {
 
 	private static final long serialVersionUID = 1L;
@@ -8,7 +10,7 @@ public class MemoryMessage extends MetricMessage {
 	private long totalMemory;
 	private long residentMemory;
 
-	public MemoryMessage(final String ipAddress, final long timestamp, String application, long totalMemory,
+	public MemoryMessage(final String ipAddress, final Date timestamp, String application, long totalMemory,
 			long residentMemory) {
 		super(timestamp, ipAddress);
 		setApplication(application);

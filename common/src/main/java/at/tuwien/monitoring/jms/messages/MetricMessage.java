@@ -1,24 +1,25 @@
 package at.tuwien.monitoring.jms.messages;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public abstract class MetricMessage implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private long timestamp;
+	private Date timestamp;
 	private String ipAddress;
 
-	public MetricMessage(long timestamp, String ipAddress) {
+	public MetricMessage(Date timestamp, String ipAddress) {
 		this.timestamp = timestamp;
 		this.ipAddress = ipAddress;
 	}
 
-	public long getTimestamp() {
+	public Date getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(long timestamp) {
+	public void setTimestamp(Date timestamp) {
 		this.timestamp = timestamp;
 	}
 

@@ -4,9 +4,10 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
-import at.tuwien.monitoring.processing.MetricProcessor;
 import at.tuwien.monitoring.server.http.EmbeddedHttpServer;
 import at.tuwien.monitoring.server.jms.JmsReceiverService;
+import at.tuwien.monitoring.server.processing.MetricProcessor;
+import at.tuwien.monitoring.server.wsla.WebServiceLevelAgreement;
 
 public class MonitoringServer {
 
@@ -42,6 +43,9 @@ public class MonitoringServer {
 
 	private void run() {
 		logger.info("Monitoring server running. Press RETURN to exit.");
+
+		startMonitoring();
+
 		try {
 			System.in.read();
 		} catch (IOException e) {
@@ -49,6 +53,15 @@ public class MonitoringServer {
 		}
 
 		shutdown();
+	}
+
+	private void startMonitoring() {
+		WebServiceLevelAgreement wsla = new WebServiceLevelAgreement("src/main/resources/sample_wsla.xml");
+		if (!wsla.isValid()) {
+			return;
+		}
+
+		metricProcessor.addExpression("select * from ClientResponseTimeMessage having responseTime >= 2000", "<2000");
 	}
 
 	private void shutdown() {

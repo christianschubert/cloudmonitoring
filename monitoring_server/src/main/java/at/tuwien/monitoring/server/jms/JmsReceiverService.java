@@ -19,7 +19,7 @@ import org.apache.activemq.broker.BrokerService;
 import at.tuwien.common.GlobalConstants;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
-import at.tuwien.monitoring.processing.MetricProcessor;
+import at.tuwien.monitoring.server.processing.MetricProcessor;
 
 public class JmsReceiverService implements MessageListener {
 

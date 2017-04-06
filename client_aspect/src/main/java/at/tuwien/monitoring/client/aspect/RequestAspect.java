@@ -122,8 +122,8 @@ public class RequestAspect {
 			final int responseCode) {
 		if (jmsService.isConnected()) {
 			MetricAggregationMessage metricAggregationMessage = new MetricAggregationMessage();
-			metricAggregationMessage.addMetricMessage(new ClientResponseTimeMessage(publicIPAddress, new Date().getTime(),
-					target, method, responseTime, responseCode));
+			metricAggregationMessage.addMetricMessage(
+					new ClientResponseTimeMessage(publicIPAddress, new Date(), target, method, responseTime, responseCode));
 			jmsService.sendObjectMessage(metricAggregationMessage);
 		}
 	}
