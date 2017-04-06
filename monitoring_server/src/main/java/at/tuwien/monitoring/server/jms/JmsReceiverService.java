@@ -56,9 +56,6 @@ public class JmsReceiverService implements MessageListener {
 	@Override
 	public void onMessage(final Message message) {
 		try {
-
-			String sourceIpAddress = message.getStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY);
-
 			if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
 				String text = textMessage.getText();
@@ -71,7 +68,7 @@ public class JmsReceiverService implements MessageListener {
 				if (serializable instanceof MetricAggregationMessage) {
 					MetricAggregationMessage metricAggregationMessage = (MetricAggregationMessage) serializable;
 					for (MetricMessage metricMessage : metricAggregationMessage.getMessageList()) {
-						metricProcessor.addEvent(sourceIpAddress, metricMessage);
+						metricProcessor.addEvent(metricMessage);
 					}
 				}
 			}

@@ -26,11 +26,12 @@ public class RequestAspect {
 	private final static Logger logger = Logger.getLogger(RequestAspect.class);
 
 	private JmsSenderService jmsService;
+	private String publicIPAddress;
 
 	public RequestAspect() {
-		String publicIPAddress = Utils.lookupPublicIPAddress();
+		publicIPAddress = Utils.lookupPublicIPAddress();
 		logger.info("Public IP address of client: " + publicIPAddress);
-		jmsService = new JmsSenderService(Constants.brokerURL, publicIPAddress, GlobalConstants.QUEUE_CLIENTS);
+		jmsService = new JmsSenderService(Constants.brokerURL, GlobalConstants.QUEUE_CLIENTS);
 		jmsService.start();
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			@Override
@@ -64,8 +65,7 @@ public class RequestAspect {
 		Object response = null;
 		try {
 			response = proceedingJoinPoint.proceed();
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 			return response;
 		}
@@ -93,8 +93,7 @@ public class RequestAspect {
 		Object response = null;
 		try {
 			response = proceedingJoinPoint.proceed();
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 			return response;
 		}
@@ -108,21 +107,23 @@ public class RequestAspect {
 			int responseCode = -1;
 			try {
 				responseCode = httpURLConnection.getResponseCode();
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				logger.error("Cannot acquire response code. Ignoring code.");
 			}
 
-			sendReponseTime(httpURLConnection.getURL().toString(), Method.valueOf(httpURLConnection.getRequestMethod()), responseTime, responseCode);
+			sendReponseTime(httpURLConnection.getURL().toString(), Method.valueOf(httpURLConnection.getRequestMethod()),
+					responseTime, responseCode);
 		}
 
 		return response;
 	}
 
-	public void sendReponseTime(final String target, final Method method, final long responseTime, final int responseCode) {
+	public void sendReponseTime(final String target, final Method method, final long responseTime,
+			final int responseCode) {
 		if (jmsService.isConnected()) {
 			MetricAggregationMessage metricAggregationMessage = new MetricAggregationMessage();
-			metricAggregationMessage.addMetricMessage(new ClientResponseTimeMessage(new Date().getTime(), target, method, responseTime, responseCode));
+			metricAggregationMessage.addMetricMessage(new ClientResponseTimeMessage(publicIPAddress, new Date().getTime(),
+					target, method, responseTime, responseCode));
 			jmsService.sendObjectMessage(metricAggregationMessage);
 		}
 	}

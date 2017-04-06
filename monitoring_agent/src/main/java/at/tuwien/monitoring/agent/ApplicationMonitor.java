@@ -53,8 +53,8 @@ public class ApplicationMonitor {
 			return;
 		}
 
-		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
-				Constants.PROCESS_MONITOR_START_DELAY, Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
+		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid), Constants.PROCESS_MONITOR_START_DELAY,
+				Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
 
 		monitoring = true;
 
@@ -141,7 +141,7 @@ public class ApplicationMonitor {
 				}
 			}
 
-			collectedMetrics.offer(new MemoryMessage(processRunner.getProcessName(), new Date().getTime(),
+			collectedMetrics.offer(new MemoryMessage(null, new Date().getTime(), processRunner.getProcessName(),
 					sumTotalMemory, sumResidentMemory));
 		}
 
@@ -159,7 +159,7 @@ public class ApplicationMonitor {
 			}
 
 			collectedMetrics
-					.offer(new CpuLoadMessage(processRunner.getProcessName(), new Date().getTime(), sumCpuLoad));
+					.offer(new CpuLoadMessage(null, new Date().getTime(), processRunner.getProcessName(), sumCpuLoad));
 		}
 	}
 }

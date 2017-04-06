@@ -32,6 +32,7 @@ public class MonitoringAgent {
 
 	private Sigar sigar;
 	private int cpuCount;
+	private String publicIPAddress;
 
 	private JmsSenderService jmsService;
 
@@ -45,12 +46,12 @@ public class MonitoringAgent {
 			return false;
 		}
 
-		String publicIPAddress = Utils.lookupPublicIPAddress();
+		publicIPAddress = Utils.lookupPublicIPAddress();
 		if (publicIPAddress == null) {
 			return false;
 		}
 
-		jmsService = new JmsSenderService(jmsBrokerURL, publicIPAddress, GlobalConstants.QUEUE_AGENTS);
+		jmsService = new JmsSenderService(jmsBrokerURL, GlobalConstants.QUEUE_AGENTS);
 		jmsService.start();
 		if (!jmsService.isConnected()) {
 			logger.error("Error creating JMS service.");
@@ -140,6 +141,7 @@ public class MonitoringAgent {
 						Queue<MetricMessage> metrics = applicationMonitor.getCollectedMetrics();
 						MetricMessage message = null;
 						while ((message = metrics.poll()) != null) {
+							message.setIpAddress(publicIPAddress);
 							aggregationMessage.addMetricMessage(message);
 						}
 					} else {

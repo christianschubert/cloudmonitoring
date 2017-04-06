@@ -15,15 +15,12 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.log4j.Logger;
 
-import at.tuwien.common.GlobalConstants;
-
 public class JmsSenderService {
 
 	private final static Logger logger = Logger.getLogger(JmsSenderService.class);
 
 	private String brokerURL = ActiveMQConnection.DEFAULT_BROKER_URL;
 
-	private String publicIPAddress;
 	private String queue;
 
 	private ActiveMQConnectionFactory connectionFactory;
@@ -39,17 +36,11 @@ public class JmsSenderService {
 		this(null, queue);
 	}
 
-	public JmsSenderService(String publicIPAddress, String queue) {
-		// use default broker URL
-		this(null, publicIPAddress, queue);
-	}
-
-	public JmsSenderService(String brokerURL, String publicIPAddress, String queue) {
+	public JmsSenderService(String brokerURL, String queue) {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
 		}
-		this.publicIPAddress = publicIPAddress;
 		this.queue = queue;
 	}
 
@@ -89,11 +80,6 @@ public class JmsSenderService {
 			// Create a messages
 			ObjectMessage objectMessage = session.createObjectMessage(object);
 
-			// append IP address of sender as a property
-			if (publicIPAddress != null) {
-				objectMessage.setStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY, publicIPAddress);
-			}
-
 			// Tell the producer to send the message
 			producer.send(objectMessage);
 			return true;
@@ -112,11 +98,6 @@ public class JmsSenderService {
 		try {
 			// Create a message
 			TextMessage textMessage = session.createTextMessage(message);
-
-			// append IP address of sender as a property
-			if (publicIPAddress != null) {
-				textMessage.setStringProperty(GlobalConstants.IP_ADDRESS_PROPERTY, publicIPAddress);
-			}
 
 			// Tell the producer to send the message
 			producer.send(textMessage);

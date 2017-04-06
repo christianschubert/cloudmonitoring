@@ -1,7 +1,5 @@
 package at.tuwien.monitoring.jms.messages;
 
-import java.util.Date;
-
 import at.tuwien.common.Method;
 
 public class ClientResponseTimeMessage extends MetricMessage {
@@ -13,8 +11,9 @@ public class ClientResponseTimeMessage extends MetricMessage {
 	private long responseTime; // milliseconds
 	private int responseCode;
 
-	public ClientResponseTimeMessage(final long timestamp, final String target, final Method method, final long responseTime, final int responseCode) {
-		super(timestamp);
+	public ClientResponseTimeMessage(final String ipAddress, final long timestamp, final String target,
+			final Method method, final long responseTime, final int responseCode) {
+		super(timestamp, ipAddress);
 		setTarget(target);
 		setMethod(method);
 		setResponseTime(responseTime);
@@ -55,7 +54,8 @@ public class ClientResponseTimeMessage extends MetricMessage {
 
 	@Override
 	public String toString() {
-		return "ClientResponseTimeMessage [Timestamp=" + new Date(getTimestamp()) + ", Target=" + getTarget() + ", Method=" + getMethod().toString()
-				+ ", ResponseTime=" + getResponseTime() + ", ResponseCode=" + getResponseCode() + "]";
+		return "ClientResponseTimeMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
+				+ ", getTarget()=" + getTarget() + ", getMethod()=" + getMethod() + ", getResponseTime()=" + getResponseTime()
+				+ ", getResponseCode()=" + getResponseCode() + "]";
 	}
 }

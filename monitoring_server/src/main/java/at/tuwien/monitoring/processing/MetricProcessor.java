@@ -27,7 +27,7 @@ public class MetricProcessor {
 		statement.addListener(metricEventListener);
 	}
 
-	public void addEvent(String sourceIpAddress, MetricMessage metricMessage) {
+	public void addEvent(MetricMessage metricMessage) {
 		epService.getEPRuntime().sendEvent(metricMessage);
 	}
 
