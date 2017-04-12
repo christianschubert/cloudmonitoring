@@ -32,13 +32,33 @@
 		their measurement. -->
 	<ServiceDefinition>
 		<Operation name="ShrinkImage" xsi:type="WSDLSOAPOperationDescriptionType">
-			<SLAParameter name="ResponseTimeImageResize" type="float"
+			<SLAParameter name="ResponseTimeImageResize" type="long"
 				unit="milliseconds">
 				<Metric>ResponseTime</Metric>
 				<Communication>
 					<Source>ImageServiceConsumer</Source>
 				</Communication>
 			</SLAParameter>
+			<SLAParameter name="AverageResponseTimeImageResize"
+				type="double" unit="percent">
+				<Metric>AverageResponseTime</Metric>
+				<Communication>
+					<Source>ImageServiceConsumer</Source>
+				</Communication>
+			</SLAParameter>
+			<SLAParameter name="CpuLoadProvider" type="double" unit="percent">
+				<Metric>CpuLoad</Metric>
+				<Communication>
+					<Source>ImageServiceProvider</Source>
+				</Communication>
+			</SLAParameter>
+
+			<Metric name="AverageResponseTime" type="long" unit="milliseconds">
+				<Source>ImageServiceConsumer</Source>
+				<Function xsi:type="Mean" resultType="double">
+					<Metric>ResponseTime</Metric>
+				</Function>
+			</Metric>
 			<Metric name="ResponseTime" type="long" unit="milliseconds">
 				<Source>ImageServiceConsumer</Source>
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
@@ -67,6 +87,34 @@
 				<Predicate xsi:type="LessEqual">
 					<SLAParameter>ResponseTimeImageResize</SLAParameter>
 					<Value>3000</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+		<ServiceLevelObjective name="AverageResponseTimeSLO">
+			<Obliged>ImageServiceProvider</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2018-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="Less">
+					<SLAParameter>AverageResponseTimeImageResize</SLAParameter>
+					<Value>1500</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+		<ServiceLevelObjective name="CpuLoadSLO">
+			<Obliged>ImageServiceConsumer</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2018-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="LessEqual">
+					<SLAParameter>CpuLoadProvider</SLAParameter>
+					<Value>80</Value>
 				</Predicate>
 			</Expression>
 			<EvaluationEvent>NewValue</EvaluationEvent>
