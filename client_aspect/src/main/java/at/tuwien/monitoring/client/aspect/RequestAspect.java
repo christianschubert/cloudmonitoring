@@ -58,15 +58,20 @@ public class RequestAspect {
 	}
 
 	@Around("hasMonitorRequestAnnotation() && atExecution()")
-	public Object annotationRequest(final ProceedingJoinPoint proceedingJoinPoint) {
+	public Object annotationRequest(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+
+		Throwable ex = null;
+		int responseCode = HttpURLConnection.HTTP_OK;
 
 		long startTime = System.currentTimeMillis();
 
 		Object response = null;
 		try {
 			response = proceedingJoinPoint.proceed();
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
+		} catch (Throwable throwable) {
+			// error -> response was not successful, assume http error code 500
+			ex = throwable;
+			responseCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
 		}
 
 		long responseTime = System.currentTimeMillis() - startTime;
@@ -76,9 +81,13 @@ public class RequestAspect {
 		for (Annotation annotation : annotations) {
 			if (annotation instanceof MonitorRequest) {
 				MonitorRequest monitorRequest = (MonitorRequest) annotation;
-				sendReponseTime(monitorRequest.target(), monitorRequest.method(), responseTime, -1);
+				sendReponseTime(monitorRequest.target(), monitorRequest.method(), responseTime, responseCode);
 				break;
 			}
+		}
+
+		if (ex != null) {
+			throw ex;
 		}
 
 		return response;
@@ -121,8 +130,8 @@ public class RequestAspect {
 			final int responseCode) {
 		if (jmsService.isConnected()) {
 			MetricAggregationMessage metricAggregationMessage = new MetricAggregationMessage();
-			metricAggregationMessage.addMetricMessage(
-					new ClientResponseTimeMessage(publicIPAddress, new Date(), target, method, responseTime, responseCode));
+			metricAggregationMessage.addMetricMessage(new ClientResponseTimeMessage(publicIPAddress, new Date(), target,
+					method, responseTime, responseCode));
 			jmsService.sendObjectMessage(metricAggregationMessage);
 		}
 	}
