@@ -41,11 +41,11 @@
 			</SLAParameter>
 			<Metric name="ResponseTime" type="long" unit="milliseconds">
 				<Source>ImageServiceConsumer</Source>
-				<MeasurementDirective xsi:type="ResponseTime"
-					resultType="long">
-					<ReadingSchedule></ReadingSchedule>
-					<MeasurementURI></MeasurementURI>
-				</MeasurementDirective>
+				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
+			</Metric>
+			<Metric name="CpuLoad" type="double" unit="percent">
+				<Source>ImageServiceProvider</Source>
+				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>
 
 			<WSDLFile>http://localhost:8080/imageresizer/application.wadl</WSDLFile>

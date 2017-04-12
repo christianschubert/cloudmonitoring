@@ -28,7 +28,7 @@ public class RequestAspect {
 	private JmsSenderService jmsService;
 	private String publicIPAddress;
 
-	public RequestAspect() {
+	private RequestAspect() {
 		publicIPAddress = Utils.lookupPublicIPAddress();
 		logger.info("Public IP address of client: " + publicIPAddress);
 		jmsService = new JmsSenderService(Constants.brokerURL, GlobalConstants.QUEUE_CLIENTS);
@@ -66,8 +66,7 @@ public class RequestAspect {
 		try {
 			response = proceedingJoinPoint.proceed();
 		} catch (Throwable e) {
-			e.printStackTrace();
-			return response;
+			throw new RuntimeException(e);
 		}
 
 		long responseTime = System.currentTimeMillis() - startTime;
