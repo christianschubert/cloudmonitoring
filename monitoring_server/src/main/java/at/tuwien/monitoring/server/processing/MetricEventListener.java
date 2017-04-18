@@ -8,6 +8,8 @@ import com.espertech.esper.client.EPServiceProvider;
 import com.espertech.esper.client.EPStatement;
 import com.espertech.esper.client.EventBean;
 import com.espertech.esper.client.StatementAwareUpdateListener;
+import com.espertech.esper.collection.Pair;
+import com.espertech.esper.event.WrapperEventBean;
 
 import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
 import at.tuwien.monitoring.jms.messages.CpuLoadMessage;
@@ -24,20 +26,32 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 	private Map<String, String> requirementDescriptions;
 	private ViolationDAO violationDAO = new ViolationDAO();
 
-	public MetricEventListener(Map<String, String> requirementDescriptions) {
+	public MetricEventListener(final Map<String, String> requirementDescriptions) {
 		this.requirementDescriptions = requirementDescriptions;
 	}
 
 	@Override
-	public void update(EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement,
-			EPServiceProvider epServiceProvider) {
+	public void update(final EventBean[] newEvents, final EventBean[] oldEvents, final EPStatement statement,
+			final EPServiceProvider epServiceProvider) {
 
 		EventBean event = newEvents[0];
-		if (!(event.getUnderlying() instanceof MetricMessage)) {
+
+		MetricMessage metricMessage = null;
+		Map<String, Object> properties = null;
+
+		if (event.getUnderlying() instanceof Pair<?, ?>) {
+			Pair<?, ?> pair = (Pair<?, ?>) event.getUnderlying();
+			metricMessage = (MetricMessage) pair.getFirst();
+			properties = ((WrapperEventBean) event).getDecoratingProperties();
+		}
+		else if (event.getUnderlying() instanceof MetricMessage) {
+			metricMessage = (MetricMessage) event.getUnderlying();
+		}
+		else {
+			logger.error("Unknown EventBean.");
 			return;
 		}
 
-		MetricMessage metricMessage = (MetricMessage) event.getUnderlying();
 		logger.info("New violation: " + metricMessage);
 
 		String requirementDesc = requirementDescriptions.get(statement.getName());
@@ -50,23 +64,26 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 		if (metricMessage instanceof ClientResponseTimeMessage) {
 			ClientResponseTimeMessage clientResponseTimeMessage = (ClientResponseTimeMessage) metricMessage;
 			violationDTO.setViolationType(ViolationType.RESPONSE_TIME);
-			violationDTO.setServiceName(
-					clientResponseTimeMessage.getMethod().toString() + " " + clientResponseTimeMessage.getTarget());
+			violationDTO.setServiceName(clientResponseTimeMessage.getMethod().toString() + " " + clientResponseTimeMessage.getTarget());
 			violationDTO.setMonitoredValue(clientResponseTimeMessage.getResponseTime());
 
-		} else if (metricMessage instanceof MemoryMessage) {
+		}
+		else if (metricMessage instanceof MemoryMessage) {
 			MemoryMessage memoryMessage = (MemoryMessage) metricMessage;
 			violationDTO.setViolationType(ViolationType.MEM_RESIDENT);
 			violationDTO.setServiceName(memoryMessage.getApplication());
 			violationDTO.setMonitoredValue(memoryMessage.getResidentMemory());
 
-		} else if (metricMessage instanceof CpuLoadMessage) {
+		}
+		else if (metricMessage instanceof CpuLoadMessage) {
 			CpuLoadMessage cpuLoadMessage = (CpuLoadMessage) metricMessage;
 			violationDTO.setViolationType(ViolationType.CPU_LOAD);
 			violationDTO.setServiceName(cpuLoadMessage.getApplication());
 			violationDTO.setMonitoredValue(cpuLoadMessage.getCpuLoad());
 		}
 
-		violationDAO.insert(violationDTO);
+		System.out.println(violationDTO);
+
+		//		violationDAO.insert(violationDTO);
 	}
 }

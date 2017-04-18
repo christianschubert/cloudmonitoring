@@ -1,13 +1,16 @@
 package at.tuwien.monitoring.server;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.apache.log4j.Logger;
 
+import at.tuwien.common.Method;
+import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
 import at.tuwien.monitoring.server.http.EmbeddedHttpServer;
 import at.tuwien.monitoring.server.jms.JmsReceiverService;
 import at.tuwien.monitoring.server.processing.MetricProcessor;
-import at.tuwien.monitoring.server.processing.Wsla2ExpressionMapper;
+import at.tuwien.monitoring.server.processing.mapping.Wsla2ExpressionMapper;
 import at.tuwien.monitoring.server.wsla.WebServiceLevelAgreement;
 
 public class MonitoringServer {
@@ -18,7 +21,7 @@ public class MonitoringServer {
 	private EmbeddedHttpServer httpServer;
 	private MetricProcessor metricProcessor;
 
-	private boolean init(String jmsBrokerURL, boolean embeddedJmsBroker) {
+	private boolean init(final String jmsBrokerURL, final boolean embeddedJmsBroker) {
 
 		metricProcessor = new MetricProcessor();
 		if (!metricProcessor.start()) {
@@ -49,7 +52,8 @@ public class MonitoringServer {
 
 		try {
 			System.in.read();
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 
@@ -63,11 +67,15 @@ public class MonitoringServer {
 		}
 
 		String info = String.format("New Agreement \"%s\" [Consumer: %s, Provider: %s]", wsla.getWSLA().getName(),
-				wsla.getWSLA().getParties().getServiceConsumer().getName(),
-				wsla.getWSLA().getParties().getServiceProvider().getName());
+				wsla.getWSLA().getParties().getServiceConsumer().getName(), wsla.getWSLA().getParties().getServiceProvider().getName());
 		logger.info(info);
 
 		new Wsla2ExpressionMapper(wsla, metricProcessor);
+
+		// send test events
+		metricProcessor.addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(), "shrink", Method.GET, 2000, 400));
+		metricProcessor.addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(), "shrink", Method.GET, 2000, 400));
+		metricProcessor.addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(), "shrink", Method.GET, 1000, 400));
 	}
 
 	private void shutdown() {
@@ -84,7 +92,7 @@ public class MonitoringServer {
 		}
 	}
 
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		String jmsBrokerURL = null;
 		boolean embeddedJmsBroker = true;
 
@@ -96,7 +104,8 @@ public class MonitoringServer {
 		for (int i = 0; i < args.length; i++) {
 			if (args[i].contains("-prod")) {
 				embeddedJmsBroker = false;
-			} else {
+			}
+			else {
 				jmsBrokerURL = args[i];
 			}
 		}
