@@ -1,4 +1,4 @@
-package at.tuwien.monitoring.client.constants;
+package at.tuwien.monitoring.client.aspect.constants;
 
 public class Constants {
 

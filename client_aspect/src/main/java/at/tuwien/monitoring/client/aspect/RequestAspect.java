@@ -15,7 +15,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import at.tuwien.common.GlobalConstants;
 import at.tuwien.common.Method;
 import at.tuwien.common.Utils;
-import at.tuwien.monitoring.client.constants.Constants;
+import at.tuwien.monitoring.client.aspect.constants.Constants;
 import at.tuwien.monitoring.jms.JmsSenderService;
 import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;

@@ -39,7 +39,8 @@ public class MonitoringAgent {
 	private ScheduledExecutorService scheduler;
 	private ScheduledFuture<?> scheduledJmsSender;
 
-	private List<ApplicationMonitor> applicationList = Collections.synchronizedList(new ArrayList<ApplicationMonitor>());
+	private List<ApplicationMonitor> applicationList = Collections
+			.synchronizedList(new ArrayList<ApplicationMonitor>());
 
 	private boolean init(String jmsBrokerURL) {
 		if (!initSigar()) {
@@ -111,7 +112,9 @@ public class MonitoringAgent {
 
 		// for test purposes monitor imageresizer application only
 		String applicationPath = "../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar";
-		String[] applicationWithParams = new String[] { "java", "-jar", applicationPath };
+		String aspectJPath = "C:/Users/Christian/.m2/repository/org/aspectj/aspectjweaver/1.8.10/aspectjweaver-1.8.10.jar";
+
+		String[] applicationWithParams = new String[] { "java", "-javaagent:" + aspectJPath, "-jar", applicationPath };
 
 		// monitor cpu load and memory of application
 		startMonitoring(applicationWithParams, Arrays.asList(MonitorTask.CpuLoad, MonitorTask.Memory));
