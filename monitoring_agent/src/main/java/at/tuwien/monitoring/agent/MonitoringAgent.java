@@ -21,6 +21,7 @@ import at.tuwien.common.GlobalConstants;
 import at.tuwien.common.Utils;
 import at.tuwien.monitoring.agent.constants.Constants;
 import at.tuwien.monitoring.agent.constants.MonitorTask;
+import at.tuwien.monitoring.agent.extension.ExtensionServer;
 import at.tuwien.monitoring.agent.process.ProcessTools;
 import at.tuwien.monitoring.jms.JmsSenderService;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
@@ -35,6 +36,8 @@ public class MonitoringAgent {
 	private String publicIPAddress;
 
 	private JmsSenderService jmsService;
+
+	private ExtensionServer extensionServer;
 
 	private ScheduledExecutorService scheduler;
 	private ScheduledFuture<?> scheduledJmsSender;
@@ -56,6 +59,12 @@ public class MonitoringAgent {
 		jmsService.start();
 		if (!jmsService.isConnected()) {
 			logger.error("Error creating JMS service.");
+			return false;
+		}
+
+		extensionServer = new ExtensionServer();
+		if (!extensionServer.start()) {
+			logger.error("Error starting extension server.");
 			return false;
 		}
 
@@ -154,6 +163,17 @@ public class MonitoringAgent {
 				}
 			}
 
+			// add messages from extension server
+			if (extensionServer != null) {
+				Queue<MetricMessage> extensionMetric = extensionServer.getCollectedMetrics();
+				MetricMessage message = null;
+				while ((message = extensionMetric.poll()) != null) {
+					message.setIpAddress(publicIPAddress);
+					aggregationMessage.addMetricMessage(message);
+				}
+			}
+
+			// send aggregated message
 			if (!aggregationMessage.getMessageList().isEmpty()) {
 				jmsService.sendObjectMessage(aggregationMessage);
 			}
@@ -169,6 +189,10 @@ public class MonitoringAgent {
 
 	private void stopAll() {
 		logger.info("Shutting down agent...");
+
+		if (extensionServer != null) {
+			extensionServer.stop();
+		}
 
 		if (scheduledJmsSender != null) {
 			scheduledJmsSender.cancel(true);
@@ -208,6 +232,8 @@ public class MonitoringAgent {
 		MonitoringAgent agent = new MonitoringAgent();
 		if (agent.init(jmsBrokerURL)) {
 			agent.start();
+		} else {
+			agent.stopAll();
 		}
 	}
 }
