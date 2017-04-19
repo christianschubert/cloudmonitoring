@@ -35,11 +35,11 @@ public class Wsla2ExpressionMapper {
 
 	private static final int AGGREGATION_MINIMUM_EVENT_SIZE = 3;
 
-	private static final String SIMPLE_EXPRESSION = "select * from %s having %s %s %s";
-	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s), * from %s having %s(%s) %s %s AND count(*) >= "
+	private static final String SIMPLE_EXPRESSION = "select %s as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s having %s %s %s";
+	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s having %s(%s) %s %s AND count(*) >= "
 			+ AGGREGATION_MINIMUM_EVENT_SIZE;
 
-	//map of basic metrics and their corresponding messages and variables
+	// map of basic metrics and their corresponding messages and variables
 	private static Map<String, MetricInformation> basicMetricMap;
 	static {
 		basicMetricMap = new HashMap<>();
@@ -75,8 +75,7 @@ public class Wsla2ExpressionMapper {
 				for (MetricType metric : op.getMetric()) {
 					if (metric.getFunction() == null) {
 						parseSimpleMetric(metric, processingMetricMap);
-					}
-					else {
+					} else {
 						// complex metric with function
 						parseComplexMetric(metric, processingMetricMap);
 					}
@@ -85,21 +84,25 @@ public class Wsla2ExpressionMapper {
 		}
 
 		// parse service level objectives
-		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations().getServiceLevelObjective()) {
+		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations()
+				.getServiceLevelObjective()) {
 			if (!checkValidity(serviceLevelObjective.getValidity())) {
 				logger.info("Validity of SLO \"" + serviceLevelObjective.getName() + "\" not given. Ignoring SLO.");
 				continue;
 			}
 
-			SimplePredicate simplePredicate = parseSimplePredicate(serviceLevelObjective.getExpression().getPredicate());
+			SimplePredicate simplePredicate = parseSimplePredicate(
+					serviceLevelObjective.getExpression().getPredicate());
 			if (simplePredicate == null) {
-				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName() + "\" not implemented yet or not valid.");
+				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName()
+						+ "\" not implemented yet or not valid.");
 				continue;
 			}
 
 			String metricToObserve = slaMetricMap.get(simplePredicate.getSlaParameter());
 			if (metricToObserve == null) {
-				logger.info("SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
+				logger.info(
+						"SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
 				continue;
 			}
 
@@ -111,24 +114,29 @@ public class Wsla2ExpressionMapper {
 	private void createExpression(final MetricInformation metricInformation, final SimplePredicate simplePredicate) {
 
 		String expression = null;
-		String requirementDesc = null;
 
 		if (metricInformation.getAggregationFunction() == null) {
 			// simple function
-			expression = String.format(SIMPLE_EXPRESSION, metricInformation.getEventMessageName(), metricInformation.getPropertyName(),
-					simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
-			requirementDesc = simplePredicate.getPredicateSign() + simplePredicate.getThreshold();
-		}
-		else {
+			String requirementDesc = simplePredicate.getPredicateSign() + simplePredicate.getThreshold();
+
+			expression = String.format(SIMPLE_EXPRESSION, metricInformation.getPropertyName(),
+					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(),
+					metricInformation.getPropertyName(), simplePredicate.getDetectionSign(),
+					simplePredicate.getThreshold());
+
+		} else {
 			// aggregation function
-			expression = String.format(AGGREGATION_FUNCTION_EXPRESSION, metricInformation.getAggregationFunction(), metricInformation.getPropertyName(),
-					metricInformation.getEventMessageName(), metricInformation.getAggregationFunction(), metricInformation.getPropertyName(),
-					simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
+			String requirementDesc = metricInformation.getAggregationFunction() + simplePredicate.getPredicateSign()
+					+ simplePredicate.getThreshold();
 
-			requirementDesc = metricInformation.getAggregationFunction() + simplePredicate.getPredicateSign() + simplePredicate.getThreshold();
+			expression = String.format(AGGREGATION_FUNCTION_EXPRESSION, metricInformation.getAggregationFunction(),
+					metricInformation.getPropertyName(), metricInformation.getPropertyName(), requirementDesc,
+					metricInformation.getEventMessageName(), metricInformation.getAggregationFunction(),
+					metricInformation.getPropertyName(), simplePredicate.getDetectionSign(),
+					simplePredicate.getThreshold());
 		}
 
-		metricProcessor.addExpression(expression, requirementDesc);
+		metricProcessor.addExpression(expression);
 	}
 
 	private void parseSimpleMetric(final MetricType metric, final Map<String, MetricInformation> processingMetricMap) {
@@ -137,8 +145,7 @@ public class Wsla2ExpressionMapper {
 		if (basicMetricMap.containsKey(metricName)) {
 			// put to processing map, get infos from basic map
 			processingMetricMap.put(metric.getName(), basicMetricMap.get(metricName));
-		}
-		else {
+		} else {
 			logger.info("Metric \"" + metric.getName() + "\" is not implemented yet or not valid.");
 		}
 	}
@@ -154,18 +161,15 @@ public class Wsla2ExpressionMapper {
 			Mean mean = (Mean) metric.getFunction();
 			metricInformation.setAggregationFunction("avg");
 			basicMetricName = mean.getMetric();
-		}
-		else if (metric.getFunction() instanceof Median) {
+		} else if (metric.getFunction() instanceof Median) {
 			Median median = (Median) metric.getFunction();
 			metricInformation.setAggregationFunction("median");
 			basicMetricName = median.getMetric();
-		}
-		else if (metric.getFunction() instanceof Max) {
+		} else if (metric.getFunction() instanceof Max) {
 			Max max = (Max) metric.getFunction();
 			metricInformation.setAggregationFunction("max");
 			basicMetricName = max.getMetric();
-		}
-		else if (metric.getFunction() instanceof Sum) {
+		} else if (metric.getFunction() instanceof Sum) {
 			Sum sum = (Sum) metric.getFunction();
 			metricInformation.setAggregationFunction("sum");
 			basicMetricName = sum.getMetric();
@@ -179,12 +183,10 @@ public class Wsla2ExpressionMapper {
 				metricInformation.setPropertyName(basicInformation.getPropertyName());
 
 				processingMetricMap.put(metric.getName(), metricInformation);
-			}
-			else {
+			} else {
 				logger.info("Metric \"" + metric.getName() + "\" is not implemented yet or not valid.");
 			}
-		}
-		else {
+		} else {
 			logger.info("Function \"" + metric.getFunction().toString() + "\" is not implemented yet or not valid.");
 		}
 	}
@@ -198,32 +200,28 @@ public class Wsla2ExpressionMapper {
 			simplePredicate.setSlaParameter(pred.getSLAParameter());
 			simplePredicate.setThreshold(pred.getValue());
 			return simplePredicate;
-		}
-		else if (predicate instanceof LessEqual) {
+		} else if (predicate instanceof LessEqual) {
 			LessEqual pred = (LessEqual) predicate;
 			simplePredicate.setPredicateSign("<=");
 			simplePredicate.setDetectionSign(">");
 			simplePredicate.setSlaParameter(pred.getSLAParameter());
 			simplePredicate.setThreshold(pred.getValue());
 			return simplePredicate;
-		}
-		else if (predicate instanceof Greater) {
+		} else if (predicate instanceof Greater) {
 			Greater pred = (Greater) predicate;
 			simplePredicate.setPredicateSign(">");
 			simplePredicate.setDetectionSign("<=");
 			simplePredicate.setSlaParameter(pred.getSLAParameter());
 			simplePredicate.setThreshold(pred.getValue());
 			return simplePredicate;
-		}
-		else if (predicate instanceof GreaterEqual) {
+		} else if (predicate instanceof GreaterEqual) {
 			GreaterEqual pred = (GreaterEqual) predicate;
 			simplePredicate.setPredicateSign(">=");
 			simplePredicate.setDetectionSign("<");
 			simplePredicate.setSlaParameter(pred.getSLAParameter());
 			simplePredicate.setThreshold(pred.getValue());
 			return simplePredicate;
-		}
-		else if (predicate instanceof Equal) {
+		} else if (predicate instanceof Equal) {
 			Equal pred = (Equal) predicate;
 			simplePredicate.setPredicateSign("=");
 			simplePredicate.setDetectionSign("!=");

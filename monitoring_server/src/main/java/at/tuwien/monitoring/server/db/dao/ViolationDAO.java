@@ -17,6 +17,9 @@ public class ViolationDAO {
 			+ "violation_type, monitored_value, required_desc) "
 			+ "values (:sourceIpAddress, :serviceName, :violationType, :monitoredValue, :requiredDesc)";
 
+	private static final String SQL_DELETE = "DELETE FROM violation";
+	private static final String SQL_RESET_ID = "ALTER TABLE violation AUTO_INCREMENT=0";
+
 	public List<ViolationDTO> findAll() {
 		try (Connection con = MysqlDao.INSTANCE.getConn().open()) {
 			return con.createQuery(SQL_SELECT_ALL).executeAndFetch(ViolationDTO.class);
@@ -33,6 +36,13 @@ public class ViolationDAO {
 	public void insert(ViolationDTO violationDTO) {
 		try (Connection con = MysqlDao.INSTANCE.getConn().open()) {
 			con.createQuery(SQL_INSERT).bind(violationDTO).executeUpdate();
+		}
+	}
+
+	public void deleteAll() {
+		try (Connection con = MysqlDao.INSTANCE.getConn().open()) {
+			con.createQuery(SQL_DELETE).executeUpdate();
+			con.createQuery(SQL_RESET_ID).executeUpdate();
 		}
 	}
 }

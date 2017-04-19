@@ -30,4 +30,6 @@ public abstract class MetricMessage implements Serializable {
 	public void setIpAddress(String ipAddress) {
 		this.ipAddress = ipAddress;
 	}
+
+	public abstract String getServiceName();
 }

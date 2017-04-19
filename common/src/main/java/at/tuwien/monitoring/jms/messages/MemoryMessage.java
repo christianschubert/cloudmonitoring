@@ -43,9 +43,14 @@ public class MemoryMessage extends MetricMessage {
 	}
 
 	@Override
+	public String getServiceName() {
+		return getApplication();
+	}
+
+	@Override
 	public String toString() {
 		return "MemoryMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
-				+ ", getApplication()=" + getApplication() + ", getTotalMemory()=" + getTotalMemory() + ", getResidentMemory()="
-				+ getResidentMemory() + "]";
+				+ ", getApplication()=" + getApplication() + ", getTotalMemory()=" + getTotalMemory()
+				+ ", getResidentMemory()=" + getResidentMemory() + "]";
 	}
 }

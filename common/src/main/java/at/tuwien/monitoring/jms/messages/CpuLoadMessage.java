@@ -32,6 +32,11 @@ public class CpuLoadMessage extends MetricMessage {
 	}
 
 	@Override
+	public String getServiceName() {
+		return getApplication();
+	}
+
+	@Override
 	public String toString() {
 		return "CpuLoadMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
 				+ ", getApplication()=" + getApplication() + ", getCpuLoad()=" + getCpuLoad() + "]";

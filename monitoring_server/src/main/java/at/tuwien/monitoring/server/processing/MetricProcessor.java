@@ -1,8 +1,5 @@
 package at.tuwien.monitoring.server.processing;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 
 import com.espertech.esper.client.Configuration;
@@ -19,22 +16,19 @@ public class MetricProcessor {
 	private EPServiceProvider epService;
 	private MetricEventListener metricEventListener;
 
-	private Map<String, String> requirementDescriptions = new HashMap<>();
-
 	public boolean start() {
 		Configuration config = new Configuration();
 		config.addEventTypeAutoName("at.tuwien.monitoring.jms.messages");
 		epService = EPServiceProviderManager.getDefaultProvider(config);
-		metricEventListener = new MetricEventListener(requirementDescriptions);
+		metricEventListener = new MetricEventListener();
 		return true;
 	}
 
-	public String addExpression(String expression, String requirementDescription) {
+	public String addExpression(String expression) {
 		EPStatement statement = epService.getEPAdministrator().createEPL(expression);
-		requirementDescriptions.put(statement.getName(), requirementDescription);
 		statement.addListener(metricEventListener);
 
-		logger.info("Added new statement: " + statement.getName() + "; Requirement: " + requirementDescription);
+		logger.info("Added new statement: " + statement.getName());
 
 		return statement.getName();
 	}
@@ -46,9 +40,8 @@ public class MetricProcessor {
 	}
 
 	public void addEvent(MetricMessage metricMessage) {
-		epService.getEPRuntime().sendEvent(metricMessage);
-
 		logger.info("New Event: " + metricMessage);
+		epService.getEPRuntime().sendEvent(metricMessage);
 	}
 
 	public void stop() {

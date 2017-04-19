@@ -55,9 +55,14 @@ public class ClientResponseTimeMessage extends MetricMessage {
 	}
 
 	@Override
+	public String getServiceName() {
+		return getMethod().toString() + " " + getTarget();
+	}
+
+	@Override
 	public String toString() {
 		return "ClientResponseTimeMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
-				+ ", getTarget()=" + getTarget() + ", getMethod()=" + getMethod() + ", getResponseTime()=" + getResponseTime()
-				+ ", getResponseCode()=" + getResponseCode() + "]";
+				+ ", getTarget()=" + getTarget() + ", getMethod()=" + getMethod() + ", getResponseTime()="
+				+ getResponseTime() + ", getResponseCode()=" + getResponseCode() + "]";
 	}
 }

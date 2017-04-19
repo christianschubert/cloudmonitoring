@@ -1,12 +1,10 @@
 package at.tuwien.monitoring.server;
 
 import java.io.IOException;
-import java.util.Date;
 
 import org.apache.log4j.Logger;
 
-import at.tuwien.common.Method;
-import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
+import at.tuwien.monitoring.server.db.dao.ViolationDAO;
 import at.tuwien.monitoring.server.http.EmbeddedHttpServer;
 import at.tuwien.monitoring.server.jms.JmsReceiverService;
 import at.tuwien.monitoring.server.processing.MetricProcessor;
@@ -52,8 +50,7 @@ public class MonitoringServer {
 
 		try {
 			System.in.read();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
@@ -61,21 +58,31 @@ public class MonitoringServer {
 	}
 
 	private void startMonitoring() {
+		// delete database data
+		new ViolationDAO().deleteAll();
+
 		WebServiceLevelAgreement wsla = new WebServiceLevelAgreement("src/main/resources/image_service_agreement.xml");
 		if (!wsla.isValid()) {
 			return;
 		}
 
 		String info = String.format("New Agreement \"%s\" [Consumer: %s, Provider: %s]", wsla.getWSLA().getName(),
-				wsla.getWSLA().getParties().getServiceConsumer().getName(), wsla.getWSLA().getParties().getServiceProvider().getName());
+				wsla.getWSLA().getParties().getServiceConsumer().getName(),
+				wsla.getWSLA().getParties().getServiceProvider().getName());
 		logger.info(info);
 
 		new Wsla2ExpressionMapper(wsla, metricProcessor);
 
 		// send test events
-		metricProcessor.addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(), "shrink", Method.GET, 2000, 400));
-		metricProcessor.addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(), "shrink", Method.GET, 2000, 400));
-		metricProcessor.addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(), "shrink", Method.GET, 1000, 400));
+		// metricProcessor
+		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
+		// "shrink", Method.GET, 2800, 400));
+		// metricProcessor
+		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
+		// "shrink", Method.GET, 2000, 400));
+		// metricProcessor
+		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
+		// "shrink", Method.GET, 2000, 400));
 	}
 
 	private void shutdown() {
@@ -104,8 +111,7 @@ public class MonitoringServer {
 		for (int i = 0; i < args.length; i++) {
 			if (args[i].contains("-prod")) {
 				embeddedJmsBroker = false;
-			}
-			else {
+			} else {
 				jmsBrokerURL = args[i];
 			}
 		}
