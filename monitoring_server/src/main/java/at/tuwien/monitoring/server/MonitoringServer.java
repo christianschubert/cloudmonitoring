@@ -80,9 +80,6 @@ public class MonitoringServer {
 		// metricProcessor
 		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
 		// "shrink", Method.GET, 2000, 400));
-		// metricProcessor
-		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
-		// "shrink", Method.GET, 2000, 400));
 	}
 
 	private void shutdown() {

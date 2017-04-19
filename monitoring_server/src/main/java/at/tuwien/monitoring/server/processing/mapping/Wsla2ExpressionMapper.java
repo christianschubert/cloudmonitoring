@@ -36,7 +36,7 @@ public class Wsla2ExpressionMapper {
 	private static final int AGGREGATION_MINIMUM_EVENT_SIZE = 3;
 
 	private static final String SIMPLE_EXPRESSION = "select %s as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s having %s %s %s";
-	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s having %s(%s) %s %s AND count(*) >= "
+	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s group by ipAddress having %s(%s) %s %s AND count(*) >= "
 			+ AGGREGATION_MINIMUM_EVENT_SIZE;
 
 	// map of basic metrics and their corresponding messages and variables
