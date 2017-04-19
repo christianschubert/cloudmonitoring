@@ -61,11 +61,11 @@ public class RequestAspect {
 	public Object annotationRequest(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
 
 		Throwable ex = null;
+		Object response = null;
 		int responseCode = HttpURLConnection.HTTP_OK;
 
 		long startTime = System.currentTimeMillis();
 
-		Object response = null;
 		try {
 			response = proceedingJoinPoint.proceed();
 		} catch (Throwable throwable) {
