@@ -39,11 +39,26 @@ public class Wsla2ExpressionMapper {
 	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s group by ipAddress having %s(%s) %s %s AND count(*) >= "
 			+ AGGREGATION_MINIMUM_EVENT_SIZE;
 
+	private static final String RATIO_FUNCTION = "count(*, %s %s %s)/count(*)";
+	private static final String RATIO_EXPRESSION = "select " + RATIO_FUNCTION
+			+ " as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s having " + RATIO_FUNCTION
+			+ " %s %s AND count(*) >=" + AGGREGATION_MINIMUM_EVENT_SIZE;
+
+	@SuppressWarnings("unused")
+	private static final String WINDOW_LENGTH = ".win:length(%)";
+
+	@SuppressWarnings("unused")
+	private static final String WINDOW_TIME_SEC = ".win:time(% sec)";
+
+	@SuppressWarnings("unused")
+	private static final String WINDOW_TIME_MIN = ".win:time(% min)";
+
 	// map of basic metrics and their corresponding messages and variables
 	private static Map<String, MetricInformation> basicMetricMap;
 	static {
 		basicMetricMap = new HashMap<>();
 		basicMetricMap.put("responsetime", new MetricInformation("ClientResponseTimeMessage", "responseTime"));
+		basicMetricMap.put("successrate", new MetricInformation("ClientResponseTimeMessage", "responseCode"));
 		basicMetricMap.put("cpuload", new MetricInformation("CpuLoadMessage", "cpuLoad"));
 		basicMetricMap.put("totalmemory", new MetricInformation("MemoryMessage", "totalMemory"));
 		basicMetricMap.put("residentmemory", new MetricInformation("MemoryMessage", "residentMemory"));
@@ -115,7 +130,18 @@ public class Wsla2ExpressionMapper {
 
 		String expression = null;
 
-		if (metricInformation.getAggregationFunction() == null) {
+		if (metricInformation.getPropertyName().toLowerCase().equals("responsecode")) {
+			// successrate (detection currently hardcoded)
+			String requirementDesc = simplePredicate.getPredicateSign() + simplePredicate.getThreshold();
+
+			// success -> status code begins with 2 (i.e 200 ok)
+			String successPattern = "'2%'";
+			expression = String.format(RATIO_EXPRESSION, metricInformation.getPropertyName(), "like", successPattern,
+					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(),
+					metricInformation.getPropertyName(), "like", successPattern, simplePredicate.getDetectionSign(),
+					simplePredicate.getThreshold());
+
+		} else if (metricInformation.getAggregationFunction() == null) {
 			// simple function
 			String requirementDesc = simplePredicate.getPredicateSign() + simplePredicate.getThreshold();
 

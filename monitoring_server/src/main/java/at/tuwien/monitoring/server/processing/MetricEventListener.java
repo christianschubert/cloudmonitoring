@@ -63,6 +63,8 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 			violationDTO.setMonitoredValue((double) monitoredValue);
 		}
 
+		System.out.println(violationDTO);
+
 		violationDAO.insert(violationDTO);
 	}
 }

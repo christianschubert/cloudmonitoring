@@ -1,7 +1,8 @@
 package at.tuwien.monitoring.server.types;
 
 public enum ViolationType {
-	CPU_LOAD("cpuload"), MEM_TOTAL("totalmemory"), MEM_RESIDENT("residentmemory"), RESPONSE_TIME("responsetime");
+	CPU_LOAD("cpuload"), MEM_TOTAL("totalmemory"), MEM_RESIDENT("residentmemory"), RESPONSE_TIME(
+			"responsetime"), SUCCESS_RATE("responsecode");
 
 	private String propName;
 

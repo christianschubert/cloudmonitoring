@@ -28,7 +28,7 @@ public class MetricProcessor {
 		EPStatement statement = epService.getEPAdministrator().createEPL(expression);
 		statement.addListener(metricEventListener);
 
-		logger.info("Added new statement: " + statement.getName());
+		logger.info("New statement: " + statement.getName() + "; " + expression);
 
 		return statement.getName();
 	}

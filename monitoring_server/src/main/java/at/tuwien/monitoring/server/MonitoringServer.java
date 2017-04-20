@@ -76,10 +76,13 @@ public class MonitoringServer {
 		// send test events
 		// metricProcessor
 		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
-		// "shrink", Method.GET, 2800, 400));
+		// "shrink", Method.GET, 1000, 200));
 		// metricProcessor
 		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
-		// "shrink", Method.GET, 2000, 400));
+		// "shrink", Method.GET, 1000, 200));
+		// metricProcessor
+		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
+		// "shrink", Method.GET, 1000, 500));
 	}
 
 	private void shutdown() {

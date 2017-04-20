@@ -52,6 +52,13 @@
 					<Source>ImageServiceProvider</Source>
 				</Communication>
 			</SLAParameter>
+			<SLAParameter name="RequestSuccessRate" type="double"
+				unit="percent">
+				<Metric>SuccessRate</Metric>
+				<Communication>
+					<Source>ImageServiceConsumer</Source>
+				</Communication>
+			</SLAParameter>
 
 			<Metric name="AverageResponseTime" type="long" unit="milliseconds">
 				<Source>ImageServiceConsumer</Source>
@@ -65,6 +72,10 @@
 			</Metric>
 			<Metric name="CpuLoad" type="double" unit="percent">
 				<Source>ImageServiceProvider</Source>
+				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
+			</Metric>
+			<Metric name="SuccessRate" type="long" unit="milliseconds">
+				<Source>ImageServiceConsumer</Source>
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>
 
@@ -115,6 +126,20 @@
 				<Predicate xsi:type="LessEqual">
 					<SLAParameter>CpuLoadProvider</SLAParameter>
 					<Value>80</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+		<ServiceLevelObjective name="RequestSuccessRateSLO">
+			<Obliged>ImageServiceProvider</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2018-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="Greater">
+					<SLAParameter>RequestSuccessRate</SLAParameter>
+					<Value>95</Value>
 				</Predicate>
 			</Expression>
 			<EvaluationEvent>NewValue</EvaluationEvent>
