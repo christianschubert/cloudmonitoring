@@ -9,6 +9,9 @@ public class CpuLoadMessage extends MetricMessage {
 	private String application;
 	private double cpuLoad;
 
+	public CpuLoadMessage() {
+	}
+
 	public CpuLoadMessage(final String ipAddress, final Date timestamp, String application, double cpuLoad) {
 		super(timestamp, ipAddress);
 		setApplication(application);

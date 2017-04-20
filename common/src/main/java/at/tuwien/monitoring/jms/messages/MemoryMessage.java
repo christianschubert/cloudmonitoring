@@ -10,6 +10,9 @@ public class MemoryMessage extends MetricMessage {
 	private long totalMemory;
 	private long residentMemory;
 
+	public MemoryMessage() {
+	}
+
 	public MemoryMessage(final String ipAddress, final Date timestamp, String application, long totalMemory,
 			long residentMemory) {
 		super(timestamp, ipAddress);

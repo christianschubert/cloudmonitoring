@@ -13,6 +13,9 @@ public class ClientResponseTimeMessage extends MetricMessage {
 	private long responseTime; // milliseconds
 	private int responseCode;
 
+	public ClientResponseTimeMessage() {
+	}
+
 	public ClientResponseTimeMessage(final String ipAddress, final Date timestamp, final String target,
 			final Method method, final long responseTime, final int responseCode) {
 		super(timestamp, ipAddress);

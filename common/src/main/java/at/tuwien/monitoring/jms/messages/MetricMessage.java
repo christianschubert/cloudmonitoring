@@ -10,6 +10,9 @@ public abstract class MetricMessage implements Serializable {
 	private Date timestamp;
 	private String ipAddress;
 
+	public MetricMessage() {
+	}
+
 	public MetricMessage(Date timestamp, String ipAddress) {
 		this.timestamp = timestamp;
 		this.ipAddress = ipAddress;

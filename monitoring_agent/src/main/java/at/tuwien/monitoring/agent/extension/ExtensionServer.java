@@ -16,26 +16,42 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import at.tuwien.monitoring.agent.constants.Constants;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
+import at.tuwien.monitoring.jms.messages.ServerExecutionTimeMessage;
 
 public class ExtensionServer {
 
 	private final static Logger logger = Logger.getLogger(ExtensionServer.class);
 
+	// pool for all clients
 	private final ExecutorService pool;
 
+	// socket where ther server listens on
 	private ServerSocket serverSocket;
+
+	// all open client sockets are stored here
 	private List<ClientHandler> clients = new ArrayList<>();
 
+	// for json to object mapping
+	private ObjectMapper objectMapper = new ObjectMapper();
+
+	// thread that waits for clients to connect
 	private ServerListener serverListener;
+
+	// metrics received by the clients are stored in this queue
+	private Queue<MetricMessage> collectedMetrics = new ConcurrentLinkedQueue<MetricMessage>();
 
 	private boolean running = false;
 
-	private Queue<MetricMessage> collectedMetrics = new ConcurrentLinkedQueue<MetricMessage>();
-
 	public ExtensionServer() {
 		pool = Executors.newCachedThreadPool();
+		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
 	public boolean start() {
@@ -103,7 +119,17 @@ public class ExtensionServer {
 				String line = null;
 
 				while ((line = clientReader.readLine()) != null) {
-					System.out.println(line);
+					try {
+						ServerExecutionTimeMessage message = objectMapper.readValue(line,
+								ServerExecutionTimeMessage.class);
+
+						logger.info("New message: " + message);
+
+						collectedMetrics.offer(message);
+
+					} catch (JsonParseException | JsonMappingException e) {
+						logger.error("Error mapping json to object. " + e.getMessage());
+					}
 				}
 			} catch (SocketException e) {
 				logger.info("Client " + address + " closed.");

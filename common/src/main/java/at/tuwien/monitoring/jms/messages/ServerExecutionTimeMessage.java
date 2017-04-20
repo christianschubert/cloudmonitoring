@@ -12,6 +12,9 @@ public class ServerExecutionTimeMessage extends MetricMessage {
 	private Method method;
 	private long executionTime; // milliseconds
 
+	public ServerExecutionTimeMessage() {
+	}
+
 	public ServerExecutionTimeMessage(final String ipAddress, final Date timestamp, final String target,
 			final Method method, final long executionTime) {
 		super(timestamp, ipAddress);
@@ -51,8 +54,8 @@ public class ServerExecutionTimeMessage extends MetricMessage {
 
 	@Override
 	public String toString() {
-		return "ClientResponseTimeMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
-				+ ", getTarget()=" + getTarget() + ", getMethod()=" + getMethod() + ", getResponseTime()="
+		return "ServerExecutionTimeMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
+				+ ", getTarget()=" + getTarget() + ", getMethod()=" + getMethod() + ", getExecutionTime()="
 				+ getExecutionTime() + "]";
 	}
 }
