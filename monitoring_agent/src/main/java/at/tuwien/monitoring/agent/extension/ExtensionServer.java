@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import at.tuwien.monitoring.agent.constants.Constants;
+import at.tuwien.common.GlobalConstants;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
 import at.tuwien.monitoring.jms.messages.ServerExecutionTimeMessage;
 
@@ -56,7 +56,7 @@ public class ExtensionServer {
 
 	public boolean start() {
 		try {
-			serverSocket = new ServerSocket(Constants.EXTENSION_SERVER_PORT);
+			serverSocket = new ServerSocket(GlobalConstants.EXTENSION_SERVER_PORT);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -162,7 +162,7 @@ public class ExtensionServer {
 		@Override
 		public void run() {
 
-			logger.info("Extension server started listening on port " + Constants.EXTENSION_SERVER_PORT);
+			logger.info("Extension server started listening on port " + GlobalConstants.EXTENSION_SERVER_PORT);
 
 			while (running) {
 				try {

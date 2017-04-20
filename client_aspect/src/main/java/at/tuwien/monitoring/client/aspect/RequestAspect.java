@@ -60,6 +60,12 @@ public class RequestAspect {
 	@Around("hasMonitorRequestAnnotation() && atExecution()")
 	public Object annotationRequest(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
 
+		if (!jmsService.isConnected()) {
+			// there is no need to measure response time if jms broker is not
+			// available
+			return proceedingJoinPoint.proceed();
+		}
+
 		Throwable ex = null;
 		Object response = null;
 		int responseCode = HttpURLConnection.HTTP_OK;
@@ -95,6 +101,16 @@ public class RequestAspect {
 
 	@Around("callGetResonseCode() && notThisAspect()")
 	public Object callRequest(final ProceedingJoinPoint proceedingJoinPoint) {
+		if (!jmsService.isConnected()) {
+			// there is no need to measure response time if jms broker is not
+			// available
+			try {
+				return proceedingJoinPoint.proceed();
+			} catch (Throwable e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
 
 		long startTime = System.currentTimeMillis();
 

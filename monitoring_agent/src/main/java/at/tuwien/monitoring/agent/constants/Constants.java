@@ -11,6 +11,4 @@ public class Constants {
 
 	public static final long PROCESS_MONITOR_START_DELAY = 100; // [ms]
 	public static final long PROCESS_MONITOR_INTERVAL = 1000; // [ms]
-
-	public static final int EXTENSION_SERVER_PORT = 8082;
 }

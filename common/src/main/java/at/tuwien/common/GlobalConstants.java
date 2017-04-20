@@ -9,4 +9,6 @@ public class GlobalConstants {
 
 	public static final String QUEUE_AGENTS = "MONITORING_AGENT_QUEUE";
 	public static final String QUEUE_CLIENTS = "MONITORING_CLIENT_QUEUE";
+
+	public static final int EXTENSION_SERVER_PORT = 8082;
 }

@@ -1,6 +1,11 @@
 package at.tuwien.monitoring.service.aspect;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.Date;
 
 import javax.ws.rs.Path;
 
@@ -11,8 +16,13 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import at.tuwien.common.GlobalConstants;
 import at.tuwien.common.Method;
 import at.tuwien.common.Utils;
+import at.tuwien.monitoring.jms.messages.ServerExecutionTimeMessage;
 
 @Aspect
 public class ExecutionAspect {
@@ -21,9 +31,37 @@ public class ExecutionAspect {
 
 	private String publicIPAddress;
 
+	private Socket socket;
+	private PrintWriter toServer;
+
+	private ObjectMapper mapper = new ObjectMapper();
+
 	private ExecutionAspect() {
 		publicIPAddress = Utils.lookupPublicIPAddress();
 		logger.info("Public IP address of client: " + publicIPAddress);
+
+		try {
+			socket = new Socket(InetAddress.getLoopbackAddress(), GlobalConstants.EXTENSION_SERVER_PORT);
+			toServer = new PrintWriter(socket.getOutputStream(), true);
+		} catch (IOException e) {
+			logger.error("Error connecting to agent. " + e.getMessage());
+		}
+
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			@Override
+			public void run() {
+				if (toServer != null) {
+					toServer.close();
+				}
+				if (socket != null) {
+					try {
+						socket.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}));
 	}
 
 	@Pointcut("@annotation(MonitorRequest)")
@@ -57,6 +95,11 @@ public class ExecutionAspect {
 	@Around("atExecution() && (hasMonitorRequestAnnotation() || "
 			+ "hasPostAnnotation() || hasGetAnnotation() || hasPutAnnotation() || hasDeleteAnnotation() || hasHeadAnnotation())")
 	public Object annotationRequest(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+		if (socket == null) {
+			// there is no need to measure execution time if agent is not
+			// available
+			return proceedingJoinPoint.proceed();
+		}
 
 		Throwable ex = null;
 		Object response = null;
@@ -69,7 +112,7 @@ public class ExecutionAspect {
 			ex = throwable;
 		}
 
-		long responseTime = System.currentTimeMillis() - startTime;
+		long executionTime = System.currentTimeMillis() - startTime;
 
 		Method method = null;
 		String target = "";
@@ -107,10 +150,8 @@ public class ExecutionAspect {
 			}
 		}
 
-		System.out.println(method + " " + target);
-
 		if (method != null && target != null && !target.isEmpty()) {
-			sendExecutionTime(target, method, responseTime);
+			sendExecutionTime(target, method, executionTime);
 		} else {
 			logger.error("Cannot send execution time. Reason: Error finding out method or target.");
 		}
@@ -131,7 +172,14 @@ public class ExecutionAspect {
 		return null;
 	}
 
-	private void sendExecutionTime(String target, Method method, long responseTime) {
+	private void sendExecutionTime(String target, Method method, long executionTime) {
+		ServerExecutionTimeMessage message = new ServerExecutionTimeMessage(publicIPAddress, new Date(), target, method,
+				executionTime);
 
+		try {
+			toServer.println(mapper.writeValueAsString(message));
+		} catch (JsonProcessingException e) {
+			logger.error("Error mapping object to json. " + e.getMessage());
+		}
 	}
 }
