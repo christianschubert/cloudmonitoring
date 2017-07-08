@@ -1,6 +1,7 @@
 package at.tuwien.monitoring.agent.process;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -87,39 +88,44 @@ public class ProcessTools {
 		long[] pids;
 		try {
 			pids = sigar.getProcList();
+			Arrays.sort(pids);
+			// System.out.println(Arrays.toString(pids));
 		} catch (SigarException e) {
 			logger.error("Cannot retrieve list of processes");
 			return processesToMonitor;
 		}
 
 		for (int i = 0; i < pids.length; i++) {
-			if (isChildProcessOf(pids[i], pid, evaluatedProcesses, processesToMonitor)) {
-				processesToMonitor.add(pids[i]);
-			}
+			checkProcess(pids[i], pid, evaluatedProcesses, processesToMonitor);
 		}
 
 		return processesToMonitor;
 	}
 
-	private static boolean isChildProcessOf(long pid, long parentId, Set<Long> evaluatedProcesses,
+	private static boolean checkProcess(long pid, long parentId, Set<Long> evaluatedProcesses,
 			Set<Long> processesToMonitor) {
 		if (evaluatedProcesses.contains(pid)) {
-			// already checked -> return result
 			return processesToMonitor.contains(pid);
 		}
 		evaluatedProcesses.add(pid);
 
 		try {
 			ProcState state = sigar.getProcState(pid);
-			if (state.getPpid() == 0) {
+
+			if (state.getPpid() == parentId) {
+				processesToMonitor.add(pid);
+				return true;
+			} else if (state.getPpid() == 0) {
 				// no parent process anymore or parent is scheduler
 				return false;
 			}
-			if (state.getPpid() == parentId) {
-				return true;
-			} else {
-				return isChildProcessOf(state.getPpid(), parentId, evaluatedProcesses, processesToMonitor);
+
+			// climb up
+			boolean result = checkProcess(state.getPpid(), parentId, evaluatedProcesses, processesToMonitor);
+			if (result) {
+				processesToMonitor.add(pid);
 			}
+			return result;
 
 		} catch (SigarException e) {
 			// Cannot retrieve state of process with pid -> Ignore process,

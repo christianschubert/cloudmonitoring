@@ -126,7 +126,7 @@ public class MonitoringAgent {
 		String[] applicationWithParams = new String[] { "java", "-javaagent:" + aspectJPath, "-jar", applicationPath };
 
 		// monitor cpu load and memory of application
-		startMonitoring(applicationWithParams, Arrays.asList(MonitorTask.CpuLoad, MonitorTask.Memory));
+		startMonitoring(applicationWithParams, Arrays.asList(MonitorTask.Cpu, MonitorTask.Memory));
 
 		// monitor till user hits RETURN
 		try {

@@ -11,6 +11,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+import org.hyperic.sigar.ProcCpu;
+import org.hyperic.sigar.ProcMem;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 
@@ -53,8 +55,8 @@ public class ApplicationMonitor {
 			return;
 		}
 
-		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid), Constants.PROCESS_MONITOR_START_DELAY,
-				Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
+		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
+				Constants.PROCESS_MONITOR_START_DELAY, Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
 
 		monitoring = true;
 
@@ -108,8 +110,8 @@ public class ApplicationMonitor {
 
 		@Override
 		public void run() {
-			if (monitorTasks.contains(MonitorTask.CpuLoad)) {
-				monitorCpuLoad();
+			if (monitorTasks.contains(MonitorTask.Cpu)) {
+				monitorCpu();
 			}
 			if (monitorTasks.contains(MonitorTask.Memory)) {
 				monitorMemory();
@@ -133,32 +135,47 @@ public class ApplicationMonitor {
 
 			for (Long pidToMonitor : processesToMonitor) {
 				try {
-					sumTotalMemory += sigar.getProcMem(pidToMonitor).getSize();
-					sumResidentMemory += sigar.getProcMem(pidToMonitor).getResident();
+					ProcMem procMem = sigar.getProcMem(pidToMonitor);
+					System.out.println(procMem);
+					sumTotalMemory += procMem.getSize();
+					sumResidentMemory += procMem.getResident();
 				} catch (SigarException e) {
 					logger.error("Error retrieving memory info from application");
 					stop();
 				}
 			}
 
-			collectedMetrics.offer(
-					new MemoryMessage(null, new Date(), processRunner.getProcessName(), sumTotalMemory, sumResidentMemory));
+			collectedMetrics.offer(new MemoryMessage(null, new Date(), processRunner.getProcessName(), sumTotalMemory,
+					sumResidentMemory));
 		}
 
-		private void monitorCpuLoad() {
+		private void monitorCpu() {
 
 			double sumCpuLoad = 0.0d;
+			long sumCpuTotal = 0;
+			long sumCpuUser = 0;
+			long sumCpuKernel = 0;
 
 			for (Long pidToMonitor : processesToMonitor) {
 				try {
-					sumCpuLoad += sigar.getProcCpu(pidToMonitor).getPercent() * 100 / cpuCount;
+					ProcCpu procCpu = sigar.getProcCpu(pidToMonitor);
+					sumCpuLoad += procCpu.getPercent() * 100 / cpuCount;
+					sumCpuTotal += procCpu.getTotal();
+					sumCpuUser += procCpu.getUser();
+					sumCpuKernel += procCpu.getSys();
 				} catch (SigarException e) {
 					logger.error("Error retrieving CPU info from application");
 					stop();
 				}
 			}
 
-			collectedMetrics.offer(new CpuLoadMessage(null, new Date(), processRunner.getProcessName(), sumCpuLoad));
+			CpuLoadMessage message = new CpuLoadMessage(null, new Date(), processRunner.getProcessName());
+			message.setCpuLoad(sumCpuLoad);
+			message.setCpuTotal(sumCpuTotal);
+			message.setCpuKernel(sumCpuKernel);
+			message.setCpuUser(sumCpuUser);
+
+			collectedMetrics.offer(message);
 		}
 	}
 }
