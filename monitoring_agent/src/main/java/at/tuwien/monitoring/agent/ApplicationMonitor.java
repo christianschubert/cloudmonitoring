@@ -151,7 +151,7 @@ public class ApplicationMonitor {
 
 		private void monitorCpu() {
 
-			double sumCpuLoad = 0.0d;
+			double sumCpuLoad = 0;
 			long sumCpuTotal = 0;
 			long sumCpuUser = 0;
 			long sumCpuKernel = 0;
