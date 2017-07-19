@@ -55,8 +55,8 @@ public class ApplicationMonitor {
 			return;
 		}
 
-		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
-				Constants.PROCESS_MONITOR_START_DELAY, Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
+		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid), Constants.PROCESS_MONITOR_START_DELAY,
+				Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
 
 		monitoring = true;
 
@@ -136,7 +136,6 @@ public class ApplicationMonitor {
 			for (Long pidToMonitor : processesToMonitor) {
 				try {
 					ProcMem procMem = sigar.getProcMem(pidToMonitor);
-					System.out.println(procMem);
 					sumTotalMemory += procMem.getSize();
 					sumResidentMemory += procMem.getResident();
 				} catch (SigarException e) {
@@ -145,8 +144,8 @@ public class ApplicationMonitor {
 				}
 			}
 
-			collectedMetrics.offer(new MemoryMessage(null, new Date(), processRunner.getProcessName(), sumTotalMemory,
-					sumResidentMemory));
+			collectedMetrics.offer(
+					new MemoryMessage(null, new Date(), processRunner.getProcessName(), sumTotalMemory, sumResidentMemory));
 		}
 
 		private void monitorCpu() {

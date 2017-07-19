@@ -89,7 +89,7 @@
 				<version>3.0.2</version>
 				<executions>
 					<execution>
-						<id>copy-resources</id>
+						<id>copy-sigar-libs</id>
 						<phase>validate</phase>
 						<goals>
 							<goal>copy-resources</goal>
@@ -99,6 +99,22 @@
 							<resources>
 								<resource>
 									<directory>sigarnatives</directory>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-aspectjweaver</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/aspectjweaver</outputDirectory>
+							<resources>
+								<resource>
+									<directory>aspectjweaver</directory>
 									<filtering>true</filtering>
 								</resource>
 							</resources>

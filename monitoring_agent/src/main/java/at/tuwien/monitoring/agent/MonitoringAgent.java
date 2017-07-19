@@ -42,10 +42,13 @@ public class MonitoringAgent {
 	private ScheduledExecutorService scheduler;
 	private ScheduledFuture<?> scheduledJmsSender;
 
-	private List<ApplicationMonitor> applicationList = Collections
-			.synchronizedList(new ArrayList<ApplicationMonitor>());
+	private List<ApplicationMonitor> applicationList = Collections.synchronizedList(new ArrayList<ApplicationMonitor>());
 
 	private boolean init(String jmsBrokerURL) {
+		if (!checkWeaver()) {
+			return false;
+		}
+
 		if (!initSigar()) {
 			return false;
 		}
@@ -69,6 +72,15 @@ public class MonitoringAgent {
 		}
 
 		scheduler = Executors.newScheduledThreadPool(1);
+		return true;
+	}
+
+	private boolean checkWeaver() {
+		if (!new File(Constants.ASPECTJ_WEAVER_PATH).exists()) {
+			logger.error(
+					"AspectJ Weaver not found. Make sure that the folder \"aspectjweaver\" is in the same folder as the executable.");
+			return false;
+		}
 		return true;
 	}
 
@@ -113,20 +125,23 @@ public class MonitoringAgent {
 		}
 	}
 
-	private void start() {
+	private void start(List<Application> applicationsToStart) {
 		scheduledJmsSender = scheduler.scheduleAtFixedRate(new JmsMetricSenderTask(), 0,
 				Constants.JMS_SEND_METRIC_MESSAGES_INTERVAL, TimeUnit.MILLISECONDS);
 
 		logger.info("Agent started");
 
-		// for test purposes monitor imageresizer application only
-		String applicationPath = "../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar";
-		String aspectJPath = "C:/Users/Christian/.m2/repository/org/aspectj/aspectjweaver/1.8.10/aspectjweaver-1.8.10.jar";
+		for (Application application : applicationsToStart) {
+			if (!new File(application.getApplicationPath()).exists()) {
+				logger.error("Application " + application.getApplicationPath() + " does not exist. Ignoring application.");
+				continue;
+			}
 
-		String[] applicationWithParams = new String[] { "java", "-javaagent:" + aspectJPath, "-jar", applicationPath };
+			String[] applicationWithParams = new String[] { "java", "-javaagent:" + Constants.ASPECTJ_WEAVER_PATH, "-jar",
+					application.getApplicationPath() };
 
-		// monitor cpu load and memory of application
-		startMonitoring(applicationWithParams, Arrays.asList(MonitorTask.Cpu, MonitorTask.Memory));
+			startMonitoring(applicationWithParams, application.getMonitorTasks());
+		}
 
 		// monitor till user hits RETURN
 		try {
@@ -231,7 +246,13 @@ public class MonitoringAgent {
 
 		MonitoringAgent agent = new MonitoringAgent();
 		if (agent.init(jmsBrokerURL)) {
-			agent.start();
+
+			// for test purposes monitor imageresizer application only
+			Application imageResizer = new Application(
+					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar",
+					Arrays.asList(MonitorTask.Cpu, MonitorTask.Memory));
+
+			agent.start(Arrays.asList(imageResizer));
 		} else {
 			agent.stopAll();
 		}
