@@ -32,7 +32,7 @@ public class ExtensionServer {
 	// pool for all clients
 	private final ExecutorService pool;
 
-	// socket where ther server listens on
+	// socket where the server listens on
 	private ServerSocket serverSocket;
 
 	// all open client sockets are stored here
@@ -120,8 +120,7 @@ public class ExtensionServer {
 
 				while ((line = clientReader.readLine()) != null) {
 					try {
-						ServerExecutionTimeMessage message = objectMapper.readValue(line,
-								ServerExecutionTimeMessage.class);
+						ServerExecutionTimeMessage message = objectMapper.readValue(line, ServerExecutionTimeMessage.class);
 
 						logger.info("New message: " + message);
 
