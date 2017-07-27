@@ -31,11 +31,9 @@ public class ProcessTools {
 	public static long getProcessIdFromProcess(Process process) {
 		long pid = -1;
 
-		if (process.getClass().getName().equals("java.lang.Win32Process")
-				|| process.getClass().getName().equals("java.lang.ProcessImpl")) {
-
+		String className = process.getClass().getName();
+		if (className.equals("java.lang.Win32Process") || className.equals("java.lang.ProcessImpl")) {
 			// Windows
-
 			try {
 				Field f = process.getClass().getDeclaredField("handle");
 				f.setAccessible(true);
@@ -51,10 +49,8 @@ public class ProcessTools {
 				e.printStackTrace();
 			}
 
-		} else if (process.getClass().getName().equals("java.lang.UNIXProcess")) {
-
+		} else if (className.equals("java.lang.UNIXProcess")) {
 			// MacOS or Linux
-
 			try {
 				Field f = process.getClass().getDeclaredField("pid");
 				f.setAccessible(true);
@@ -70,11 +66,11 @@ public class ProcessTools {
 
 	/**
 	 * Recursively find out all processes that belong to a given process.<br>
-	 * This is done by querying all processes and looking up their parent
-	 * process ID.
+	 * This is done by querying all processes and looking up their parent process
+	 * ID.
 	 * 
 	 * @param pid
-	 *            process id of a process
+	 *          process id of a process
 	 * @return a list of all child processes belonging to the given process
 	 *         including the process itself
 	 */

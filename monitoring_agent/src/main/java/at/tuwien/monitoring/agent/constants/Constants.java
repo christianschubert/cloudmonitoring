@@ -1,9 +1,11 @@
 package at.tuwien.monitoring.agent.constants;
 
-public class Constants {
+public final class Constants {
 
 	private Constants() {
 	}
+
+	public static final String ASPECTJ_WEAVER_PATH = "aspectjweaver/aspectjweaver.jar";
 
 	public static final long JMS_SEND_METRIC_MESSAGES_INTERVAL = 5000; // [ms]
 

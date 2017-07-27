@@ -43,21 +43,20 @@ public class ShrinkResource {
 	public void uploadImage(@FormDataParam("image") InputStream uploadedInputStream,
 			@FormDataParam("image") FormDataContentDisposition detail, @FormDataParam("size") int size,
 			@FormDataParam("width") int width, @FormDataParam("height") int height,
-			@FormDataParam("rotation") String rotation, @Suspended final AsyncResponse asyncResponse)
-			throws IOException {
+			@FormDataParam("rotation") String rotation, @Suspended final AsyncResponse asyncResponse) throws IOException {
 
 		asyncResponse.setTimeoutHandler(new TimeoutHandler() {
 			@Override
 			public void handleTimeout(AsyncResponse asyncResponse) {
-				asyncResponse.resume(
-						Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
+				asyncResponse
+						.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
 			}
 		});
 		asyncResponse.setTimeout(20, TimeUnit.SECONDS);
 
 		if (uploadedInputStream == null || detail == null) {
-			asyncResponse.resume(
-					Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build());
+			asyncResponse
+					.resume(Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build());
 			return;
 		}
 
@@ -103,7 +102,7 @@ public class ShrinkResource {
 			e.printStackTrace();
 		}
 
-		asyncResponse.resume(
-				Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
+		asyncResponse
+				.resume(Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
 	}
 }
