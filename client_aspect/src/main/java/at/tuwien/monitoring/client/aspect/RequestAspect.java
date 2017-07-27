@@ -6,16 +6,18 @@ import java.net.HttpURLConnection;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 
 import at.tuwien.common.GlobalConstants;
 import at.tuwien.common.Method;
+import at.tuwien.common.Settings;
 import at.tuwien.common.Utils;
-import at.tuwien.monitoring.client.aspect.constants.Constants;
 import at.tuwien.monitoring.jms.JmsSenderService;
 import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
@@ -31,12 +33,13 @@ public class RequestAspect {
 	private RequestAspect() {
 		publicIPAddress = Utils.lookupPublicIPAddress();
 		logger.info("Public IP address of client: " + publicIPAddress);
-		jmsService = new JmsSenderService(Constants.brokerURL, GlobalConstants.QUEUE_CLIENTS);
-		jmsService.start();
+
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			@Override
 			public void run() {
-				jmsService.stop();
+				if (jmsService != null) {
+					jmsService.stop();
+				}
 			}
 		}));
 	}
@@ -55,6 +58,30 @@ public class RequestAspect {
 
 	@Pointcut("execution(* *(..))")
 	public void atExecution() {
+	}
+
+	@Before("execution(* main(..))")
+	public void beforeMain(JoinPoint joinPoint) {
+		// retrieve config file path from main arguments
+		Object[] args = joinPoint.getArgs();
+		String[] stringArgs = (String[]) args[0];
+
+		String brokerUrl = GlobalConstants.DEFAULT_BROKER_URL;
+
+		for (String arg : stringArgs) {
+			if (!arg.startsWith("config:")) {
+				continue;
+			}
+			String split[] = arg.split("config:");
+			if (split.length != 2) {
+				continue;
+			}
+			Settings settings = Utils.readProperties(split[1]);
+			brokerUrl = settings.brokerUrl;
+		}
+
+		jmsService = new JmsSenderService(brokerUrl, GlobalConstants.QUEUE_CLIENTS);
+		jmsService.start();
 	}
 
 	@Around("hasMonitorRequestAnnotation() && atExecution()")

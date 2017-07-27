@@ -10,8 +10,8 @@ import java.nio.file.Paths;
 
 import org.apache.log4j.Logger;
 
-import at.tuwien.common.Method;
-import at.tuwien.monitoring.client.aspect.MonitorRequest;
+import at.tuwien.common.Settings;
+import at.tuwien.common.Utils;
 import at.tuwien.monitoring.client.constants.Constants;
 import at.tuwien.monitoring.client.request.Rotation;
 import at.tuwien.monitoring.client.request.ServiceRequester;
@@ -20,11 +20,11 @@ public class MonitoringClient {
 
 	private final static Logger logger = Logger.getLogger(MonitoringClient.class);
 
-	private void start() {
+	private void start(String serviceUrl) {
 		cleanupDownloadFolder();
 		logger.info("Monitoring client running. Enter 'x' to exit. Press return to start new requests.");
 
-		ServiceRequester requester = new ServiceRequester(Constants.SERVICE_URI_LOCAL);
+		ServiceRequester requester = new ServiceRequester(serviceUrl + Constants.APP_PATH);
 
 		boolean isRequest = true;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -48,10 +48,6 @@ public class MonitoringClient {
 		System.exit(0);
 	}
 
-	@MonitorRequest(method = Method.GET, target = Constants.SERVICE_URI_LOCAL)
-	private void testAnnotation() throws Exception {
-	}
-
 	private void cleanupDownloadFolder() {
 		// delete all image files from download directory (except .gitignore)
 		try {
@@ -63,7 +59,22 @@ public class MonitoringClient {
 	}
 
 	public static void main(final String[] args) {
+
+		String serviceUrl = Constants.DEFAULT_SERVICE_URL;
+
+		for (String arg : args) {
+			if (!arg.startsWith("config:")) {
+				continue;
+			}
+			String split[] = arg.split("config:");
+			if (split.length != 2) {
+				continue;
+			}
+			Settings settings = Utils.readProperties(split[1]);
+			serviceUrl = settings.serviceUrl;
+		}
+
 		MonitoringClient monitoringClient = new MonitoringClient();
-		monitoringClient.start();
+		monitoringClient.start(serviceUrl);
 	}
 }

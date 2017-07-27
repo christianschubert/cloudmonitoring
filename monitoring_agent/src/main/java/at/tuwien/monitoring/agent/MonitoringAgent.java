@@ -18,6 +18,7 @@ import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 
 import at.tuwien.common.GlobalConstants;
+import at.tuwien.common.Settings;
 import at.tuwien.common.Utils;
 import at.tuwien.monitoring.agent.constants.Constants;
 import at.tuwien.monitoring.agent.constants.MonitorTask;
@@ -42,7 +43,8 @@ public class MonitoringAgent {
 	private ScheduledExecutorService scheduler;
 	private ScheduledFuture<?> scheduledJmsSender;
 
-	private List<ApplicationMonitor> applicationList = Collections.synchronizedList(new ArrayList<ApplicationMonitor>());
+	private List<ApplicationMonitor> applicationList = Collections
+			.synchronizedList(new ArrayList<ApplicationMonitor>());
 
 	private boolean init(String jmsBrokerURL) {
 		if (!checkWeaver()) {
@@ -133,12 +135,13 @@ public class MonitoringAgent {
 
 		for (Application application : applicationsToStart) {
 			if (!new File(application.getApplicationPath()).exists()) {
-				logger.error("Application " + application.getApplicationPath() + " does not exist. Ignoring application.");
+				logger.error(
+						"Application " + application.getApplicationPath() + " does not exist. Ignoring application.");
 				continue;
 			}
 
-			String[] applicationWithParams = new String[] { "java", "-javaagent:" + Constants.ASPECTJ_WEAVER_PATH, "-jar",
-					application.getApplicationPath() };
+			String[] applicationWithParams = new String[] { "java", "-javaagent:" + Constants.ASPECTJ_WEAVER_PATH,
+					"-jar", application.getApplicationPath() };
 
 			startMonitoring(applicationWithParams, application.getMonitorTasks());
 		}
@@ -241,7 +244,8 @@ public class MonitoringAgent {
 			logger.error("Invalid number of arguments.");
 			return;
 		} else if (args.length == 1) {
-			jmsBrokerURL = args[0];
+			Settings settings = Utils.readProperties(args[0]);
+			jmsBrokerURL = settings.brokerUrl;
 		}
 
 		MonitoringAgent agent = new MonitoringAgent();

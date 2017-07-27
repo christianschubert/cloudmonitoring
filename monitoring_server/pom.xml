@@ -15,8 +15,7 @@
 	<properties>
 		<jersey.version>2.25.1</jersey.version>
 		<main.class>at.tuwien.monitoring.server.MonitoringServer</main.class>
-		<activemq.broker.url>tcp://localhost:61616</activemq.broker.url>
-		<!-- <activemq.broker.url>tcp://ec2-52-41-245-4.us-west-2.compute.amazonaws.com:61616</activemq.broker.url> -->
+		<main.basedir>${project.parent.basedir}</main.basedir>
 	</properties>
 
 	<dependencyManagement>
@@ -92,10 +91,6 @@
 				</executions>
 				<configuration>
 					<mainClass>${main.class}</mainClass>
-					<arguments>
-						<!-- <argument>-prod</argument> -->
-						<argument>${activemq.broker.url}</argument>
-					</arguments>
 				</configuration>
 			</plugin>
 			<plugin>
