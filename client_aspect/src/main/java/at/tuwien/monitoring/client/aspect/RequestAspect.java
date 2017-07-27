@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import java.net.HttpURLConnection;
 import java.util.Date;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -66,7 +67,7 @@ public class RequestAspect {
 		Object[] args = joinPoint.getArgs();
 		String[] stringArgs = (String[]) args[0];
 
-		String brokerUrl = GlobalConstants.DEFAULT_BROKER_URL;
+		String brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
 
 		for (String arg : stringArgs) {
 			if (!arg.startsWith("config:")) {

@@ -29,6 +29,7 @@ public class MonitoringClient {
 		boolean isRequest = true;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		while (isRequest) {
+			requester.shrinkRequest(Constants.IMAGE_VERY_BIG, 400, Rotation.FLIP_HORZ);
 			requester.shrinkRequest(Constants.IMAGE_BIG, 400, Rotation.FLIP_HORZ);
 			requester.shrinkRequest(Constants.IMAGE_MEDIUM, 300);
 			requester.shrinkRequest(Constants.IMAGE_SMALL, Rotation.CW_90);

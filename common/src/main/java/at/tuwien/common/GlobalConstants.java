@@ -7,8 +7,6 @@ public class GlobalConstants {
 
 	public static final String BASE_URI_HTTP_MONITORING_SERVER = "http://0.0.0.0:8081/";
 
-	public static final String DEFAULT_BROKER_URL = "tcp://localhost:61616";
-
 	public static final String QUEUE_AGENTS = "MONITORING_AGENT_QUEUE";
 	public static final String QUEUE_CLIENTS = "MONITORING_CLIENT_QUEUE";
 

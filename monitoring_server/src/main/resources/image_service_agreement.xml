@@ -139,7 +139,7 @@
 			<Expression>
 				<Predicate xsi:type="Greater">
 					<SLAParameter>RequestSuccessRate</SLAParameter>
-					<Value>95</Value>
+					<Value>0.95</Value>
 				</Predicate>
 			</Expression>
 			<EvaluationEvent>NewValue</EvaluationEvent>
