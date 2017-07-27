@@ -17,4 +17,5 @@ public class Constants {
 	public static final String IMAGE_SMALL = "image_small.jpg";
 	public static final String IMAGE_MEDIUM = "image_medium.jpg";
 	public static final String IMAGE_BIG = "image_big.jpg";
+	public static final String IMAGE_VERY_BIG = "image_very_big.jpg";
 }

@@ -29,7 +29,7 @@ public class ShrinkTest {
 
 	private static final String UPLOAD_PATH = "upload/";
 	private static final String DOWNLOAD_PATH = "download/";
-	private static final String IMAGE = "image_medium.jpg";
+	private static final String IMAGE = "image_small.jpg";
 
 	private HttpServer server;
 	private WebTarget target;
