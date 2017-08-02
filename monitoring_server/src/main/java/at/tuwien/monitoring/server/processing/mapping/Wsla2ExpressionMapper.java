@@ -35,13 +35,13 @@ public class Wsla2ExpressionMapper {
 
 	private static final int AGGREGATION_MINIMUM_EVENT_SIZE = 3;
 
-	private static final String SIMPLE_EXPRESSION = "select %s as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s(%s > = 0) having %s %s %s";
-	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s(%s > = 0) group by ipAddress having %s(%s) %s %s AND count(*) >= "
+	private static final String SIMPLE_EXPRESSION = "select %s as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s(%s >= 0) having %s %s %s";
+	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s(%s >= 0) group by ipAddress having %s(%s) %s %s AND count(*) >= "
 			+ AGGREGATION_MINIMUM_EVENT_SIZE;
 
 	private static final String RATIO_FUNCTION = "count(*, %s %s %s)/count(*)";
 	private static final String RATIO_EXPRESSION = "select " + RATIO_FUNCTION
-			+ " as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s(%s > = 0) group by ipAddress having "
+			+ " as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s(%s >= 0) group by ipAddress having "
 			+ RATIO_FUNCTION + " %s %s AND count(*) >=" + AGGREGATION_MINIMUM_EVENT_SIZE;
 
 	@SuppressWarnings("unused")
@@ -99,21 +99,25 @@ public class Wsla2ExpressionMapper {
 		}
 
 		// parse service level objectives
-		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations().getServiceLevelObjective()) {
+		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations()
+				.getServiceLevelObjective()) {
 			if (!checkValidity(serviceLevelObjective.getValidity())) {
 				logger.info("Validity of SLO \"" + serviceLevelObjective.getName() + "\" not given. Ignoring SLO.");
 				continue;
 			}
 
-			SimplePredicate simplePredicate = parseSimplePredicate(serviceLevelObjective.getExpression().getPredicate());
+			SimplePredicate simplePredicate = parseSimplePredicate(
+					serviceLevelObjective.getExpression().getPredicate());
 			if (simplePredicate == null) {
-				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName() + "\" not implemented yet or not valid.");
+				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName()
+						+ "\" not implemented yet or not valid.");
 				continue;
 			}
 
 			String metricToObserve = slaMetricMap.get(simplePredicate.getSlaParameter());
 			if (metricToObserve == null) {
-				logger.info("SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
+				logger.info(
+						"SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
 				continue;
 			}
 
@@ -143,8 +147,8 @@ public class Wsla2ExpressionMapper {
 
 			expression = String.format(SIMPLE_EXPRESSION, metricInformation.getPropertyName(),
 					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(),
-					metricInformation.getPropertyName(), metricInformation.getPropertyName(), simplePredicate.getDetectionSign(),
-					simplePredicate.getThreshold());
+					metricInformation.getPropertyName(), metricInformation.getPropertyName(),
+					simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
 
 		} else {
 			// aggregation function
