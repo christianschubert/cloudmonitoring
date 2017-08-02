@@ -2,6 +2,7 @@ package at.tuwien.monitoring.client.aspect;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.util.Date;
 
@@ -14,6 +15,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.glassfish.jersey.client.ClientRequest;
 
 import at.tuwien.common.GlobalConstants;
 import at.tuwien.common.Method;
@@ -59,6 +61,29 @@ public class RequestAspect {
 
 	@Pointcut("execution(* *(..))")
 	public void atExecution() {
+	}
+
+	/*
+	 * check if service is available; if not, send response code HTTP_UNAVAILABLE
+	 * to server
+	 */
+	@Around("execution(* _apply(..))")
+	public Object apply(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+		try {
+			return proceedingJoinPoint.proceed();
+		} catch (Throwable e) {
+			if (e instanceof ConnectException) {
+				Object arg = proceedingJoinPoint.getArgs()[0];
+				if (arg instanceof ClientRequest) {
+					ClientRequest clientRequest = (ClientRequest) arg;
+					int responseCode = HttpURLConnection.HTTP_UNAVAILABLE;
+					sendReponseTime(clientRequest.getUri().toURL().toString(), Method.valueOf(clientRequest.getMethod()), -1,
+							responseCode);
+				}
+				throw e;
+			}
+		}
+		return null;
 	}
 
 	@Before("execution(* main(..))")
@@ -174,8 +199,8 @@ public class RequestAspect {
 			final int responseCode) {
 		if (jmsService.isConnected()) {
 			MetricAggregationMessage metricAggregationMessage = new MetricAggregationMessage();
-			metricAggregationMessage.addMetricMessage(new ClientResponseTimeMessage(publicIPAddress, new Date(), target,
-					method, responseTime, responseCode));
+			metricAggregationMessage.addMetricMessage(
+					new ClientResponseTimeMessage(publicIPAddress, new Date(), target, method, responseTime, responseCode));
 			jmsService.sendObjectMessage(metricAggregationMessage);
 		}
 	}
