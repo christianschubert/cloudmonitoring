@@ -11,11 +11,6 @@ public class StatusResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public String getStatus() {
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 		return "Online";
 	}
 }
