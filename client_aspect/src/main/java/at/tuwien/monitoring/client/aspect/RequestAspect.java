@@ -1,10 +1,9 @@
 package at.tuwien.monitoring.client.aspect;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.log4j.Logger;
@@ -16,6 +15,7 @@ import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
 
 import at.tuwien.common.GlobalConstants;
 import at.tuwien.common.Method;
@@ -47,46 +47,11 @@ public class RequestAspect {
 		}));
 	}
 
-	@Pointcut("@annotation(MonitorRequest)")
-	public void hasMonitorRequestAnnotation() {
+	@Pointcut("execution(* main(..))")
+	public void mainExecution() {
 	}
 
-	@Pointcut("call (* java.net.HttpURLConnection.getResponseCode(..))")
-	public void callGetResonseCode() {
-	}
-
-	@Pointcut("!within(RequestAspect)")
-	public void notThisAspect() {
-	}
-
-	@Pointcut("execution(* *(..))")
-	public void atExecution() {
-	}
-
-	/*
-	 * check if service is available; if not, send response code HTTP_UNAVAILABLE
-	 * to server
-	 */
-	@Around("execution(* _apply(..))")
-	public Object apply(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-		try {
-			return proceedingJoinPoint.proceed();
-		} catch (Throwable e) {
-			if (e instanceof ConnectException) {
-				Object arg = proceedingJoinPoint.getArgs()[0];
-				if (arg instanceof ClientRequest) {
-					ClientRequest clientRequest = (ClientRequest) arg;
-					int responseCode = HttpURLConnection.HTTP_UNAVAILABLE;
-					sendReponseTime(clientRequest.getUri().toURL().toString(), Method.valueOf(clientRequest.getMethod()), -1,
-							responseCode);
-				}
-				throw e;
-			}
-		}
-		return null;
-	}
-
-	@Before("execution(* main(..))")
+	@Before("mainExecution()")
 	public void beforeMain(JoinPoint joinPoint) {
 		// retrieve config file path from main arguments
 		Object[] args = joinPoint.getArgs();
@@ -110,30 +75,82 @@ public class RequestAspect {
 		jmsService.start();
 	}
 
+	@Pointcut("execution(* _apply(..))")
+	public void applyExecution() {
+	}
+
+	@Around("applyExecution()")
+	public Object apply(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+
+		Throwable ex = null;
+		Object response = null;
+		int responseCode = -1;
+
+		long startTime = System.nanoTime();
+
+		try {
+			response = proceedingJoinPoint.proceed();
+		} catch (Throwable throwable) {
+			ex = throwable;
+		}
+
+		long responseTime = System.nanoTime() - startTime;
+
+		if (ex != null) {
+			// error -> response was not successful, assume http error code 500
+			// set invalid response time
+			responseCode = HttpURLConnection.HTTP_UNAVAILABLE;
+			responseTime = -1;
+		} else if (response instanceof ClientResponse) {
+			ClientResponse clientResponse = (ClientResponse) response;
+			responseCode = clientResponse.getStatus();
+		}
+
+		Object arg = proceedingJoinPoint.getArgs()[0];
+		if (arg instanceof ClientRequest) {
+			ClientRequest clientRequest = (ClientRequest) arg;
+			sendReponseTime(clientRequest.getUri().toURL().toString(), Method.valueOf(clientRequest.getMethod()),
+					responseTime, responseCode);
+		}
+
+		if (ex != null) {
+			throw ex;
+		}
+
+		return response;
+	}
+
+	@Pointcut("@annotation(MonitorRequest)")
+	public void hasMonitorRequestAnnotation() {
+	}
+
+	@Pointcut("execution(* *(..))")
+	public void atExecution() {
+	}
+
 	@Around("hasMonitorRequestAnnotation() && atExecution()")
 	public Object annotationRequest(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-
-		if (!jmsService.isConnected()) {
-			// there is no need to measure response time if jms broker is not
-			// available
-			return proceedingJoinPoint.proceed();
-		}
 
 		Throwable ex = null;
 		Object response = null;
 		int responseCode = HttpURLConnection.HTTP_OK;
 
-		long startTime = System.currentTimeMillis();
+		long startTime = System.nanoTime();
 
 		try {
 			response = proceedingJoinPoint.proceed();
 		} catch (Throwable throwable) {
-			// error -> response was not successful, assume http error code 500
 			ex = throwable;
-			responseCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
 		}
 
-		long responseTime = System.currentTimeMillis() - startTime;
+		long responseTime = System.nanoTime() - startTime;
+
+		if (ex != null) {
+			// error -> response was not successful, assume http error code 500, set
+			// invalid response time
+			responseCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
+			responseTime = -1;
+		}
 
 		MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
 		Annotation[] annotations = signature.getMethod().getAnnotations();
@@ -152,55 +169,12 @@ public class RequestAspect {
 		return response;
 	}
 
-	@Around("callGetResonseCode() && notThisAspect()")
-	public Object callRequest(final ProceedingJoinPoint proceedingJoinPoint) {
-		if (!jmsService.isConnected()) {
-			// there is no need to measure response time if jms broker is not
-			// available
-			try {
-				return proceedingJoinPoint.proceed();
-			} catch (Throwable e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
-
-		long startTime = System.currentTimeMillis();
-
-		Object response = null;
-		try {
-			response = proceedingJoinPoint.proceed();
-		} catch (Throwable e) {
-			e.printStackTrace();
-			return response;
-		}
-
-		long responseTime = System.currentTimeMillis() - startTime;
-
-		Object target = proceedingJoinPoint.getTarget();
-		if (target instanceof HttpURLConnection) {
-			HttpURLConnection httpURLConnection = (HttpURLConnection) target;
-
-			int responseCode = -1;
-			try {
-				responseCode = httpURLConnection.getResponseCode();
-			} catch (IOException e) {
-				logger.error("Cannot acquire response code. Ignoring code.");
-			}
-
-			sendReponseTime(httpURLConnection.getURL().toString(), Method.valueOf(httpURLConnection.getRequestMethod()),
-					responseTime, responseCode);
-		}
-
-		return response;
-	}
-
 	public void sendReponseTime(final String target, final Method method, final long responseTime,
 			final int responseCode) {
 		if (jmsService.isConnected()) {
 			MetricAggregationMessage metricAggregationMessage = new MetricAggregationMessage();
-			metricAggregationMessage.addMetricMessage(
-					new ClientResponseTimeMessage(publicIPAddress, new Date(), target, method, responseTime, responseCode));
+			metricAggregationMessage.addMetricMessage(new ClientResponseTimeMessage(publicIPAddress, new Date(), target,
+					method, responseTime == -1 ? -1 : TimeUnit.NANOSECONDS.toMillis(responseTime), responseCode));
 			jmsService.sendObjectMessage(metricAggregationMessage);
 		}
 	}

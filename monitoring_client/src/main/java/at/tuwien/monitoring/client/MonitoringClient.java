@@ -29,10 +29,11 @@ public class MonitoringClient {
 		boolean isRequest = true;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		while (isRequest) {
-			requester.shrinkRequest(Constants.IMAGE_VERY_BIG, 400, Rotation.FLIP_HORZ);
+			// requester.shrinkRequest(Constants.IMAGE_VERY_BIG, 400,
+			// Rotation.FLIP_HORZ);
 			requester.shrinkRequest(Constants.IMAGE_BIG, 400, Rotation.FLIP_HORZ);
-			requester.shrinkRequest(Constants.IMAGE_MEDIUM, 300);
-			requester.shrinkRequest(Constants.IMAGE_SMALL, Rotation.CW_90);
+			// requester.shrinkRequest(Constants.IMAGE_MEDIUM, 300);
+			// requester.shrinkRequest(Constants.IMAGE_SMALL, Rotation.CW_90);
 
 			try {
 				if (br.readLine().equals("x")) {
@@ -52,8 +53,8 @@ public class MonitoringClient {
 	private void cleanupDownloadFolder() {
 		// delete all image files from download directory (except .gitignore)
 		try {
-			Files.walk(Paths.get(Constants.DOWNLOAD_PATH)).map(Path::toFile)
-					.filter(f -> !f.getName().equals(".gitignore")).forEach(File::delete);
+			Files.walk(Paths.get(Constants.DOWNLOAD_PATH)).map(Path::toFile).filter(f -> !f.getName().equals(".gitignore"))
+					.forEach(File::delete);
 		} catch (IOException e) {
 			logger.error("Error cleaning up download directory.");
 		}

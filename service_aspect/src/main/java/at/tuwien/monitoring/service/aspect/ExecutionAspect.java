@@ -6,6 +6,7 @@ import java.lang.annotation.Annotation;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Path;
 
@@ -104,7 +105,7 @@ public class ExecutionAspect {
 		Throwable ex = null;
 		Object response = null;
 
-		long startTime = System.currentTimeMillis();
+		long startTime = System.nanoTime();
 
 		try {
 			response = proceedingJoinPoint.proceed();
@@ -112,7 +113,7 @@ public class ExecutionAspect {
 			ex = throwable;
 		}
 
-		long executionTime = System.currentTimeMillis() - startTime;
+		long executionTime = System.nanoTime() - startTime;
 
 		Method method = null;
 		String target = "";
@@ -174,7 +175,7 @@ public class ExecutionAspect {
 
 	private void sendExecutionTime(String target, Method method, long executionTime) {
 		ServerExecutionTimeMessage message = new ServerExecutionTimeMessage(publicIPAddress, new Date(), target, method,
-				executionTime);
+				TimeUnit.NANOSECONDS.toMillis(executionTime));
 
 		try {
 			toServer.println(mapper.writeValueAsString(message));
