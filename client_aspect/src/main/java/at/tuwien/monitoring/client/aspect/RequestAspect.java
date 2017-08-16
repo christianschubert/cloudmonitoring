@@ -80,7 +80,7 @@ public class RequestAspect {
 	}
 
 	@Around("applyExecution()")
-	public Object apply(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+	public Object applyAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
 
 		Throwable ex = null;
 		Object response = null;
