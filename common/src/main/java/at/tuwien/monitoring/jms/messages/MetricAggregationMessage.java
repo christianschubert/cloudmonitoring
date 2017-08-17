@@ -2,6 +2,7 @@ package at.tuwien.monitoring.jms.messages;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MetricAggregationMessage implements Serializable {
@@ -11,6 +12,10 @@ public class MetricAggregationMessage implements Serializable {
 	private List<MetricMessage> messageList = new ArrayList<MetricMessage>();
 
 	public MetricAggregationMessage() {
+	}
+
+	public MetricAggregationMessage(MetricMessage... messages) {
+		messageList = new ArrayList<>(Arrays.asList(messages));
 	}
 
 	public List<MetricMessage> getMessageList() {

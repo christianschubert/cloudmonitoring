@@ -95,7 +95,7 @@ public class ExecutionAspect {
 
 	@Around("atExecution() && (hasMonitorRequestAnnotation() || "
 			+ "hasPostAnnotation() || hasGetAnnotation() || hasPutAnnotation() || hasDeleteAnnotation() || hasHeadAnnotation())")
-	public Object annotationRequest(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+	public Object annotationRequest(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
 		if (socket == null) {
 			// there is no need to measure execution time if agent is not
 			// available

@@ -10,7 +10,6 @@ import java.nio.file.StandardCopyOption;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -47,38 +46,29 @@ public class ServiceRequester {
 	}
 
 	public void shrinkRequest(String image, int size, Rotation rotation) {
-
 		int currentRequestID = ++requestID;
-		logger.info("New request: ID=" + currentRequestID + "; image=" + image + "; size=" + size + "; rotation="
-				+ rotation.toString());
 
-		target.request().async().post(buildPostEntity(image, size, rotation), new InvocationCallback<Response>() {
+		Response response = null;
+		try {
+			response = target.request().post(buildPostEntity(image, size, rotation));
+		} catch (Throwable e) {
+			logger.error("Error processing request with ID " + currentRequestID + ". Server offline?");
+			return;
+		}
 
-			@Override
-			public void completed(Response response) {
-				if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-					logger.error("Service status code is not ok. Code: " + response.getStatus() + "; (Request ID "
-							+ currentRequestID + ")");
-					return;
-				}
+		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+			logger.error("Service status code is not ok. Code: " + response.getStatus() + "; (Request ID "
+					+ currentRequestID + ")");
+			return;
+		}
 
-				InputStream is = response.readEntity(InputStream.class);
-				try {
-					Files.copy(is, Paths.get(Constants.DOWNLOAD_PATH + currentRequestID + "_" + image),
-							StandardCopyOption.REPLACE_EXISTING);
-					logger.info("Request with ID " + currentRequestID + " finished!");
-
-				} catch (IOException e) {
-					logger.error("Error while copying shrinked image (Request ID " + currentRequestID + ").");
-				}
-			}
-
-			@Override
-			public void failed(Throwable throwable) {
-				logger.error("Error processing request with ID " + currentRequestID + ". Server offline?");
-			}
-		});
-
+		InputStream is = response.readEntity(InputStream.class);
+		try {
+			Files.copy(is, Paths.get(Constants.DOWNLOAD_PATH + currentRequestID + "_" + image),
+					StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			logger.error("Error while copying shrinked image (Request ID " + currentRequestID + ").");
+		}
 	}
 
 	private Entity<FormDataMultiPart> buildPostEntity(String image, int size, Rotation rotation) {

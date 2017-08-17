@@ -1,6 +1,7 @@
 package at.tuwien.monitoring.jms.messages;
 
 import java.util.Date;
+import java.util.StringJoiner;
 
 import at.tuwien.common.Method;
 
@@ -16,8 +17,8 @@ public class ClientResponseTimeMessage extends MetricMessage {
 	public ClientResponseTimeMessage() {
 	}
 
-	public ClientResponseTimeMessage(final String ipAddress, final Date timestamp, final String target,
-			final Method method, final long responseTime, final int responseCode) {
+	public ClientResponseTimeMessage(String ipAddress, Date timestamp, String target, Method method, long responseTime,
+			final int responseCode) {
 		super(timestamp, ipAddress);
 		setTarget(target);
 		setMethod(method);
@@ -29,7 +30,7 @@ public class ClientResponseTimeMessage extends MetricMessage {
 		return target;
 	}
 
-	public void setTarget(final String target) {
+	public void setTarget(String target) {
 		this.target = target;
 	}
 
@@ -37,7 +38,7 @@ public class ClientResponseTimeMessage extends MetricMessage {
 		return method;
 	}
 
-	public void setMethod(final Method method) {
+	public void setMethod(Method method) {
 		this.method = method;
 	}
 
@@ -45,7 +46,7 @@ public class ClientResponseTimeMessage extends MetricMessage {
 		return responseTime;
 	}
 
-	public void setResponseTime(final long responseTime) {
+	public void setResponseTime(long responseTime) {
 		this.responseTime = responseTime;
 	}
 
@@ -53,7 +54,7 @@ public class ClientResponseTimeMessage extends MetricMessage {
 		return responseCode;
 	}
 
-	public void setResponseCode(final int responseCode) {
+	public void setResponseCode(int responseCode) {
 		this.responseCode = responseCode;
 	}
 
@@ -67,5 +68,27 @@ public class ClientResponseTimeMessage extends MetricMessage {
 		return "ClientResponseTimeMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
 				+ ", getTarget()=" + getTarget() + ", getMethod()=" + getMethod() + ", getResponseTime()="
 				+ getResponseTime() + ", getResponseCode()=" + getResponseCode() + "]";
+	}
+
+	@Override
+	public String getCsvHeader() {
+		return new StringJoiner(";")
+				.add("timestamp")
+				.add("target")
+				.add("method")
+				.add("responseTime")
+				.add("responseCode")
+				.toString();
+	}
+
+	@Override
+	public String toCsvEntry() {
+		return new StringJoiner(";")
+				.add(getTimestamp().toString())
+				.add(getTarget())
+				.add(getMethod().toString())
+				.add(String.valueOf(getResponseTime()))
+				.add(String.valueOf(responseCode))
+				.toString();
 	}
 }

@@ -1,11 +1,14 @@
 package at.tuwien.monitoring.client.aspect;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.net.HttpURLConnection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -30,8 +33,13 @@ public class RequestAspect {
 
 	private final static Logger logger = Logger.getLogger(RequestAspect.class);
 
+	private static Settings settings = new Settings();
+
 	private JmsSenderService jmsService;
 	private String publicIPAddress;
+
+	private PrintWriter outLogFile;
+	private boolean writeHeader = true;
 
 	private RequestAspect() {
 		publicIPAddress = Utils.lookupPublicIPAddress();
@@ -42,6 +50,10 @@ public class RequestAspect {
 			public void run() {
 				if (jmsService != null) {
 					jmsService.stop();
+				}
+
+				if (outLogFile != null) {
+					outLogFile.close();
 				}
 			}
 		}));
@@ -57,8 +69,6 @@ public class RequestAspect {
 		Object[] args = joinPoint.getArgs();
 		String[] stringArgs = (String[]) args[0];
 
-		String brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
-
 		for (String arg : stringArgs) {
 			if (!arg.startsWith("config:")) {
 				continue;
@@ -67,12 +77,22 @@ public class RequestAspect {
 			if (split.length != 2) {
 				continue;
 			}
-			Settings settings = Utils.readProperties(split[1]);
-			brokerUrl = settings.brokerUrl;
+			settings = Utils.readProperties(split[1]);
 		}
 
-		jmsService = new JmsSenderService(brokerUrl, GlobalConstants.QUEUE_CLIENTS);
+		jmsService = new JmsSenderService(settings.brokerUrl, GlobalConstants.QUEUE_CLIENTS);
 		jmsService.start();
+
+		if (settings.logMetrics) {
+			try {
+				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_client_aspect.csv");
+				BufferedWriter bw = new BufferedWriter(fw);
+				outLogFile = new PrintWriter(bw);
+			} catch (IOException e) {
+				settings.logMetrics = false;
+				logger.error("Error logging metrics to file.");
+			}
+		}
 	}
 
 	@Pointcut("execution(* _apply(..))")
@@ -109,7 +129,7 @@ public class RequestAspect {
 		Object arg = proceedingJoinPoint.getArgs()[0];
 		if (arg instanceof ClientRequest) {
 			ClientRequest clientRequest = (ClientRequest) arg;
-			sendReponseTime(clientRequest.getUri().toURL().toString(), Method.valueOf(clientRequest.getMethod()),
+			sendMessage(clientRequest.getUri().toURL().toString(), Method.valueOf(clientRequest.getMethod()),
 					responseTime, responseCode);
 		}
 
@@ -129,7 +149,7 @@ public class RequestAspect {
 	}
 
 	@Around("hasMonitorRequestAnnotation() && atExecution()")
-	public Object annotationRequest(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+	public Object annotationRequest(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
 
 		Throwable ex = null;
 		Object response = null;
@@ -157,7 +177,7 @@ public class RequestAspect {
 		for (Annotation annotation : annotations) {
 			if (annotation instanceof MonitorRequest) {
 				MonitorRequest monitorRequest = (MonitorRequest) annotation;
-				sendReponseTime(monitorRequest.target(), monitorRequest.method(), responseTime, responseCode);
+				sendMessage(monitorRequest.target(), monitorRequest.method(), responseTime, responseCode);
 				break;
 			}
 		}
@@ -169,13 +189,29 @@ public class RequestAspect {
 		return response;
 	}
 
-	public void sendReponseTime(final String target, final Method method, final long responseTime,
-			final int responseCode) {
-		if (jmsService.isConnected()) {
-			MetricAggregationMessage metricAggregationMessage = new MetricAggregationMessage();
-			metricAggregationMessage.addMetricMessage(new ClientResponseTimeMessage(publicIPAddress, new Date(), target,
-					method, responseTime == -1 ? -1 : TimeUnit.NANOSECONDS.toMillis(responseTime), responseCode));
-			jmsService.sendObjectMessage(metricAggregationMessage);
+	public void sendMessage(String target, Method method, long responseTime, int responseCode) {
+
+		if (jmsService.isConnected() || settings.logMetrics) {
+
+			// convert nanoseconds to milliseconds, responsetime is -1 for requests with
+			// errors
+			long responseTimeMillis = (responseTime == -1 ? -1 : TimeUnit.NANOSECONDS.toMillis(responseTime));
+
+			ClientResponseTimeMessage clientResponseTimeMessage = new ClientResponseTimeMessage(publicIPAddress,
+					new Date(), target, method, responseTimeMillis, responseCode);
+
+			if (settings.logMetrics) {
+				if (writeHeader) {
+					outLogFile.println(clientResponseTimeMessage.getCsvHeader());
+					writeHeader = false;
+				}
+				outLogFile.println(clientResponseTimeMessage.toCsvEntry());
+				outLogFile.flush();
+			}
+
+			if (jmsService.isConnected()) {
+				jmsService.sendObjectMessage(new MetricAggregationMessage(clientResponseTimeMessage));
+			}
 		}
 	}
 }

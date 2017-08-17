@@ -8,12 +8,12 @@ class MetricInformation {
 	public MetricInformation() {
 	}
 
-	public MetricInformation(final String eventMessageName, final String propertyName) {
+	public MetricInformation(String eventMessageName, String propertyName) {
 		setEventMessageName(eventMessageName);
 		setPropertyName(propertyName);
 	}
 
-	public MetricInformation(final String eventMessageName, final String propertyName, final String aggregationFunction) {
+	public MetricInformation(String eventMessageName, String propertyName, String aggregationFunction) {
 		setEventMessageName(eventMessageName);
 		setPropertyName(propertyName);
 		setAggregationFunction(aggregationFunction);
@@ -23,7 +23,7 @@ class MetricInformation {
 		return eventMessageName;
 	}
 
-	public void setEventMessageName(final String eventMessageName) {
+	public void setEventMessageName(String eventMessageName) {
 		this.eventMessageName = eventMessageName;
 	}
 
@@ -31,7 +31,7 @@ class MetricInformation {
 		return propertyName;
 	}
 
-	public void setPropertyName(final String propertyName) {
+	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName;
 	}
 
@@ -39,13 +39,13 @@ class MetricInformation {
 		return aggregationFunction;
 	}
 
-	public void setAggregationFunction(final String aggregationFunction) {
+	public void setAggregationFunction(String aggregationFunction) {
 		this.aggregationFunction = aggregationFunction;
 	}
 
 	@Override
 	public String toString() {
-		return "MetricInformation [eventMessageName=" + eventMessageName + ", propertyName=" + propertyName + ", aggregationFunction="
-				+ aggregationFunction + "]";
+		return "MetricInformation [eventMessageName=" + eventMessageName + ", propertyName=" + propertyName
+				+ ", aggregationFunction=" + aggregationFunction + "]";
 	}
 }

@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 import org.hyperic.sigar.Sigar;
@@ -32,6 +33,10 @@ public class MonitoringAgent {
 
 	private final static Logger logger = Logger.getLogger(MonitoringAgent.class);
 
+	private static Settings settings = new Settings();
+
+	private AtomicInteger currentApplicationID = new AtomicInteger(0);
+
 	private Sigar sigar;
 	private int cpuCount;
 	private String publicIPAddress;
@@ -46,7 +51,7 @@ public class MonitoringAgent {
 	private List<ApplicationMonitor> applicationList = Collections
 			.synchronizedList(new ArrayList<ApplicationMonitor>());
 
-	private boolean init(String jmsBrokerURL) {
+	private boolean init() {
 		if (!checkWeaver()) {
 			return false;
 		}
@@ -60,7 +65,7 @@ public class MonitoringAgent {
 			return false;
 		}
 
-		jmsService = new JmsSenderService(jmsBrokerURL, GlobalConstants.QUEUE_AGENTS);
+		jmsService = new JmsSenderService(settings.brokerUrl, GlobalConstants.QUEUE_AGENTS);
 		jmsService.start();
 		if (!jmsService.isConnected()) {
 			logger.error("Error creating JMS service.");
@@ -129,7 +134,7 @@ public class MonitoringAgent {
 
 	private void start(List<Application> applicationsToStart) {
 		scheduledJmsSender = scheduler.scheduleAtFixedRate(new JmsMetricSenderTask(), 0,
-				Constants.JMS_SEND_METRIC_MESSAGES_INTERVAL, TimeUnit.MILLISECONDS);
+				settings.metricsAggregationInterval, TimeUnit.MILLISECONDS);
 
 		logger.info("Agent started");
 
@@ -200,7 +205,8 @@ public class MonitoringAgent {
 	}
 
 	private void startMonitoring(String[] applicationWithParams, List<MonitorTask> monitorTasks) {
-		ApplicationMonitor applicationMonitor = new ApplicationMonitor(cpuCount, applicationWithParams, monitorTasks);
+		ApplicationMonitor applicationMonitor = new ApplicationMonitor(cpuCount, applicationWithParams, monitorTasks,
+				settings, currentApplicationID.incrementAndGet());
 		applicationMonitor.start();
 		applicationList.add(applicationMonitor);
 	}
@@ -224,7 +230,9 @@ public class MonitoringAgent {
 			}
 		}
 
-		jmsService.stop();
+		if (jmsService != null) {
+			jmsService.stop();
+		}
 
 		// stop all monitorings and their processes
 		synchronized (applicationList) {
@@ -238,19 +246,20 @@ public class MonitoringAgent {
 		logger.info("Shut down success");
 	}
 
-	public static void main(String[] args) {
-		String jmsBrokerURL = null;
-		if (args.length > 1) {
-			logger.error("Invalid number of arguments.");
-			return;
-		} else if (args.length == 1) {
-			Settings settings = Utils.readProperties(args[0]);
-			jmsBrokerURL = settings.brokerUrl;
+	public static void main(final String[] args) {
+		for (String arg : args) {
+			if (!arg.startsWith("config:")) {
+				continue;
+			}
+			String split[] = arg.split("config:");
+			if (split.length != 2) {
+				continue;
+			}
+			settings = Utils.readProperties(split[1]);
 		}
 
 		MonitoringAgent agent = new MonitoringAgent();
-		if (agent.init(jmsBrokerURL)) {
-
+		if (agent.init()) {
 			// for test purposes monitor imageresizer application only
 			Application imageResizer = new Application(
 					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar",

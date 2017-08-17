@@ -19,7 +19,7 @@ public class MonitoringServer {
 	private EmbeddedHttpServer httpServer;
 	private MetricProcessor metricProcessor;
 
-	private boolean init(final String jmsBrokerURL, final boolean embeddedJmsBroker) {
+	private boolean init(String jmsBrokerURL, boolean embeddedJmsBroker) {
 
 		metricProcessor = new MetricProcessor();
 		if (!metricProcessor.start()) {

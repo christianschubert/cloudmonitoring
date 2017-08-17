@@ -1,6 +1,7 @@
 package at.tuwien.monitoring.jms.messages;
 
 import java.util.Date;
+import java.util.StringJoiner;
 
 import at.tuwien.common.Method;
 
@@ -15,8 +16,7 @@ public class ServerExecutionTimeMessage extends MetricMessage {
 	public ServerExecutionTimeMessage() {
 	}
 
-	public ServerExecutionTimeMessage(final String ipAddress, final Date timestamp, final String target,
-			final Method method, final long executionTime) {
+	public ServerExecutionTimeMessage(String ipAddress, Date timestamp, String target, Method method, long executionTime) {
 		super(timestamp, ipAddress);
 		setTarget(target);
 		setMethod(method);
@@ -27,7 +27,7 @@ public class ServerExecutionTimeMessage extends MetricMessage {
 		return target;
 	}
 
-	public void setTarget(final String target) {
+	public void setTarget(String target) {
 		this.target = target;
 	}
 
@@ -35,7 +35,7 @@ public class ServerExecutionTimeMessage extends MetricMessage {
 		return method;
 	}
 
-	public void setMethod(final Method method) {
+	public void setMethod(Method method) {
 		this.method = method;
 	}
 
@@ -43,7 +43,7 @@ public class ServerExecutionTimeMessage extends MetricMessage {
 		return executionTime;
 	}
 
-	public void setExecutionTime(final long executionTime) {
+	public void setExecutionTime(long executionTime) {
 		this.executionTime = executionTime;
 	}
 
@@ -54,8 +54,27 @@ public class ServerExecutionTimeMessage extends MetricMessage {
 
 	@Override
 	public String toString() {
-		return "ServerExecutionTimeMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
-				+ ", getTarget()=" + getTarget() + ", getMethod()=" + getMethod() + ", getExecutionTime()="
-				+ getExecutionTime() + "]";
+		return "ServerExecutionTimeMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress() + ", getTarget()=" + getTarget()
+				+ ", getMethod()=" + getMethod() + ", getExecutionTime()=" + getExecutionTime() + "]";
+	}
+
+	@Override
+	public String getCsvHeader() {
+		return new StringJoiner(";")
+				.add("timestamp")
+				.add("target")
+				.add("method")
+				.add("executionTime")
+				.toString();
+	}
+
+	@Override
+	public String toCsvEntry() {
+		return new StringJoiner(";")
+				.add(getTimestamp().toString())
+				.add(getTarget())
+				.add(getMethod().toString())
+				.add(String.valueOf(getExecutionTime()))
+				.toString();
 	}
 }

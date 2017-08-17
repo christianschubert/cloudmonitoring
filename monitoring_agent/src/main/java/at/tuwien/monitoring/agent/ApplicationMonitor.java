@@ -1,5 +1,9 @@
 package at.tuwien.monitoring.agent;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
@@ -16,6 +20,7 @@ import org.hyperic.sigar.ProcMem;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 
+import at.tuwien.common.Settings;
 import at.tuwien.monitoring.agent.constants.Constants;
 import at.tuwien.monitoring.agent.constants.MonitorTask;
 import at.tuwien.monitoring.agent.process.ProcessRunner;
@@ -30,6 +35,8 @@ public class ApplicationMonitor {
 
 	private int cpuCount;
 
+	private int applicationID;
+
 	private ProcessRunner processRunner;
 
 	private ScheduledExecutorService scheduler;
@@ -38,11 +45,20 @@ public class ApplicationMonitor {
 	private List<MonitorTask> monitorTasks;
 	private Queue<MetricMessage> collectedMetrics = new ConcurrentLinkedQueue<MetricMessage>();
 
+	private Settings settings;
+
 	private boolean monitoring;
 
-	public ApplicationMonitor(int cpuCount, String[] applicationWithParams, List<MonitorTask> monitorTasks) {
+	private PrintWriter cpuLogFile, memoryLogFile;
+	private boolean addCsvHeaderCpu = true, addCsvHeaderMem = true;
+
+	public ApplicationMonitor(int cpuCount, String[] applicationWithParams, List<MonitorTask> monitorTasks,
+			Settings settings, int applicationID) {
 		this.cpuCount = cpuCount;
 		this.monitorTasks = monitorTasks;
+		this.settings = settings;
+		this.applicationID = applicationID;
+
 		processRunner = new ProcessRunner(applicationWithParams);
 		scheduler = Executors.newScheduledThreadPool(1);
 	}
@@ -55,12 +71,30 @@ public class ApplicationMonitor {
 			return;
 		}
 
-		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid), Constants.PROCESS_MONITOR_START_DELAY,
-				Constants.PROCESS_MONITOR_INTERVAL, TimeUnit.MILLISECONDS);
+		if (settings.logMetrics) {
+			try {
+				FileWriter fwCpu = new FileWriter(
+						settings.etcFolderPath + "/logs/logs_agent_cpu_application_" + applicationID + ".csv");
+				BufferedWriter bwCpu = new BufferedWriter(fwCpu);
+				cpuLogFile = new PrintWriter(bwCpu);
+
+				FileWriter fwMem = new FileWriter(
+						settings.etcFolderPath + "/logs/logs_agent_mem_application_" + applicationID + ".csv");
+				BufferedWriter bwMem = new BufferedWriter(fwMem);
+				memoryLogFile = new PrintWriter(bwMem);
+			} catch (IOException e) {
+				settings.logMetrics = false;
+				logger.error("Error logging metrics to file.");
+			}
+		}
+
+		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
+				Constants.PROCESS_MONITOR_START_DELAY, settings.systemMetricsMonitorInterval, TimeUnit.MILLISECONDS);
 
 		monitoring = true;
 
-		logger.info("Started monitoring of application \"" + processRunner.getProcessName() + "\"");
+		logger.info("Started monitoring of application \"" + processRunner.getProcessName() + "\" with ID "
+				+ applicationID);
 	}
 
 	public boolean isMonitoring() {
@@ -69,7 +103,8 @@ public class ApplicationMonitor {
 
 	public void stop() {
 
-		logger.info("Shutting down monitoring of application \"" + processRunner.getProcessName() + "\"...");
+		logger.info("Shutting down monitoring of application \"" + processRunner.getProcessName() + "\" with ID "
+				+ applicationID + "...");
 
 		monitoring = false;
 
@@ -87,6 +122,13 @@ public class ApplicationMonitor {
 		if (processRunner != null) {
 			processRunner.stop();
 		}
+
+		if (memoryLogFile != null) {
+			memoryLogFile.close();
+		}
+		if (cpuLogFile != null) {
+			cpuLogFile.close();
+		}
 	}
 
 	public Queue<MetricMessage> getCollectedMetrics() {
@@ -103,7 +145,7 @@ public class ApplicationMonitor {
 
 		public MonitorTimerTask(long pid) {
 			this.pid = pid;
-			this.sigar = ProcessTools.getSigar();
+			sigar = ProcessTools.getSigar();
 			processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
 			lastTime = System.currentTimeMillis();
 		}
@@ -120,7 +162,7 @@ public class ApplicationMonitor {
 			// check if the child process list should be updated
 			long currentTime = System.currentTimeMillis();
 			lastUpdatedPidList += (currentTime - lastTime);
-			if (lastUpdatedPidList > Constants.PROCESS_CHILDREN_UPDATE_INTERVAL) {
+			if (lastUpdatedPidList > settings.processChildrenUpdateInterval) {
 				// update child process list
 				processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
 				lastUpdatedPidList = 0;
@@ -144,8 +186,18 @@ public class ApplicationMonitor {
 				}
 			}
 
-			collectedMetrics.offer(
-					new MemoryMessage(null, new Date(), processRunner.getProcessName(), sumTotalMemory, sumResidentMemory));
+			MemoryMessage memoryMessage = new MemoryMessage(null, new Date(), processRunner.getProcessName(),
+					sumTotalMemory, sumResidentMemory);
+			collectedMetrics.offer(memoryMessage);
+
+			if (settings.logMetrics) {
+				if (addCsvHeaderMem) {
+					memoryLogFile.println(memoryMessage.getCsvHeader());
+					addCsvHeaderMem = false;
+				}
+				memoryLogFile.println(memoryMessage.toCsvEntry());
+				memoryLogFile.flush();
+			}
 		}
 
 		private void monitorCpu() {
@@ -175,6 +227,15 @@ public class ApplicationMonitor {
 			message.setCpuUser(sumCpuUser);
 
 			collectedMetrics.offer(message);
+
+			if (settings.logMetrics) {
+				if (addCsvHeaderCpu) {
+					cpuLogFile.println(message.getCsvHeader());
+					addCsvHeaderCpu = false;
+				}
+				cpuLogFile.println(message.toCsvEntry());
+				cpuLogFile.flush();
+			}
 		}
 	}
 }

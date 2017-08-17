@@ -66,12 +66,12 @@ public class Wsla2ExpressionMapper {
 
 	private MetricProcessor metricProcessor;
 
-	public Wsla2ExpressionMapper(final WebServiceLevelAgreement wsla, final MetricProcessor metricProcessor) {
+	public Wsla2ExpressionMapper(WebServiceLevelAgreement wsla, MetricProcessor metricProcessor) {
 		this.metricProcessor = metricProcessor;
 		doMapping(wsla);
 	}
 
-	private void doMapping(final WebServiceLevelAgreement wsla) {
+	private void doMapping(WebServiceLevelAgreement wsla) {
 
 		Map<String, String> slaMetricMap = new HashMap<>();
 		Map<String, MetricInformation> processingMetricMap = new HashMap<>();
@@ -126,7 +126,7 @@ public class Wsla2ExpressionMapper {
 		}
 	}
 
-	private void createExpression(final MetricInformation metricInformation, final SimplePredicate simplePredicate) {
+	private void createExpression(MetricInformation metricInformation, SimplePredicate simplePredicate) {
 
 		String expression = null;
 
@@ -165,7 +165,7 @@ public class Wsla2ExpressionMapper {
 		metricProcessor.addExpression(expression);
 	}
 
-	private void parseSimpleMetric(final MetricType metric, final Map<String, MetricInformation> processingMetricMap) {
+	private void parseSimpleMetric(MetricType metric, Map<String, MetricInformation> processingMetricMap) {
 		// simple metric, should be in basic metric map if implemented
 		String metricName = metric.getName().toLowerCase();
 		if (basicMetricMap.containsKey(metricName)) {
@@ -177,7 +177,7 @@ public class Wsla2ExpressionMapper {
 	}
 
 	// currently one level implemented
-	private void parseComplexMetric(final MetricType metric, final Map<String, MetricInformation> processingMetricMap) {
+	private void parseComplexMetric(MetricType metric, Map<String, MetricInformation> processingMetricMap) {
 
 		MetricInformation metricInformation = new MetricInformation();
 		String basicMetricName = null;
@@ -217,7 +217,7 @@ public class Wsla2ExpressionMapper {
 		}
 	}
 
-	private SimplePredicate parseSimplePredicate(final PredicateType predicate) {
+	private SimplePredicate parseSimplePredicate(PredicateType predicate) {
 		SimplePredicate simplePredicate = new SimplePredicate();
 		if (predicate instanceof Less) {
 			Less pred = (Less) predicate;
@@ -259,7 +259,7 @@ public class Wsla2ExpressionMapper {
 		return null;
 	}
 
-	private boolean checkValidity(final List<PeriodType> validity) {
+	private boolean checkValidity(List<PeriodType> validity) {
 		Date startTime = validity.get(0).getStart().toGregorianCalendar().getTime();
 		Date stopTime = validity.get(0).getEnd().toGregorianCalendar().getTime();
 		Date now = new Date();

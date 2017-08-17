@@ -1,6 +1,7 @@
 package at.tuwien.monitoring.jms.messages;
 
 import java.util.Date;
+import java.util.StringJoiner;
 
 public class CpuLoadMessage extends MetricMessage {
 
@@ -15,7 +16,7 @@ public class CpuLoadMessage extends MetricMessage {
 	public CpuLoadMessage() {
 	}
 
-	public CpuLoadMessage(final String ipAddress, final Date timestamp, String application) {
+	public CpuLoadMessage(String ipAddress, Date timestamp, String application) {
 		super(timestamp, ipAddress);
 		setApplication(application);
 	}
@@ -67,7 +68,32 @@ public class CpuLoadMessage extends MetricMessage {
 
 	@Override
 	public String toString() {
-		return "CpuLoadMessage [application=" + application + ", cpuLoad=" + getCpuLoad() + ", cpuTotal="
-				+ getCpuTotal() + ", cpuUser=" + getCpuUser() + ", cpuKernel=" + getCpuKernel() + "]";
+		return "CpuLoadMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress() + ", getApplication=" + getApplication()
+				+ ", getCpuLoad=" + getCpuLoad() + ", getCpuTotal=" + getCpuTotal() + ", getCpuUser=" + getCpuUser() + ", getCpuKernel=" + getCpuKernel()
+				+ "]";
+	}
+
+	@Override
+	public String getCsvHeader() {
+		return new StringJoiner(";")
+				.add("timestamp")
+				.add("application")
+				.add("cpuLoad")
+				.add("cpuTotal")
+				.add("cpuUser")
+				.add("cpuKernel")
+				.toString();
+	}
+
+	@Override
+	public String toCsvEntry() {
+		return new StringJoiner(";")
+				.add(getTimestamp().toString())
+				.add(getApplication())
+				.add(String.valueOf(getCpuLoad()))
+				.add(String.valueOf(getCpuTotal()))
+				.add(String.valueOf(getCpuUser()))
+				.add(String.valueOf(getCpuKernel()))
+				.toString();
 	}
 }
