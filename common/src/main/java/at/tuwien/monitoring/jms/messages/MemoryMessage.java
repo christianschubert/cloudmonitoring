@@ -1,6 +1,7 @@
 package at.tuwien.monitoring.jms.messages;
 
 import java.util.Date;
+import java.util.StringJoiner;
 
 public class MemoryMessage extends MetricMessage {
 
@@ -13,8 +14,7 @@ public class MemoryMessage extends MetricMessage {
 	public MemoryMessage() {
 	}
 
-	public MemoryMessage(final String ipAddress, final Date timestamp, String application, long totalMemory,
-			long residentMemory) {
+	public MemoryMessage(String ipAddress, Date timestamp, String application, long totalMemory, long residentMemory) {
 		super(timestamp, ipAddress);
 		setApplication(application);
 		setTotalMemory(totalMemory);
@@ -52,8 +52,27 @@ public class MemoryMessage extends MetricMessage {
 
 	@Override
 	public String toString() {
-		return "MemoryMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
-				+ ", getApplication()=" + getApplication() + ", getTotalMemory()=" + getTotalMemory()
-				+ ", getResidentMemory()=" + getResidentMemory() + "]";
+		return "MemoryMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress() + ", getApplication()=" + getApplication()
+				+ ", getTotalMemory()=" + getTotalMemory() + ", getResidentMemory()=" + getResidentMemory() + "]";
+	}
+
+	@Override
+	public String getCsvHeader() {
+		return new StringJoiner(";")
+				.add("timestamp")
+				.add("application")
+				.add("totalMemory")
+				.add("residentMemory")
+				.toString();
+	}
+
+	@Override
+	public String toCsvEntry() {
+		return new StringJoiner(";")
+				.add(getTimestamp().toString())
+				.add(getApplication())
+				.add(String.valueOf(getTotalMemory()))
+				.add(String.valueOf(getResidentMemory()))
+				.toString();
 	}
 }

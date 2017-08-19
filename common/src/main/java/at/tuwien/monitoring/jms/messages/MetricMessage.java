@@ -35,4 +35,8 @@ public abstract class MetricMessage implements Serializable {
 	}
 
 	public abstract String getServiceName();
+
+	public abstract String getCsvHeader();
+
+	public abstract String toCsvEntry();
 }

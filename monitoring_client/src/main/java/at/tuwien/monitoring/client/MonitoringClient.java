@@ -1,12 +1,14 @@
 package at.tuwien.monitoring.client;
 
-import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -20,50 +22,68 @@ public class MonitoringClient {
 
 	private final static Logger logger = Logger.getLogger(MonitoringClient.class);
 
-	private void start(String serviceUrl) {
+	private static Settings settings = new Settings();
+
+	private PrintWriter outLogFile;
+
+	private void start() {
 		cleanupDownloadFolder();
-		logger.info("Monitoring client running. Enter 'x' to exit. Press return to start new requests.");
 
-		ServiceRequester requester = new ServiceRequester(serviceUrl + Constants.APP_PATH);
-
-		boolean isRequest = true;
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		while (isRequest) {
-			// requester.shrinkRequest(Constants.IMAGE_VERY_BIG, 400,
-			// Rotation.FLIP_HORZ);
-			requester.shrinkRequest(Constants.IMAGE_BIG, 400, Rotation.FLIP_HORZ);
-			// requester.shrinkRequest(Constants.IMAGE_MEDIUM, 300);
-			// requester.shrinkRequest(Constants.IMAGE_SMALL, Rotation.CW_90);
-
+		if (settings.logMetrics) {
 			try {
-				if (br.readLine().equals("x")) {
-					isRequest = false;
-				}
+				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_client.csv");
+				BufferedWriter bw = new BufferedWriter(fw);
+				outLogFile = new PrintWriter(bw);
+
+				// csv header
+				outLogFile.println("responseTime");
 			} catch (IOException e) {
-				e.printStackTrace();
-				isRequest = false;
+				settings.logMetrics = false;
+				logger.error("Error logging metrics to file.");
 			}
 		}
 
+		String image = "image_" + settings.imageType + ".jpg";
+
+		ServiceRequester requester = new ServiceRequester(settings.serviceUrl + Constants.APP_PATH);
+
+		logger.info("Test running. Please wait...");
+
+		for (int i = 0; i < settings.requestCount; i++) {
+			// start measuring response time from client - to compare with aspect
+			long startTime = System.nanoTime();
+
+			requester.shrinkRequest(image, settings.imageTargetSize, Rotation.valueOf(settings.imageRotation));
+
+			if (settings.logMetrics) {
+				long responseTime = System.nanoTime() - startTime;
+				outLogFile.println(TimeUnit.NANOSECONDS.toMillis(responseTime));
+				outLogFile.flush();
+			}
+		}
+
+		logger.info("Test finished!");
 		logger.info("Monitoring client shutdown.");
 		requester.shutdown();
+
+		if (outLogFile != null) {
+			outLogFile.close();
+		}
+
 		System.exit(0);
 	}
 
 	private void cleanupDownloadFolder() {
 		// delete all image files from download directory (except .gitignore)
 		try {
-			Files.walk(Paths.get(Constants.DOWNLOAD_PATH)).map(Path::toFile).filter(f -> !f.getName().equals(".gitignore"))
-					.forEach(File::delete);
+			Files.walk(Paths.get(Constants.DOWNLOAD_PATH)).map(Path::toFile)
+					.filter(f -> !f.getName().equals(".gitignore")).forEach(File::delete);
 		} catch (IOException e) {
 			logger.error("Error cleaning up download directory.");
 		}
 	}
 
 	public static void main(final String[] args) {
-
-		String serviceUrl = Constants.DEFAULT_SERVICE_URL;
-
 		for (String arg : args) {
 			if (!arg.startsWith("config:")) {
 				continue;
@@ -72,11 +92,10 @@ public class MonitoringClient {
 			if (split.length != 2) {
 				continue;
 			}
-			Settings settings = Utils.readProperties(split[1]);
-			serviceUrl = settings.serviceUrl;
+			settings = Utils.readProperties(split[1]);
 		}
 
 		MonitoringClient monitoringClient = new MonitoringClient();
-		monitoringClient.start(serviceUrl);
+		monitoringClient.start();
 	}
 }

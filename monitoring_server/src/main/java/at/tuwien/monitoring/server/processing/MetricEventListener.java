@@ -23,8 +23,8 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 	private ViolationDAO violationDAO = new ViolationDAO();
 
 	@Override
-	public void update(final EventBean[] newEvents, final EventBean[] oldEvents, final EPStatement statement,
-			final EPServiceProvider epServiceProvider) {
+	public void update(EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement,
+			EPServiceProvider epServiceProvider) {
 
 		EventBean event = newEvents[0];
 

@@ -107,7 +107,7 @@ public class ExtensionServer {
 
 		public ClientHandler(Socket socket) {
 			this.socket = socket;
-			this.address = socket.getRemoteSocketAddress().toString();
+			address = socket.getRemoteSocketAddress().toString();
 
 			logger.info("New client: " + address);
 		}
@@ -120,7 +120,8 @@ public class ExtensionServer {
 
 				while ((line = clientReader.readLine()) != null) {
 					try {
-						ServerExecutionTimeMessage message = objectMapper.readValue(line, ServerExecutionTimeMessage.class);
+						ServerExecutionTimeMessage message = objectMapper.readValue(line,
+								ServerExecutionTimeMessage.class);
 
 						logger.info("New message: " + message);
 

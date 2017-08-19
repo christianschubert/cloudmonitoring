@@ -14,7 +14,7 @@ public class SimplePredicate {
 		return predicateSign;
 	}
 
-	public void setPredicateSign(final String predicateSign) {
+	public void setPredicateSign(String predicateSign) {
 		this.predicateSign = predicateSign;
 	}
 
@@ -22,7 +22,7 @@ public class SimplePredicate {
 		return slaParameter;
 	}
 
-	public void setSlaParameter(final String slaParameter) {
+	public void setSlaParameter(String slaParameter) {
 		this.slaParameter = slaParameter;
 	}
 
@@ -30,7 +30,7 @@ public class SimplePredicate {
 		return threshold;
 	}
 
-	public void setThreshold(final double threshold) {
+	public void setThreshold(double threshold) {
 		this.threshold = threshold;
 	}
 
@@ -38,13 +38,13 @@ public class SimplePredicate {
 		return detectionSign;
 	}
 
-	public void setDetectionSign(final String detectionSign) {
+	public void setDetectionSign(String detectionSign) {
 		this.detectionSign = detectionSign;
 	}
 
 	@Override
 	public String toString() {
-		return "SimplePredicate [predicateSign=" + predicateSign + ", detectionSign=" + detectionSign + ", slaParameter=" + slaParameter + ", threshold="
-				+ threshold + "]";
+		return "SimplePredicate [predicateSign=" + predicateSign + ", detectionSign=" + detectionSign
+				+ ", slaParameter=" + slaParameter + ", threshold=" + threshold + "]";
 	}
 }

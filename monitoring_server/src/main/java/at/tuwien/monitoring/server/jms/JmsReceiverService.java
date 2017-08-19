@@ -38,12 +38,12 @@ public class JmsReceiverService implements MessageListener {
 	private boolean embeddedJmsBroker;
 	private boolean connected = false;
 
-	public JmsReceiverService(final boolean embeddedJmsBroker, MetricProcessor metricProcessor) {
+	public JmsReceiverService(boolean embeddedJmsBroker, MetricProcessor metricProcessor) {
 		// use default broker URL
 		this(null, embeddedJmsBroker, metricProcessor);
 	}
 
-	public JmsReceiverService(final String brokerURL, final boolean embeddedJmsBroker, MetricProcessor metricProcessor) {
+	public JmsReceiverService(String brokerURL, final boolean embeddedJmsBroker, MetricProcessor metricProcessor) {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
@@ -54,7 +54,7 @@ public class JmsReceiverService implements MessageListener {
 	}
 
 	@Override
-	public void onMessage(final Message message) {
+	public void onMessage(Message message) {
 		try {
 			if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
