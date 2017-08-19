@@ -9,6 +9,7 @@ import javax.xml.bind.JAXBElement;
 
 import org.apache.log4j.Logger;
 
+import com.ibm.wsla.Average;
 import com.ibm.wsla.Equal;
 import com.ibm.wsla.Greater;
 import com.ibm.wsla.GreaterEqual;
@@ -99,25 +100,21 @@ public class Wsla2ExpressionMapper {
 		}
 
 		// parse service level objectives
-		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations()
-				.getServiceLevelObjective()) {
+		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations().getServiceLevelObjective()) {
 			if (!checkValidity(serviceLevelObjective.getValidity())) {
 				logger.info("Validity of SLO \"" + serviceLevelObjective.getName() + "\" not given. Ignoring SLO.");
 				continue;
 			}
 
-			SimplePredicate simplePredicate = parseSimplePredicate(
-					serviceLevelObjective.getExpression().getPredicate());
+			SimplePredicate simplePredicate = parseSimplePredicate(serviceLevelObjective.getExpression().getPredicate());
 			if (simplePredicate == null) {
-				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName()
-						+ "\" not implemented yet or not valid.");
+				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName() + "\" not implemented yet or not valid.");
 				continue;
 			}
 
 			String metricToObserve = slaMetricMap.get(simplePredicate.getSlaParameter());
 			if (metricToObserve == null) {
-				logger.info(
-						"SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
+				logger.info("SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
 				continue;
 			}
 
@@ -147,8 +144,8 @@ public class Wsla2ExpressionMapper {
 
 			expression = String.format(SIMPLE_EXPRESSION, metricInformation.getPropertyName(),
 					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(),
-					metricInformation.getPropertyName(), metricInformation.getPropertyName(),
-					simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
+					metricInformation.getPropertyName(), metricInformation.getPropertyName(), simplePredicate.getDetectionSign(),
+					simplePredicate.getThreshold());
 
 		} else {
 			// aggregation function
@@ -183,7 +180,7 @@ public class Wsla2ExpressionMapper {
 		String basicMetricName = null;
 
 		// resolve functions
-		if (metric.getFunction() instanceof Mean) {
+		if (metric.getFunction() instanceof Mean || metric.getFunction() instanceof Average) {
 			Mean mean = (Mean) metric.getFunction();
 			metricInformation.setAggregationFunction("avg");
 			basicMetricName = mean.getMetric();

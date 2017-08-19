@@ -40,7 +40,7 @@
 				</Communication>
 			</SLAParameter>
 			<SLAParameter name="AverageResponseTimeImageResize"
-				type="double" unit="percent">
+				type="double" unit="milliseconds">
 				<Metric>AverageResponseTime</Metric>
 				<Communication>
 					<Source>ImageServiceConsumer</Source>
@@ -60,9 +60,9 @@
 				</Communication>
 			</SLAParameter>
 
-			<Metric name="AverageResponseTime" type="long" unit="milliseconds">
+			<Metric name="AverageResponseTime" type="double" unit="milliseconds">
 				<Source>ImageServiceConsumer</Source>
-				<Function xsi:type="Mean" resultType="double">
+				<Function xsi:type="Average" resultType="double">
 					<Metric>ResponseTime</Metric>
 				</Function>
 			</Metric>
