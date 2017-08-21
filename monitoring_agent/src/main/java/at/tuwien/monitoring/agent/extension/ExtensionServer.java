@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import at.tuwien.common.GlobalConstants;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
-import at.tuwien.monitoring.jms.messages.ServerExecutionTimeMessage;
+import at.tuwien.monitoring.jms.messages.ServerInfoMessage;
 
 public class ExtensionServer {
 
@@ -120,8 +120,8 @@ public class ExtensionServer {
 
 				while ((line = clientReader.readLine()) != null) {
 					try {
-						ServerExecutionTimeMessage message = objectMapper.readValue(line,
-								ServerExecutionTimeMessage.class);
+						ServerInfoMessage message = objectMapper.readValue(line,
+								ServerInfoMessage.class);
 
 						logger.info("New message: " + message);
 

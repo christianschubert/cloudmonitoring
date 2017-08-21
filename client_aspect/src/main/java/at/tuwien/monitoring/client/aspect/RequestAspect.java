@@ -25,7 +25,7 @@ import at.tuwien.common.Method;
 import at.tuwien.common.Settings;
 import at.tuwien.common.Utils;
 import at.tuwien.monitoring.jms.JmsSenderService;
-import at.tuwien.monitoring.jms.messages.ClientResponseTimeMessage;
+import at.tuwien.monitoring.jms.messages.ClientInfoMessage;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
 
 @Aspect
@@ -197,7 +197,7 @@ public class RequestAspect {
 			// errors
 			long responseTimeMillis = (responseTime == -1 ? -1 : TimeUnit.NANOSECONDS.toMillis(responseTime));
 
-			ClientResponseTimeMessage clientResponseTimeMessage = new ClientResponseTimeMessage(publicIPAddress,
+			ClientInfoMessage clientResponseTimeMessage = new ClientInfoMessage(publicIPAddress,
 					new Date(), target, method, responseTimeMillis, responseCode);
 
 			if (settings.logMetrics) {

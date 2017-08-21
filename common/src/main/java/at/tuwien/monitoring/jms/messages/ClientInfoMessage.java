@@ -5,7 +5,7 @@ import java.util.StringJoiner;
 
 import at.tuwien.common.Method;
 
-public class ClientResponseTimeMessage extends MetricMessage {
+public class ClientInfoMessage extends MetricMessage {
 
 	private static final long serialVersionUID = 1L;
 
@@ -14,10 +14,10 @@ public class ClientResponseTimeMessage extends MetricMessage {
 	private long responseTime; // milliseconds
 	private int responseCode;
 
-	public ClientResponseTimeMessage() {
+	public ClientInfoMessage() {
 	}
 
-	public ClientResponseTimeMessage(String ipAddress, Date timestamp, String target, Method method, long responseTime,
+	public ClientInfoMessage(String ipAddress, Date timestamp, String target, Method method, long responseTime,
 			final int responseCode) {
 		super(timestamp, ipAddress);
 		setTarget(target);

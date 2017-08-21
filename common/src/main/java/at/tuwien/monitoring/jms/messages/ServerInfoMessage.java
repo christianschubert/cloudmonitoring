@@ -5,7 +5,7 @@ import java.util.StringJoiner;
 
 import at.tuwien.common.Method;
 
-public class ServerExecutionTimeMessage extends MetricMessage {
+public class ServerInfoMessage extends MetricMessage {
 
 	private static final long serialVersionUID = 1L;
 
@@ -13,10 +13,10 @@ public class ServerExecutionTimeMessage extends MetricMessage {
 	private Method method;
 	private long executionTime; // milliseconds
 
-	public ServerExecutionTimeMessage() {
+	public ServerInfoMessage() {
 	}
 
-	public ServerExecutionTimeMessage(String ipAddress, Date timestamp, String target, Method method, long executionTime) {
+	public ServerInfoMessage(String ipAddress, Date timestamp, String target, Method method, long executionTime) {
 		super(timestamp, ipAddress);
 		setTarget(target);
 		setMethod(method);

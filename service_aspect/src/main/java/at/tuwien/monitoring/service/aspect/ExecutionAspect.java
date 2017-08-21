@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import at.tuwien.common.GlobalConstants;
 import at.tuwien.common.Method;
 import at.tuwien.common.Utils;
-import at.tuwien.monitoring.jms.messages.ServerExecutionTimeMessage;
+import at.tuwien.monitoring.jms.messages.ServerInfoMessage;
 
 @Aspect
 public class ExecutionAspect {
@@ -174,7 +174,7 @@ public class ExecutionAspect {
 	}
 
 	private void sendExecutionTime(String target, Method method, long executionTime) {
-		ServerExecutionTimeMessage message = new ServerExecutionTimeMessage(publicIPAddress, new Date(), target, method,
+		ServerInfoMessage message = new ServerInfoMessage(publicIPAddress, new Date(), target, method,
 				TimeUnit.NANOSECONDS.toMillis(executionTime));
 
 		try {

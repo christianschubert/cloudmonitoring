@@ -58,8 +58,8 @@ public class Wsla2ExpressionMapper {
 	private static Map<String, MetricInformation> basicMetricMap;
 	static {
 		basicMetricMap = new HashMap<>();
-		basicMetricMap.put("responsetime", new MetricInformation("ClientResponseTimeMessage", "responseTime"));
-		basicMetricMap.put("successrate", new MetricInformation("ClientResponseTimeMessage", "responseCode"));
+		basicMetricMap.put("responsetime", new MetricInformation("ClientInfoMessage", "responseTime"));
+		basicMetricMap.put("successrate", new MetricInformation("ClientInfoMessage", "responseCode"));
 		basicMetricMap.put("cpuload", new MetricInformation("CpuLoadMessage", "cpuLoad"));
 		basicMetricMap.put("totalmemory", new MetricInformation("MemoryMessage", "totalMemory"));
 		basicMetricMap.put("residentmemory", new MetricInformation("MemoryMessage", "residentMemory"));
@@ -100,25 +100,21 @@ public class Wsla2ExpressionMapper {
 		}
 
 		// parse service level objectives
-		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations()
-				.getServiceLevelObjective()) {
+		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations().getServiceLevelObjective()) {
 			if (!checkValidity(serviceLevelObjective.getValidity())) {
 				logger.info("Validity of SLO \"" + serviceLevelObjective.getName() + "\" not given. Ignoring SLO.");
 				continue;
 			}
 
-			SimplePredicate simplePredicate = parseSimplePredicate(
-					serviceLevelObjective.getExpression().getPredicate());
+			SimplePredicate simplePredicate = parseSimplePredicate(serviceLevelObjective.getExpression().getPredicate());
 			if (simplePredicate == null) {
-				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName()
-						+ "\" not implemented yet or not valid.");
+				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName() + "\" not implemented yet or not valid.");
 				continue;
 			}
 
 			String metricToObserve = slaMetricMap.get(simplePredicate.getSlaParameter());
 			if (metricToObserve == null) {
-				logger.info(
-						"SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
+				logger.info("SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
 				continue;
 			}
 
@@ -148,8 +144,8 @@ public class Wsla2ExpressionMapper {
 
 			expression = String.format(SIMPLE_EXPRESSION, metricInformation.getPropertyName(),
 					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(),
-					metricInformation.getPropertyName(), metricInformation.getPropertyName(),
-					simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
+					metricInformation.getPropertyName(), metricInformation.getPropertyName(), simplePredicate.getDetectionSign(),
+					simplePredicate.getThreshold());
 
 		} else {
 			// aggregation function
