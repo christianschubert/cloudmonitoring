@@ -197,8 +197,8 @@ public class RequestAspect {
 			// errors
 			long responseTimeMillis = (responseTime == -1 ? -1 : TimeUnit.NANOSECONDS.toMillis(responseTime));
 
-			ClientInfoMessage clientResponseTimeMessage = new ClientInfoMessage(publicIPAddress,
-					new Date(), target, method, responseTimeMillis, responseCode);
+			ClientInfoMessage clientResponseTimeMessage = new ClientInfoMessage(publicIPAddress, new Date(), target,
+					method, responseTimeMillis, responseCode);
 
 			if (settings.logMetrics) {
 				if (writeHeader) {
