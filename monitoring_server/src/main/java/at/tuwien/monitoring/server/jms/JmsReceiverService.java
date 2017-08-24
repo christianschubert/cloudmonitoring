@@ -23,7 +23,7 @@ import at.tuwien.monitoring.server.processing.MetricProcessor;
 
 public class JmsReceiverService implements MessageListener {
 
-	private String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
+	private String brokerURL = "tcp://0.0.0.0:61616";
 
 	private BrokerService broker;
 	private ActiveMQConnectionFactory connectionFactory;
