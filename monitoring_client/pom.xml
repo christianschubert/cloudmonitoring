@@ -70,7 +70,7 @@
 				<configuration>
 					<executable>java</executable>
 					<arguments>
-						<argument>-javaagent:${main.basedir}/aspectjweaver/aspectjweaver.jar</argument>
+						<argument>-javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar</argument>
 						<argument>-classpath</argument>
 						<classpath />
 						<argument>${main.class}</argument>
