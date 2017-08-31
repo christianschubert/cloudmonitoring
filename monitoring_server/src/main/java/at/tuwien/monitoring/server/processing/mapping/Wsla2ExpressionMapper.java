@@ -36,30 +36,27 @@ public class Wsla2ExpressionMapper {
 
 	private static final int AGGREGATION_MINIMUM_EVENT_SIZE = 3;
 
-	private static final String SIMPLE_EXPRESSION = "select %s as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s(%s >= 0) having %s %s %s";
-	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s(%s >= 0) group by ipAddress, serviceName having %s(%s) %s %s AND count(*) >= "
+	private static final String SIMPLE_EXPRESSION = "select %s as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s%s having %s %s %s";
+	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s%s group by ipAddress, serviceName having %s(%s) %s %s AND count(*) >= "
 			+ AGGREGATION_MINIMUM_EVENT_SIZE;
 
 	private static final String RATIO_FUNCTION = "count(*, %s %s %s)/count(*)";
-	private static final String RATIO_EXPRESSION = "select " + RATIO_FUNCTION
-			+ " as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s(%s >= 0) group by ipAddress, serviceName having "
-			+ RATIO_FUNCTION + " %s %s AND count(*) >=" + AGGREGATION_MINIMUM_EVENT_SIZE;
+
+	private static final String WINDOW_TIME_SEC = ".win:time(%d sec)";
 
 	@SuppressWarnings("unused")
-	private static final String WINDOW_LENGTH = ".win:length(%)";
+	private static final String WINDOW_LENGTH = ".win:length(%d)";
 
 	@SuppressWarnings("unused")
-	private static final String WINDOW_TIME_SEC = ".win:time(% sec)";
-
-	@SuppressWarnings("unused")
-	private static final String WINDOW_TIME_MIN = ".win:time(% min)";
+	private static final String WINDOW_TIME_MIN = ".win:time(%d min)";
 
 	// map of basic metrics and their corresponding messages and variables
 	private static Map<String, MetricInformation> basicMetricMap;
 	static {
 		basicMetricMap = new HashMap<>();
 		basicMetricMap.put("responsetime", new MetricInformation("ClientInfoMessage", "responseTime"));
-		basicMetricMap.put("successrate", new MetricInformation("ClientInfoMessage", "responseCode"));
+		basicMetricMap.put("successability", new MetricInformation("ClientInfoMessage", "responseCode"));
+		basicMetricMap.put("throughput", new MetricInformation("ClientInfoMessage", "count(*)"));
 		basicMetricMap.put("cpuload", new MetricInformation("CpuLoadMessage", "cpuLoad"));
 		basicMetricMap.put("totalmemory", new MetricInformation("MemoryMessage", "totalMemory"));
 		basicMetricMap.put("residentmemory", new MetricInformation("MemoryMessage", "residentMemory"));
@@ -126,26 +123,33 @@ public class Wsla2ExpressionMapper {
 	private void createExpression(MetricInformation metricInformation, SimplePredicate simplePredicate) {
 
 		String expression = null;
+		String filter = String.format("(%s >= 0)", metricInformation.getPropertyName());
+		if (metricInformation.getPropertyName().equals("count(*)")) {
+			// throughput
+			filter = String.format(WINDOW_TIME_SEC, 1);
+		}
 
 		if (metricInformation.getPropertyName().toLowerCase().equals("responsecode")) {
 			// successrate (detection currently hardcoded)
 			String requirementDesc = simplePredicate.getPredicateSign() + simplePredicate.getThreshold();
+			String aggregationFunction = metricInformation.getAggregationFunction() == null ? ""
+					: metricInformation.getAggregationFunction();
 
 			// success -> status code begins with 2 (i.e 200 ok)
 			String successPattern = "'2%'";
-			expression = String.format(RATIO_EXPRESSION, metricInformation.getPropertyName(), "like", successPattern,
-					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(),
-					metricInformation.getPropertyName(), metricInformation.getPropertyName(), "like", successPattern,
-					simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
+			String ratioFunction = String.format(RATIO_FUNCTION, metricInformation.getPropertyName(), "like", successPattern);
+
+			expression = String.format(AGGREGATION_FUNCTION_EXPRESSION, aggregationFunction, ratioFunction,
+					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(), filter,
+					aggregationFunction, ratioFunction, simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
 
 		} else if (metricInformation.getAggregationFunction() == null) {
 			// simple function
 			String requirementDesc = simplePredicate.getPredicateSign() + simplePredicate.getThreshold();
 
 			expression = String.format(SIMPLE_EXPRESSION, metricInformation.getPropertyName(),
-					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(),
-					metricInformation.getPropertyName(), metricInformation.getPropertyName(), simplePredicate.getDetectionSign(),
-					simplePredicate.getThreshold());
+					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(), filter,
+					metricInformation.getPropertyName(), simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
 
 		} else {
 			// aggregation function
@@ -154,9 +158,8 @@ public class Wsla2ExpressionMapper {
 
 			expression = String.format(AGGREGATION_FUNCTION_EXPRESSION, metricInformation.getAggregationFunction(),
 					metricInformation.getPropertyName(), metricInformation.getPropertyName(), requirementDesc,
-					metricInformation.getEventMessageName(), metricInformation.getPropertyName(),
-					metricInformation.getAggregationFunction(), metricInformation.getPropertyName(),
-					simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
+					metricInformation.getEventMessageName(), filter, metricInformation.getAggregationFunction(),
+					metricInformation.getPropertyName(), simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
 		}
 
 		metricProcessor.addExpression(expression);

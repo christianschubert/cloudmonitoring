@@ -52,9 +52,16 @@
 					<Source>ImageServiceProvider</Source>
 				</Communication>
 			</SLAParameter>
-			<SLAParameter name="RequestSuccessRate" type="double"
+			<SLAParameter name="RequestSuccessability" type="double"
 				unit="percent">
-				<Metric>SuccessRate</Metric>
+				<Metric>Successability</Metric>
+				<Communication>
+					<Source>ImageServiceConsumer</Source>
+				</Communication>
+			</SLAParameter>
+			<SLAParameter name="RequestMaxThroughput" type="double"
+				unit="percent">
+				<Metric>MaxThroughput</Metric>
 				<Communication>
 					<Source>ImageServiceConsumer</Source>
 				</Communication>
@@ -74,14 +81,24 @@
 				<Source>ImageServiceProvider</Source>
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>
-			<Metric name="SuccessRate" type="long" unit="milliseconds">
+			<Metric name="Successability" type="long" unit="percent">
+				<Source>ImageServiceConsumer</Source>
+				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
+			</Metric>
+			<Metric name="MaxThroughput" type="long" unit="percent">
+				<Source>ImageServiceConsumer</Source>
+				<Function xsi:type="Max" resultType="long">
+					<Metric>Throughput</Metric>
+				</Function>
+			</Metric>
+			<Metric name="Throughput" type="long" unit="percent">
 				<Source>ImageServiceConsumer</Source>
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>
 
 			<WSDLFile>http://localhost:8080/imageresizer/application.wadl</WSDLFile>
 			<SOAPBindingName>http://localhost:8080/imageresizer/shrink</SOAPBindingName>
-			<SOAPOperationName>shrink</SOAPOperationName>
+			<SOAPOperationName>POST</SOAPOperationName>
 		</Operation>
 
 	</ServiceDefinition>
@@ -111,7 +128,21 @@
 			<Expression>
 				<Predicate xsi:type="Less">
 					<SLAParameter>AverageResponseTimeImageResize</SLAParameter>
-					<Value>1500</Value>
+					<Value>200</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+		<ServiceLevelObjective name="RequestMaxThroughputSLO">
+			<Obliged>ImageServiceProvider</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2018-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="Greater">
+					<SLAParameter>RequestMaxThroughput</SLAParameter>
+					<Value>1</Value>
 				</Predicate>
 			</Expression>
 			<EvaluationEvent>NewValue</EvaluationEvent>
@@ -130,7 +161,7 @@
 			</Expression>
 			<EvaluationEvent>NewValue</EvaluationEvent>
 		</ServiceLevelObjective>
-		<ServiceLevelObjective name="RequestSuccessRateSLO">
+		<ServiceLevelObjective name="RequestSuccessabilitySLO">
 			<Obliged>ImageServiceProvider</Obliged>
 			<Validity>
 				<Start>2017-01-01T14:00:00.000-05:00</Start>
@@ -138,7 +169,7 @@
 			</Validity>
 			<Expression>
 				<Predicate xsi:type="Greater">
-					<SLAParameter>RequestSuccessRate</SLAParameter>
+					<SLAParameter>RequestSuccessability</SLAParameter>
 					<Value>0.95</Value>
 				</Predicate>
 			</Expression>
