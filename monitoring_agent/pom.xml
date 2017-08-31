@@ -52,7 +52,7 @@
 						<argument>-classpath</argument>
 						<classpath />
 						<argument>${main.class}</argument>
-						<argument>${main.basedir}/etc/settings.properties</argument>
+						<argument>config:${main.basedir}/etc/settings.properties</argument>
 					</arguments>
 				</configuration>
 			</plugin>
