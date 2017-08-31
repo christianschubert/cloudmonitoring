@@ -56,7 +56,7 @@ public class Wsla2ExpressionMapper {
 		basicMetricMap = new HashMap<>();
 		basicMetricMap.put("responsetime", new MetricInformation("ClientInfoMessage", "responseTime"));
 		basicMetricMap.put("successability", new MetricInformation("ClientInfoMessage", "responseCode"));
-		basicMetricMap.put("throughput", new MetricInformation("ClientInfoMessage", "count(*)"));
+		basicMetricMap.put("throughput", new MetricInformation("ServerInfoMessage", "count(*)"));
 		basicMetricMap.put("cpuload", new MetricInformation("CpuLoadMessage", "cpuLoad"));
 		basicMetricMap.put("totalmemory", new MetricInformation("MemoryMessage", "totalMemory"));
 		basicMetricMap.put("residentmemory", new MetricInformation("MemoryMessage", "residentMemory"));
