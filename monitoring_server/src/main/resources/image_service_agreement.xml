@@ -63,7 +63,7 @@
 				unit="percent">
 				<Metric>MaxThroughput</Metric>
 				<Communication>
-					<Source>ImageServiceConsumer</Source>
+					<Source>ImageServiceProvider</Source>
 				</Communication>
 			</SLAParameter>
 
@@ -86,13 +86,13 @@
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>
 			<Metric name="MaxThroughput" type="long" unit="percent">
-				<Source>ImageServiceConsumer</Source>
+				<Source>ImageServiceProvider</Source>
 				<Function xsi:type="Max" resultType="long">
 					<Metric>Throughput</Metric>
 				</Function>
 			</Metric>
 			<Metric name="Throughput" type="long" unit="percent">
-				<Source>ImageServiceConsumer</Source>
+				<Source>ImageServiceProvider</Source>
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>
 
