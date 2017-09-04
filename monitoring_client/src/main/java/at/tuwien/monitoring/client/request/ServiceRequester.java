@@ -64,8 +64,7 @@ public class ServiceRequester {
 
 		InputStream is = response.readEntity(InputStream.class);
 		try {
-			Files.copy(is, Paths.get(Constants.DOWNLOAD_PATH + currentRequestID + "_" + image),
-					StandardCopyOption.REPLACE_EXISTING);
+			Files.copy(is, Paths.get(Constants.DOWNLOAD_PATH + image), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
 			logger.error("Error while copying shrinked image (Request ID " + currentRequestID + ").");
 		}

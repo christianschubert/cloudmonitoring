@@ -33,7 +33,7 @@ public class MonitoringAgent {
 
 	private final static Logger logger = Logger.getLogger(MonitoringAgent.class);
 
-	private static Settings settings = new Settings();
+	private Settings settings;
 
 	private AtomicInteger currentApplicationID = new AtomicInteger(0);
 
@@ -51,7 +51,9 @@ public class MonitoringAgent {
 	private List<ApplicationMonitor> applicationList = Collections
 			.synchronizedList(new ArrayList<ApplicationMonitor>());
 
-	private boolean init() {
+	public boolean init(Settings settings) {
+		this.settings = settings;
+
 		if (!checkWeaver()) {
 			return false;
 		}
@@ -61,9 +63,6 @@ public class MonitoringAgent {
 		}
 
 		publicIPAddress = Utils.lookupPublicIPAddress();
-		if (publicIPAddress == null) {
-			return false;
-		}
 
 		jmsService = new JmsSenderService(settings.brokerUrl, GlobalConstants.QUEUE_AGENTS);
 		jmsService.start();
@@ -132,7 +131,7 @@ public class MonitoringAgent {
 		}
 	}
 
-	private void start(List<Application> applicationsToStart) {
+	public void startApplicationMonitoring(List<Application> applicationsToStart) {
 		scheduledJmsSender = scheduler.scheduleAtFixedRate(new JmsMetricSenderTask(), 0,
 				settings.metricsAggregationInterval, TimeUnit.MILLISECONDS);
 
@@ -146,7 +145,7 @@ public class MonitoringAgent {
 			}
 
 			String[] applicationWithParams = new String[] { "java", "-javaagent:" + Constants.ASPECTJ_WEAVER_PATH,
-					"-jar", application.getApplicationPath() };
+					"-jar", application.getApplicationPath(), application.getParams() };
 
 			startMonitoring(applicationWithParams, application.getMonitorTasks());
 		}
@@ -211,7 +210,7 @@ public class MonitoringAgent {
 		applicationList.add(applicationMonitor);
 	}
 
-	private void stopAll() {
+	public void stopAll() {
 		logger.info("Shutting down agent...");
 
 		if (extensionServer != null) {
@@ -247,6 +246,8 @@ public class MonitoringAgent {
 	}
 
 	public static void main(final String[] args) {
+		Settings settings = new Settings();
+
 		for (String arg : args) {
 			if (!arg.startsWith("config:")) {
 				continue;
@@ -259,13 +260,13 @@ public class MonitoringAgent {
 		}
 
 		MonitoringAgent agent = new MonitoringAgent();
-		if (agent.init()) {
+		if (agent.init(settings)) {
 			// for test purposes monitor imageresizer application only
 			Application imageResizer = new Application(
-					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar",
+					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "8080",
 					Arrays.asList(MonitorTask.Cpu, MonitorTask.Memory));
 
-			agent.start(Arrays.asList(imageResizer));
+			agent.startApplicationMonitoring(Arrays.asList(imageResizer));
 		} else {
 			agent.stopAll();
 		}

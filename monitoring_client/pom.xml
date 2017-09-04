@@ -35,8 +35,18 @@
 		<dependency>
 			<groupId>at.tuwien.monitoring</groupId>
 			<artifactId>client_aspect</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${version}</version>
 		</dependency>
+        <dependency>
+            <groupId>at.tuwien.monitoring</groupId>
+            <artifactId>monitoring_server</artifactId>
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>at.tuwien.monitoring</groupId>
+            <artifactId>monitoring_agent</artifactId>
+            <version>${version}</version>
+        </dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-client</artifactId>

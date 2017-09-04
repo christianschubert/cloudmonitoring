@@ -13,8 +13,15 @@ import org.glassfish.jersey.server.ResourceConfig;
  *
  */
 public class MonitoringService {
+
+	static final int DEFAULT_PORT = 8080;
+
 	// Base URI the Grizzly HTTP server will listen on
-	public static final String BASE_URI = "http://0.0.0.0:8080/imageresizer/";
+	private static final String BASE_URI = "http://0.0.0.0:%d/imageresizer/";
+
+	static String getBaseUri(int port) {
+		return String.format(BASE_URI, port);
+	}
 
 	/**
 	 * Starts Grizzly HTTP server exposing JAX-RS resources defined in this
@@ -22,7 +29,7 @@ public class MonitoringService {
 	 * 
 	 * @return Grizzly HTTP server.
 	 */
-	public static HttpServer startServer() {
+	public static HttpServer startServer(int port) {
 		// create a resource config that scans for JAX-RS resources and
 		// providers
 		// in at.tuwien.monitoring.service package
@@ -31,7 +38,7 @@ public class MonitoringService {
 
 		// create and start a new instance of grizzly http server
 		// exposing the Jersey application at BASE_URI
-		return GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
+		return GrizzlyHttpServerFactory.createHttpServer(URI.create(getBaseUri(port)), rc);
 	}
 
 	/**
@@ -41,10 +48,27 @@ public class MonitoringService {
 	 * @throws IOException
 	 */
 	public static void main(final String[] args) throws IOException {
-		final HttpServer server = startServer();
-		System.out.println(String.format(
-				"Jersey app started with WADL available at " + "%sapplication.wadl\nHit enter to stop it...",
-				BASE_URI));
+
+		int port = DEFAULT_PORT;
+
+		for (String arg : args) {
+			try {
+				int tempPort = Integer.parseInt(arg);
+				if (tempPort >= 1 && tempPort <= 65535) {
+					port = tempPort;
+				}
+				else {
+					throw new IllegalArgumentException();
+				}
+			}
+			catch (IllegalArgumentException e) {
+				System.err.println("Invalid argument. Must be a valid port number (1-65535).");
+			}
+
+		}
+
+		final HttpServer server = startServer(port);
+		System.out.println(String.format("Jersey app started with WADL available at " + "%sapplication.wadl\nHit enter to stop it...", getBaseUri(port)));
 		System.in.read();
 		server.shutdownNow();
 		System.exit(0);

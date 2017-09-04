@@ -1,0 +1,197 @@
+<?xml version="1.0"?>
+<SLA xmlns="http://www.ibm.com/wsla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.ibm.com/wsla wsla.xsd" name="ImageServiceAgreement">
+
+	<!-- Definition of the Involved Parties, the signatory parties as well as 
+		the supporting ones -->
+	<Parties>
+		<ServiceProvider name="ImageServiceProvider">
+			<Contact>
+				<Street>PO BOX 218</Street>
+				<City>Yorktown, NY 10598, USA</City>
+			</Contact>
+		</ServiceProvider>
+		<ServiceConsumer name="ImageServiceConsumer">
+			<Contact>
+				<Street>19 Skyline Drive</Street>
+				<City>Hawthorne, NY 10532, USA</City>
+			</Contact>
+		</ServiceConsumer>
+		<SupportingParty name="Trusted3rdParty">
+			<Contact>
+				<Street>Hursley Park</Street>
+				<City>Winchester, England, SO21 2JN</City>
+			</Contact>
+			<Sponsor>ImageServiceProvider</Sponsor>
+			<Sponsor>ImageServiceConsumer</Sponsor>
+			<Role>ConditionEvaluationService</Role>
+		</SupportingParty>
+	</Parties>
+
+	<!-- The definition of the service in terms of the service parameters and 
+		their measurement. -->
+	<ServiceDefinition>
+		<Operation name="ShrinkImage" xsi:type="WSDLSOAPOperationDescriptionType">
+			<SLAParameter name="ResponseTimeImageResize" type="long"
+				unit="milliseconds">
+				<Metric>ResponseTime</Metric>
+				<Communication>
+					<Source>ImageServiceConsumer</Source>
+				</Communication>
+			</SLAParameter>
+			<SLAParameter name="AverageResponseTimeImageResize"
+				type="double" unit="milliseconds">
+				<Metric>AverageResponseTime</Metric>
+				<Communication>
+					<Source>ImageServiceConsumer</Source>
+				</Communication>
+			</SLAParameter>
+			<SLAParameter name="CpuLoadProvider" type="double" unit="percent">
+				<Metric>CpuLoad</Metric>
+				<Communication>
+					<Source>ImageServiceProvider</Source>
+				</Communication>
+			</SLAParameter>
+			<SLAParameter name="RequestSuccessability" type="double"
+				unit="percent">
+				<Metric>Successability</Metric>
+				<Communication>
+					<Source>ImageServiceConsumer</Source>
+				</Communication>
+			</SLAParameter>
+			<SLAParameter name="RequestMaxThroughput" type="double"
+				unit="percent">
+				<Metric>MaxThroughput</Metric>
+				<Communication>
+					<Source>ImageServiceProvider</Source>
+				</Communication>
+			</SLAParameter>
+
+			<Metric name="AverageResponseTime" type="double" unit="milliseconds">
+				<Source>ImageServiceConsumer</Source>
+				<Function xsi:type="Average" resultType="double">
+					<Metric>ResponseTime</Metric>
+				</Function>
+			</Metric>
+			<Metric name="ResponseTime" type="long" unit="milliseconds">
+				<Source>ImageServiceConsumer</Source>
+				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
+			</Metric>
+			<Metric name="CpuLoad" type="double" unit="percent">
+				<Source>ImageServiceProvider</Source>
+				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
+			</Metric>
+			<Metric name="Successability" type="long" unit="percent">
+				<Source>ImageServiceConsumer</Source>
+				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
+			</Metric>
+			<Metric name="MaxThroughput" type="long" unit="percent">
+				<Source>ImageServiceProvider</Source>
+				<Function xsi:type="Max" resultType="long">
+					<Metric>Throughput</Metric>
+				</Function>
+			</Metric>
+			<Metric name="Throughput" type="long" unit="percent">
+				<Source>ImageServiceProvider</Source>
+				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
+			</Metric>
+
+			<WSDLFile>http://localhost:8080/imageresizer/application.wadl</WSDLFile>
+			<SOAPBindingName>http://localhost:8080/imageresizer/shrink</SOAPBindingName>
+			<SOAPOperationName>POST</SOAPOperationName>
+		</Operation>
+
+	</ServiceDefinition>
+
+	<!-- The obligations of the parties, referring to parameters defined above. -->
+	<Obligations>
+		<ServiceLevelObjective name="ResponseTimeSLO">
+			<Obliged>ImageServiceProvider</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2018-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="LessEqual">
+					<SLAParameter>ResponseTimeImageResize</SLAParameter>
+					<Value>3000</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+		<ServiceLevelObjective name="AverageResponseTimeSLO">
+			<Obliged>ImageServiceProvider</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2018-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="Less">
+					<SLAParameter>AverageResponseTimeImageResize</SLAParameter>
+					<Value>200</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+		<ServiceLevelObjective name="RequestMaxThroughputSLO">
+			<Obliged>ImageServiceProvider</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2018-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="Greater">
+					<SLAParameter>RequestMaxThroughput</SLAParameter>
+					<Value>1</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+		<ServiceLevelObjective name="CpuLoadSLO">
+			<Obliged>ImageServiceConsumer</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2018-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="LessEqual">
+					<SLAParameter>CpuLoadProvider</SLAParameter>
+					<Value>80</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+		<ServiceLevelObjective name="RequestSuccessabilitySLO">
+			<Obliged>ImageServiceProvider</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2018-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="Greater">
+					<SLAParameter>RequestSuccessability</SLAParameter>
+					<Value>0.95</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+		<ActionGuarantee name="ResponseTimeNotificationGuarantee">
+			<Obliged>ImageServiceProvider</Obliged>
+			<Expression>
+				<Predicate xsi:type="Violation">
+					<ServiceLevelObjective>ResponseTimeSLO</ServiceLevelObjective>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+			<QualifiedAction>
+				<Party>ImageServiceConsumer</Party>
+				<Action actionName="notification" xsi:type="Notification">
+					<NotificationType>Violation</NotificationType>
+					<CausingGuarantee>ResponseTimeNotificationGuarantee</CausingGuarantee>
+					<SLAParameter>ResponseTimeImageResize</SLAParameter>
+				</Action>
+			</QualifiedAction>
+			<ExecutionModality>Always</ExecutionModality>
+		</ActionGuarantee>
+	</Obligations>
+</SLA>

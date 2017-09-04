@@ -18,14 +18,21 @@ public class MonitoringServer {
 	private JmsReceiverService jmsService;
 	private EmbeddedHttpServer httpServer;
 	private MetricProcessor metricProcessor;
+	private Wsla2ExpressionMapper wsla2ExpressionMapper;
 
-	private boolean init(String jmsBrokerURL, boolean embeddedJmsBroker) {
+	public boolean init() {
+		return init(null, true);
+	}
+
+	public boolean init(String jmsBrokerURL, boolean embeddedJmsBroker) {
 
 		metricProcessor = new MetricProcessor();
 		if (!metricProcessor.start()) {
 			logger.error("Error creating metric processor.");
 			return false;
 		}
+
+		wsla2ExpressionMapper = new Wsla2ExpressionMapper(metricProcessor);
 
 		jmsService = new JmsReceiverService(jmsBrokerURL, embeddedJmsBroker, metricProcessor);
 		jmsService.start();
@@ -40,28 +47,14 @@ public class MonitoringServer {
 			return false;
 		}
 
-		return true;
-	}
-
-	private void run() {
-		logger.info("Monitoring server running. Press RETURN to exit.");
-
-		startMonitoring();
-
-		try {
-			System.in.read();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		shutdown();
-	}
-
-	private void startMonitoring() {
 		// delete database data
 		new ViolationDAO().deleteAll();
 
-		WebServiceLevelAgreement wsla = new WebServiceLevelAgreement("src/main/resources/image_service_agreement.xml");
+		return true;
+	}
+
+	public void startSLAMonitoring(String wslaPath) {
+		WebServiceLevelAgreement wsla = new WebServiceLevelAgreement(wslaPath);
 		if (!wsla.isValid()) {
 			return;
 		}
@@ -71,21 +64,10 @@ public class MonitoringServer {
 				wsla.getWSLA().getParties().getServiceProvider().getName());
 		logger.info(info);
 
-		new Wsla2ExpressionMapper(wsla, metricProcessor);
-
-		// send test events
-		// metricProcessor
-		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
-		// "shrink", Method.GET, 1000, 200));
-		// metricProcessor
-		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
-		// "shrink", Method.GET, 1000, 200));
-		// metricProcessor
-		// .addEvent(new ClientResponseTimeMessage("127.0.0.1", new Date(),
-		// "shrink", Method.GET, 1000, 500));
+		wsla2ExpressionMapper.doMapping(wsla);
 	}
 
-	private void shutdown() {
+	public void shutdown() {
 		logger.info("Monitoring server shutdown.");
 
 		if (metricProcessor != null) {
@@ -118,7 +100,14 @@ public class MonitoringServer {
 
 		MonitoringServer server = new MonitoringServer();
 		if (server.init(jmsBrokerURL, embeddedJmsBroker)) {
-			server.run();
+			server.startSLAMonitoring("src/main/resources/image_service_agreement.xml");
+			logger.info("Monitoring server running. Press RETURN to exit.");
+			try {
+				System.in.read();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			server.shutdown();
 		}
 	}
 }

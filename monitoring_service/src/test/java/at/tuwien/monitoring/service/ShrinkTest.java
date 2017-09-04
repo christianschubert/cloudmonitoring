@@ -38,12 +38,12 @@ public class ShrinkTest {
 	@Before
 	public void setUp() throws Exception {
 		// start the server
-		server = MonitoringService.startServer();
+		server = MonitoringService.startServer(MonitoringService.DEFAULT_PORT);
 
 		// create the client
 		client = ClientBuilder.newClient();
 		client.register(MultiPartFeature.class);
-		target = client.target(MonitoringService.BASE_URI);
+		target = client.target(MonitoringService.getBaseUri(MonitoringService.DEFAULT_PORT));
 	}
 
 	@After
@@ -61,8 +61,7 @@ public class ShrinkTest {
 		multipartEntity.field("size", "300");
 		multipartEntity.field("rotation", "CW_90");
 
-		Response response = target.path("shrink").request()
-				.post(Entity.entity(multipartEntity, MediaType.MULTIPART_FORM_DATA));
+		Response response = target.path("shrink").request().post(Entity.entity(multipartEntity, MediaType.MULTIPART_FORM_DATA));
 
 		int status = response.getStatus();
 		InputStream is = response.readEntity(InputStream.class);
