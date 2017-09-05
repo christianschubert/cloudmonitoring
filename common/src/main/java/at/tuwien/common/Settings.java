@@ -9,7 +9,7 @@ public class Settings {
 	public boolean logMetrics = false;
 
 	public String imageRotation = "NONE";
-	public String imageType = "big";
+	public String imageType = "medium";
 	public int imageTargetSize = 300;
 	public int requestCount = 100;
 

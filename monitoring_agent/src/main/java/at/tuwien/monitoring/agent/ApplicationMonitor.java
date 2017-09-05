@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
-import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -35,6 +34,7 @@ public class ApplicationMonitor {
 
 	private int cpuCount;
 
+	private Application application;
 	private int applicationID;
 
 	private ProcessRunner processRunner;
@@ -42,7 +42,7 @@ public class ApplicationMonitor {
 	private ScheduledExecutorService scheduler;
 	private ScheduledFuture<?> scheduledMonitor;
 
-	private List<MonitorTask> monitorTasks;
+	private Set<MonitorTask> monitorTasks;
 	private Queue<MetricMessage> collectedMetrics = new ConcurrentLinkedQueue<MetricMessage>();
 
 	private Settings settings;
@@ -52,23 +52,24 @@ public class ApplicationMonitor {
 	private PrintWriter cpuLogFile, memoryLogFile;
 	private boolean addCsvHeaderCpu = true, addCsvHeaderMem = true;
 
-	public ApplicationMonitor(int cpuCount, String[] applicationWithParams, List<MonitorTask> monitorTasks,
-			Settings settings, int applicationID) {
+	public ApplicationMonitor(int cpuCount, String[] applicationWithParams, Application application, Settings settings,
+			int applicationID) {
 		this.cpuCount = cpuCount;
-		this.monitorTasks = monitorTasks;
+		this.application = application;
 		this.settings = settings;
 		this.applicationID = applicationID;
+		this.monitorTasks = application.getMonitorTasks();
 
 		processRunner = new ProcessRunner(applicationWithParams);
 		scheduler = Executors.newScheduledThreadPool(1);
 	}
 
-	public void start() {
+	public long start() {
 		long pid = processRunner.start();
 		if (pid == -1) {
 			// Error starting process and retreiving pid
 			stop();
-			return;
+			return pid;
 		}
 
 		if (settings.logMetrics) {
@@ -88,17 +89,23 @@ public class ApplicationMonitor {
 			}
 		}
 
-		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
-				Constants.PROCESS_MONITOR_START_DELAY, settings.systemMetricsMonitorInterval, TimeUnit.MILLISECONDS);
+		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid), Constants.PROCESS_MONITOR_START_DELAY,
+				settings.systemMetricsMonitorInterval, TimeUnit.MILLISECONDS);
 
 		monitoring = true;
 
-		logger.info("Started monitoring of application \"" + processRunner.getProcessName() + "\" with ID "
-				+ applicationID);
+		logger
+				.info("Started monitoring of application \"" + processRunner.getProcessName() + "\" with ID " + applicationID);
+
+		return pid;
 	}
 
 	public boolean isMonitoring() {
 		return monitoring;
+	}
+
+	public Application getApplication() {
+		return application;
 	}
 
 	public void stop() {
@@ -186,8 +193,8 @@ public class ApplicationMonitor {
 				}
 			}
 
-			MemoryMessage memoryMessage = new MemoryMessage(null, new Date(), processRunner.getProcessName(),
-					sumTotalMemory, sumResidentMemory);
+			MemoryMessage memoryMessage = new MemoryMessage(null, new Date(), processRunner.getProcessName(), sumTotalMemory,
+					sumResidentMemory);
 			collectedMetrics.offer(memoryMessage);
 
 			if (settings.logMetrics) {

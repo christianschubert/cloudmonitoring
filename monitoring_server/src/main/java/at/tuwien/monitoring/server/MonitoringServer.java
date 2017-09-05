@@ -108,6 +108,8 @@ public class MonitoringServer {
 				e.printStackTrace();
 			}
 			server.shutdown();
+		} else {
+			server.shutdown();
 		}
 	}
 }

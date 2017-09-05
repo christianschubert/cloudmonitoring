@@ -3,8 +3,8 @@ package at.tuwien.monitoring.agent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
@@ -48,12 +48,13 @@ public class MonitoringAgent {
 	private ScheduledExecutorService scheduler;
 	private ScheduledFuture<?> scheduledJmsSender;
 
-	private List<ApplicationMonitor> applicationList = Collections
-			.synchronizedList(new ArrayList<ApplicationMonitor>());
+	private List<ApplicationMonitor> applicationList = Collections.synchronizedList(new ArrayList<ApplicationMonitor>());
 
-	public boolean init(Settings settings) {
+	public MonitoringAgent(Settings settings) {
 		this.settings = settings;
+	}
 
+	public boolean init() {
 		if (!checkWeaver()) {
 			return false;
 		}
@@ -78,6 +79,9 @@ public class MonitoringAgent {
 		}
 
 		scheduler = Executors.newScheduledThreadPool(1);
+		scheduledJmsSender = scheduler.scheduleAtFixedRate(new JmsMetricSenderTask(), 0,
+				settings.metricsAggregationInterval, TimeUnit.MILLISECONDS);
+
 		return true;
 	}
 
@@ -121,6 +125,7 @@ public class MonitoringAgent {
 		}
 
 		ProcessTools.setSigar(sigar);
+
 		return true;
 	}
 
@@ -131,33 +136,42 @@ public class MonitoringAgent {
 		}
 	}
 
-	public void startApplicationMonitoring(List<Application> applicationsToStart) {
-		scheduledJmsSender = scheduler.scheduleAtFixedRate(new JmsMetricSenderTask(), 0,
-				settings.metricsAggregationInterval, TimeUnit.MILLISECONDS);
+	public long startApplicationMonitoring(Application application, boolean isJavaAplication) {
+		if (!new File(application.getApplicationPath()).exists()) {
+			logger.error("Application " + application.getApplicationPath() + " does not exist. Ignoring application.");
+		}
 
-		logger.info("Agent started");
+		String[] applicationWithParams = new String[] { application.getApplicationPath(), application.getParams() };
 
-		for (Application application : applicationsToStart) {
-			if (!new File(application.getApplicationPath()).exists()) {
-				logger.error(
-						"Application " + application.getApplicationPath() + " does not exist. Ignoring application.");
-				continue;
+		if (isJavaAplication) {
+			applicationWithParams = new String[] { "java", "-javaagent:" + Constants.ASPECTJ_WEAVER_PATH, "-jar",
+					application.getApplicationPath(), application.getParams() };
+		}
+
+		ApplicationMonitor applicationMonitor = new ApplicationMonitor(cpuCount, applicationWithParams, application,
+				settings, currentApplicationID.incrementAndGet());
+		long pid = applicationMonitor.start();
+		if (pid != -1) {
+			synchronized (applicationList) {
+				applicationList.add(applicationMonitor);
 			}
-
-			String[] applicationWithParams = new String[] { "java", "-javaagent:" + Constants.ASPECTJ_WEAVER_PATH,
-					"-jar", application.getApplicationPath(), application.getParams() };
-
-			startMonitoring(applicationWithParams, application.getMonitorTasks());
 		}
 
-		// monitor till user hits RETURN
-		try {
-			System.in.read();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		return pid;
+	}
 
-		stopAll();
+	public void stopApplicationMonitoring(Application application) {
+		synchronized (applicationList) {
+			Iterator<ApplicationMonitor> itAppList = applicationList.iterator();
+			while (itAppList.hasNext()) {
+				ApplicationMonitor applicationMonitor = itAppList.next();
+				if (applicationMonitor.getApplication().equals(application)) {
+					applicationMonitor.stop();
+					itAppList.remove();
+					return;
+				}
+			}
+		}
 	}
 
 	public class JmsMetricSenderTask implements Runnable {
@@ -203,14 +217,7 @@ public class MonitoringAgent {
 		}
 	}
 
-	private void startMonitoring(String[] applicationWithParams, List<MonitorTask> monitorTasks) {
-		ApplicationMonitor applicationMonitor = new ApplicationMonitor(cpuCount, applicationWithParams, monitorTasks,
-				settings, currentApplicationID.incrementAndGet());
-		applicationMonitor.start();
-		applicationList.add(applicationMonitor);
-	}
-
-	public void stopAll() {
+	public void shutdown() {
 		logger.info("Shutting down agent...");
 
 		if (extensionServer != null) {
@@ -259,16 +266,25 @@ public class MonitoringAgent {
 			settings = Utils.readProperties(split[1]);
 		}
 
-		MonitoringAgent agent = new MonitoringAgent();
-		if (agent.init(settings)) {
+		MonitoringAgent agent = new MonitoringAgent(settings);
+		if (agent.init()) {
 			// for test purposes monitor imageresizer application only
 			Application imageResizer = new Application(
 					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "8080",
-					Arrays.asList(MonitorTask.Cpu, MonitorTask.Memory));
+					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
 
-			agent.startApplicationMonitoring(Arrays.asList(imageResizer));
+			agent.startApplicationMonitoring(imageResizer, true);
+
+			// monitor till user hits RETURN
+			try {
+				System.in.read();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			agent.shutdown();
 		} else {
-			agent.stopAll();
+			agent.shutdown();
 		}
 	}
 }

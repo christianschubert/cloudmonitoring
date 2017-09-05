@@ -22,9 +22,13 @@ public class MonitoringClient {
 
 	private final static Logger logger = Logger.getLogger(MonitoringClient.class);
 
-	private static Settings settings = new Settings();
+	private Settings settings;
 
 	private PrintWriter outLogFile;
+
+	public MonitoringClient(Settings settings) {
+		this.settings = settings;
+	}
 
 	private void start() {
 		cleanupDownloadFolder();
@@ -76,14 +80,16 @@ public class MonitoringClient {
 	private void cleanupDownloadFolder() {
 		// delete all image files from download directory (except .gitignore)
 		try {
-			Files.walk(Paths.get(Constants.DOWNLOAD_PATH)).map(Path::toFile)
-					.filter(f -> !f.getName().equals(".gitignore")).forEach(File::delete);
+			Files.walk(Paths.get(Constants.DOWNLOAD_PATH)).map(Path::toFile).filter(f -> !f.getName().equals(".gitignore"))
+					.forEach(File::delete);
 		} catch (IOException e) {
 			logger.error("Error cleaning up download directory.");
 		}
 	}
 
 	public static void main(final String[] args) {
+		Settings settings = new Settings();
+
 		for (String arg : args) {
 			if (!arg.startsWith("config:")) {
 				continue;
@@ -95,7 +101,7 @@ public class MonitoringClient {
 			settings = Utils.readProperties(split[1]);
 		}
 
-		MonitoringClient monitoringClient = new MonitoringClient();
+		MonitoringClient monitoringClient = new MonitoringClient(settings);
 		monitoringClient.start();
 	}
 }

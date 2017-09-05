@@ -16,6 +16,7 @@
 		<jersey.version>2.25.1</jersey.version>
 		<aspectj.version>1.8.10</aspectj.version>
 		<main.class>at.tuwien.monitoring.client.MonitoringClient</main.class>
+		<integration.test.class>at.tuwien.monitoring.integration.Integration</integration.test.class>
 		<main.basedir>${project.parent.basedir}</main.basedir>
 	</properties>
 
@@ -35,17 +36,17 @@
 		<dependency>
 			<groupId>at.tuwien.monitoring</groupId>
 			<artifactId>client_aspect</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
         <dependency>
             <groupId>at.tuwien.monitoring</groupId>
             <artifactId>monitoring_server</artifactId>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>at.tuwien.monitoring</groupId>
             <artifactId>monitoring_agent</artifactId>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
@@ -88,6 +89,21 @@
 					</arguments>
 				</configuration>
 				<executions>
+					<execution>
+						<id>integration</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>java</executable>
+							<arguments>
+								<argument>-classpath</argument>
+								<classpath />
+								<argument>${integration.test.class}</argument>
+								<argument>config:${main.basedir}/etc/settings.properties</argument>
+							</arguments>
+						</configuration>
+					</execution>
 					<execution>
 						<id>noaspect</id>
 						<goals>

@@ -1,19 +1,19 @@
 package at.tuwien.monitoring.agent;
 
-import java.util.List;
+import java.util.Set;
 
 import at.tuwien.monitoring.agent.constants.MonitorTask;
 
 public class Application {
 	private String applicationPath;
 	private String params;
-	private List<MonitorTask> monitorTasks;
+	private Set<MonitorTask> monitorTasks;
 
-	public Application(String applicationPath, List<MonitorTask> monitorTasks) {
+	public Application(String applicationPath, Set<MonitorTask> monitorTasks) {
 		this(applicationPath, "", monitorTasks);
 	}
 
-	public Application(String applicationPath, String params, List<MonitorTask> monitorTasks) {
+	public Application(String applicationPath, String params, Set<MonitorTask> monitorTasks) {
 		super();
 		this.applicationPath = applicationPath;
 		this.params = params;
@@ -28,11 +28,11 @@ public class Application {
 		this.applicationPath = applicationPath;
 	}
 
-	public List<MonitorTask> getMonitorTasks() {
+	public Set<MonitorTask> getMonitorTasks() {
 		return monitorTasks;
 	}
 
-	public void setMonitorTasks(List<MonitorTask> monitorTasks) {
+	public void setMonitorTasks(Set<MonitorTask> monitorTasks) {
 		this.monitorTasks = monitorTasks;
 	}
 
@@ -46,6 +46,44 @@ public class Application {
 
 	@Override
 	public String toString() {
-		return "Application [applicationPath=" + applicationPath + ", params=" + params + ", monitorTasks=" + monitorTasks + "]";
+		return "Application [applicationPath=" + applicationPath + ", params=" + params + ", monitorTasks=" + monitorTasks
+				+ "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((applicationPath == null) ? 0 : applicationPath.hashCode());
+		result = prime * result + ((monitorTasks == null) ? 0 : monitorTasks.hashCode());
+		result = prime * result + ((params == null) ? 0 : params.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Application other = (Application) obj;
+		if (applicationPath == null) {
+			if (other.applicationPath != null)
+				return false;
+		} else if (!applicationPath.equals(other.applicationPath))
+			return false;
+		if (monitorTasks == null) {
+			if (other.monitorTasks != null)
+				return false;
+		} else if (!monitorTasks.equals(other.monitorTasks))
+			return false;
+		if (params == null) {
+			if (other.params != null)
+				return false;
+		} else if (!params.equals(other.params))
+			return false;
+		return true;
 	}
 }
