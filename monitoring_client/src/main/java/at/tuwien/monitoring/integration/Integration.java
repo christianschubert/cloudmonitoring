@@ -38,15 +38,27 @@ public class Integration {
 
 		monitoringAgent = new MonitoringAgent(settings);
 		if (monitoringAgent.init()) {
-
-			Application imageResizer = new Application(APP_PATH, String.valueOf(8070),
-					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
-
-			monitoringAgent.startApplicationMonitoring(imageResizer, true);
+			startApplications(5);
 		} else {
 			logger.error("Error initializing monitoring agent.");
 			monitoringAgent.shutdown();
 			return;
+		}
+	}
+
+	private void startApplications(int count) {
+		for (int i = 0; i < count; i++) {
+			Application imageResizer = new Application(APP_PATH, String.valueOf(8070 + i),
+					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
+
+			monitoringAgent.startApplicationMonitoring(imageResizer, true);
+
+			try {
+				// wait for process to start
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

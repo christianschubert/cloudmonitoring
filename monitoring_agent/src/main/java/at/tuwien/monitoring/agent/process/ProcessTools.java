@@ -1,7 +1,6 @@
 package at.tuwien.monitoring.agent.process;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -74,7 +73,7 @@ public class ProcessTools {
 	 * @return a list of all child processes belonging to the given process
 	 *         including the process itself
 	 */
-	public static Set<Long> findProcessesToMonitor(long pid) {
+	public synchronized static Set<Long> findProcessesToMonitor(long pid) {
 
 		Set<Long> processesToMonitor = new HashSet<>();
 		Set<Long> evaluatedProcesses = new HashSet<>();
@@ -84,8 +83,6 @@ public class ProcessTools {
 		long[] pids;
 		try {
 			pids = sigar.getProcList();
-			Arrays.sort(pids);
-			// System.out.println(Arrays.toString(pids));
 		} catch (SigarException e) {
 			logger.error("Cannot retrieve list of processes");
 			return processesToMonitor;
@@ -98,7 +95,7 @@ public class ProcessTools {
 		return processesToMonitor;
 	}
 
-	private static boolean checkProcess(long pid, long parentId, Set<Long> evaluatedProcesses,
+	private synchronized static boolean checkProcess(long pid, long parentId, Set<Long> evaluatedProcesses,
 			Set<Long> processesToMonitor) {
 		if (evaluatedProcesses.contains(pid)) {
 			return processesToMonitor.contains(pid);
