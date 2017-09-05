@@ -102,6 +102,7 @@
 								<argument>${integration.test.class}</argument>
 								<argument>config:${main.basedir}/etc/settings.properties</argument>
 							</arguments>
+							<workingDirectory>${main.basedir}/monitoring_agent</workingDirectory>           
 						</configuration>
 					</execution>
 					<execution>

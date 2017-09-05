@@ -100,7 +100,10 @@ public class MonitoringAgent {
 					"Sigar natives not found. Make sure that the folder \"sigarnatives\" is in the same folder as the executable.");
 			return false;
 		}
-		System.setProperty("java.library.path", "sigarnatives");
+
+		String path = new File(settings.etcFolderPath).getParent().toString() + "/monitoring_agent/sigarnatives";
+		System.setProperty("java.library.path", System.getProperty("java.library.path") + ";sigarnatives");
+		System.setProperty("java.library.path", System.getProperty("java.library.path") + ";" + path);
 
 		sigar = new Sigar();
 
@@ -139,6 +142,7 @@ public class MonitoringAgent {
 	public long startApplicationMonitoring(Application application, boolean isJavaAplication) {
 		if (!new File(application.getApplicationPath()).exists()) {
 			logger.error("Application " + application.getApplicationPath() + " does not exist. Ignoring application.");
+			return -1;
 		}
 
 		String[] applicationWithParams = new String[] { application.getApplicationPath(), application.getParams() };
