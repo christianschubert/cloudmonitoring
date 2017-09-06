@@ -1,13 +1,9 @@
 package at.tuwien.monitoring.client;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
@@ -31,8 +27,6 @@ public class MonitoringClient {
 	}
 
 	private void start() {
-		cleanupDownloadFolder();
-
 		if (settings.logMetrics) {
 			try {
 				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_client.csv");
@@ -75,16 +69,6 @@ public class MonitoringClient {
 		}
 
 		System.exit(0);
-	}
-
-	private void cleanupDownloadFolder() {
-		// delete all image files from download directory (except .gitignore)
-		try {
-			Files.walk(Paths.get(Constants.DOWNLOAD_PATH)).map(Path::toFile).filter(f -> !f.getName().equals(".gitignore"))
-					.forEach(File::delete);
-		} catch (IOException e) {
-			logger.error("Error cleaning up download directory.");
-		}
 	}
 
 	public static void main(final String[] args) {

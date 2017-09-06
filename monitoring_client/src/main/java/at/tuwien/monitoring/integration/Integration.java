@@ -1,6 +1,8 @@
 package at.tuwien.monitoring.integration;
 
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -22,19 +24,24 @@ public class Integration {
 	private MonitoringServer monitoringServer;
 	private MonitoringAgent monitoringAgent;
 
+	private Set<Application> applications = new HashSet<>();
+
 	public Integration(Settings settings) {
 		this.settings = settings;
 	}
 
 	private void init() {
+		// start ttp
 		monitoringServer = new MonitoringServer();
 		if (!monitoringServer.init()) {
 			logger.error("Error initializing monitoring server.");
 			monitoringServer.shutdown();
 			return;
 		}
-		monitoringServer.startSLAMonitoring("src/main/resources/image_service_agreement.xml");
+		// add sample agreement
+		monitoringServer.startSLAMonitoring(settings.etcFolderPath + "/image_service_agreement.xml");
 
+		// start agent
 		monitoringAgent = new MonitoringAgent(settings);
 		if (!monitoringAgent.init()) {
 			logger.error("Error initializing monitoring agent.");
@@ -43,15 +50,28 @@ public class Integration {
 
 		}
 		startApplications(5);
+		
+		// TODO: do something with applications
+
+		// stop monitoring of applications
+		for (Application application : applications) {
+			monitoringAgent.stopApplicationMonitoring(application);
+		}
+
+		// stop agent
+		monitoringAgent.shutdown();
+
+		// stop ttp
+		monitoringServer.shutdown();
 	}
 
 	private void startApplications(int count) {
 		for (int i = 0; i < count; i++) {
-			Application imageResizer = new Application(APP_PATH, String.valueOf(8070 + i),
+			Application application = new Application(APP_PATH, String.valueOf(8070 + i),
 					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
 
-			monitoringAgent.startApplicationMonitoring(imageResizer, true);
-
+			monitoringAgent.startApplicationMonitoring(application, true);
+			applications.add(application);
 			try {
 				// wait for process to start
 				Thread.sleep(3000);

@@ -6,7 +6,7 @@ public class Settings {
 	public String brokerUrl = "tcp://localhost:61616";
 	public String serviceUrl = "http://localhost:8080";
 
-	public boolean logMetrics = false;
+	public boolean logMetrics = true;
 
 	public String imageRotation = "NONE";
 	public String imageType = "medium";
