@@ -149,6 +149,7 @@ public class ApplicationMonitor {
 		private long lastTime = 0;
 		private long lastUpdatedPidList = 0;
 		private Sigar sigar;
+		private MemoryMessage lastMemoryMessage;
 
 		public MonitorTimerTask(long pid) {
 			this.pid = pid;
@@ -195,7 +196,11 @@ public class ApplicationMonitor {
 
 			MemoryMessage memoryMessage = new MemoryMessage(null, new Date(), processRunner.getProcessName(), sumTotalMemory,
 					sumResidentMemory);
-			collectedMetrics.offer(memoryMessage);
+
+			if (lastMemoryMessage == null || !memoryMessage.equals(lastMemoryMessage)) {
+				// only if memory is different to last measuement, send it.
+				collectedMetrics.offer(memoryMessage);
+			}
 
 			if (settings.logMetrics) {
 				if (addCsvHeaderMem) {
@@ -205,6 +210,8 @@ public class ApplicationMonitor {
 				memoryLogFile.println(memoryMessage.toCsvEntry());
 				memoryLogFile.flush();
 			}
+
+			lastMemoryMessage = memoryMessage;
 		}
 
 		private void monitorCpu() {
@@ -233,7 +240,11 @@ public class ApplicationMonitor {
 			message.setCpuKernel(sumCpuKernel);
 			message.setCpuUser(sumCpuUser);
 
-			collectedMetrics.offer(message);
+			if (sumCpuLoad > 0) {
+				// only if load is greater than zero, send it.
+				// if load is zero, there is also no change in the other cpu metrics
+				collectedMetrics.offer(message);
+			}
 
 			if (settings.logMetrics) {
 				if (addCsvHeaderCpu) {

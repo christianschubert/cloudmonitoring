@@ -1,7 +1,7 @@
 package at.tuwien.common;
 
 public class Settings {
-	public String etcFolderPath = System.getProperty("user.home") + "/cloudmonitoring_logs";
+	public String etcFolderPath = System.getProperty("user.home") + "/cloudmonitoring/etc";
 
 	public String brokerUrl = "tcp://localhost:61616";
 	public String serviceUrl = "http://localhost:8080";

@@ -101,10 +101,7 @@ public class MonitoringAgent {
 			return false;
 		}
 
-		String path = new File(settings.etcFolderPath).getParent().toString() + "/monitoring_agent/sigarnatives";
-		System.setProperty("java.library.path", System.getProperty("java.library.path") + ";sigarnatives");
-		System.setProperty("java.library.path", System.getProperty("java.library.path") + ";" + path);
-
+		System.setProperty("org.hyperic.sigar.path", "sigarnatives");
 		sigar = new Sigar();
 
 		if (sigar.getNativeLibrary() == null) {

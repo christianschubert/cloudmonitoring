@@ -50,7 +50,7 @@ public class Integration {
 
 		}
 		startApplications(5);
-		
+
 		// TODO: do something with applications
 
 		// stop monitoring of applications
