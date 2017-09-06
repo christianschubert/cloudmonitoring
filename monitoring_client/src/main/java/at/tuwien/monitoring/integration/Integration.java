@@ -28,22 +28,21 @@ public class Integration {
 
 	private void init() {
 		monitoringServer = new MonitoringServer();
-		if (monitoringServer.init()) {
-			monitoringServer.startSLAMonitoring("src/main/resources/image_service_agreement.xml");
-		} else {
+		if (!monitoringServer.init()) {
 			logger.error("Error initializing monitoring server.");
 			monitoringServer.shutdown();
 			return;
 		}
+		monitoringServer.startSLAMonitoring("src/main/resources/image_service_agreement.xml");
 
 		monitoringAgent = new MonitoringAgent(settings);
-		if (monitoringAgent.init()) {
-			startApplications(5);
-		} else {
+		if (!monitoringAgent.init()) {
 			logger.error("Error initializing monitoring agent.");
 			monitoringAgent.shutdown();
 			return;
+
 		}
+		startApplications(5);
 	}
 
 	private void startApplications(int count) {
