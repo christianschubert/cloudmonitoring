@@ -89,13 +89,13 @@ public class ApplicationMonitor {
 			}
 		}
 
-		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid), Constants.PROCESS_MONITOR_START_DELAY,
-				settings.systemMetricsMonitorInterval, TimeUnit.MILLISECONDS);
+		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
+				Constants.PROCESS_MONITOR_START_DELAY, settings.systemMetricsMonitorInterval, TimeUnit.MILLISECONDS);
 
 		monitoring = true;
 
-		logger
-				.info("Started monitoring of application \"" + processRunner.getProcessName() + "\" with ID " + applicationID);
+		logger.info("Started monitoring of application \"" + processRunner.getProcessName() + "\" with ID "
+				+ applicationID);
 
 		return pid;
 	}
@@ -183,6 +183,8 @@ public class ApplicationMonitor {
 			long sumTotalMemory = 0;
 			long sumResidentMemory = 0;
 
+			linuxProcessCacheWorkaround();
+
 			for (Long pidToMonitor : processesToMonitor) {
 				try {
 					ProcMem procMem = sigar.getProcMem(pidToMonitor);
@@ -194,8 +196,8 @@ public class ApplicationMonitor {
 				}
 			}
 
-			MemoryMessage memoryMessage = new MemoryMessage(null, new Date(), processRunner.getProcessName(), sumTotalMemory,
-					sumResidentMemory);
+			MemoryMessage memoryMessage = new MemoryMessage(null, new Date(), processRunner.getProcessName(),
+					sumTotalMemory, sumResidentMemory);
 
 			if (lastMemoryMessage == null || !memoryMessage.equals(lastMemoryMessage)) {
 				// only if memory is different to last measuement, send it.
@@ -220,6 +222,8 @@ public class ApplicationMonitor {
 			long sumCpuTotal = 0;
 			long sumCpuUser = 0;
 			long sumCpuKernel = 0;
+
+			linuxProcessCacheWorkaround();
 
 			for (Long pidToMonitor : processesToMonitor) {
 				try {
@@ -253,6 +257,23 @@ public class ApplicationMonitor {
 				}
 				cpuLogFile.println(message.toCsvEntry());
 				cpuLogFile.flush();
+			}
+		}
+
+		/**
+		 * Sigar caches the last read process for 2 seconds under Linux; If we want a
+		 * higher rate of measuring than 2 seconds, we have to request any other
+		 * process, so a new reading is done
+		 */
+		private void linuxProcessCacheWorkaround() {
+			if (settings.systemMetricsMonitorInterval < 2000 & ProcessTools.isLinux()
+					&& processesToMonitor.size() == 1) {
+				try {
+					// read init process (pid 1) - should always be available
+					sigar.getProcCpu(1);
+				} catch (SigarException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

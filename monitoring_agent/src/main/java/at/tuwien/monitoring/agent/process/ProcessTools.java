@@ -27,6 +27,14 @@ public class ProcessTools {
 		return ProcessTools.sigar;
 	}
 
+	public static boolean isLinux() {
+		String os = System.getProperty("os.name");
+		if (os == null) {
+			return false;
+		}
+		return os.toLowerCase().startsWith("linux");
+	}
+
 	public static long getProcessIdFromProcess(Process process) {
 		long pid = -1;
 
@@ -69,7 +77,7 @@ public class ProcessTools {
 	 * ID.
 	 * 
 	 * @param pid
-	 *          process id of a process
+	 *            process id of a process
 	 * @return a list of all child processes belonging to the given process
 	 *         including the process itself
 	 */
