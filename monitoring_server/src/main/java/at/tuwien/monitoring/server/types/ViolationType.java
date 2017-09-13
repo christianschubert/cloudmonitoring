@@ -4,9 +4,9 @@ public enum ViolationType {
 	CPU_LOAD("cpuload"), MEM_TOTAL("totalmemory"), MEM_RESIDENT("residentmemory"), RESPONSE_TIME(
 			"responsetime"), SUCCESSABILTY("responsecode"), THROUGHPUT("count(*)");
 
-	private String propName;
+	private final String propName;
 
-	private ViolationType(String propName) {
+	ViolationType(String propName) {
 		this.propName = propName;
 	}
 
@@ -16,7 +16,7 @@ public enum ViolationType {
 
 	public static ViolationType get(String propName) {
 		for (ViolationType v : values()) {
-			if (v.propName.equals(propName.toLowerCase())) {
+			if (propName.toLowerCase().startsWith(v.propName)) {
 				return v;
 			}
 		}
