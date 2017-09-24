@@ -39,6 +39,7 @@ public class MonitoringAgent {
 
 	private Sigar sigar;
 	private int cpuCount;
+	private long memTotal;
 	private String publicIPAddress;
 
 	private JmsSenderService jmsService;
@@ -118,8 +119,11 @@ public class MonitoringAgent {
 
 			logger.info("CPU count: " + cpuCount);
 
+			memTotal = sigar.getMem().getTotal();
+			logger.info("Total memory [Byte]: " + memTotal);
+
 		} catch (SigarException e) {
-			logger.error("Error retrieving cpu count.");
+			logger.error("Error retrieving cpu count or memory size.");
 			closeSigar();
 			return false;
 		}
@@ -149,8 +153,8 @@ public class MonitoringAgent {
 					application.getApplicationPath(), application.getParams() };
 		}
 
-		ApplicationMonitor applicationMonitor = new ApplicationMonitor(cpuCount, applicationWithParams, application,
-				settings, currentApplicationID.incrementAndGet());
+		ApplicationMonitor applicationMonitor = new ApplicationMonitor(cpuCount, memTotal, applicationWithParams,
+				application, settings, currentApplicationID.incrementAndGet());
 		long pid = applicationMonitor.start();
 		if (pid != -1) {
 			applicationList.add(applicationMonitor);

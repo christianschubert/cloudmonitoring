@@ -33,6 +33,7 @@ public class ApplicationMonitor {
 	private final static Logger logger = Logger.getLogger(ApplicationMonitor.class);
 
 	private int cpuCount;
+	private long memTotal;
 
 	private Application application;
 	private int applicationID;
@@ -52,9 +53,10 @@ public class ApplicationMonitor {
 	private PrintWriter cpuLogFile, memoryLogFile;
 	private boolean addCsvHeaderCpu = true, addCsvHeaderMem = true;
 
-	public ApplicationMonitor(int cpuCount, String[] applicationWithParams, Application application, Settings settings,
-			int applicationID) {
+	public ApplicationMonitor(int cpuCount, long memTotal, String[] applicationWithParams, Application application,
+			Settings settings, int applicationID) {
 		this.cpuCount = cpuCount;
+		this.memTotal = memTotal;
 		this.application = application;
 		this.settings = settings;
 		this.applicationID = applicationID;
@@ -198,8 +200,10 @@ public class ApplicationMonitor {
 				}
 			}
 
+			double memUsage = ((double) sumResidentMemory / memTotal) * 100;
+
 			MemoryMessage memoryMessage = new MemoryMessage(null, new Date(), processRunner.getProcessName(),
-					sumVirtualMemory, sumResidentMemory, sumSharedMemory);
+					sumVirtualMemory, sumResidentMemory, sumSharedMemory, memUsage);
 
 			if (lastMemoryMessage == null || !memoryMessage.equals(lastMemoryMessage)) {
 				// only if memory is different to last measuement, send it.

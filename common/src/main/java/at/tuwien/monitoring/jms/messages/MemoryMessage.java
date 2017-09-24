@@ -11,14 +11,16 @@ public class MemoryMessage extends MetricMessage {
 	private long virtualMemory;
 	private long residentMemory;
 	private long sharedMemory;
+	private double memUsage;
 
 	public MemoryMessage(String ipAddress, Date timestamp, String application, long virtualMemory, long residentMemory,
-			long sharedMemory) {
+			long sharedMemory, double memUsage) {
 		super(timestamp, ipAddress);
 		setApplication(application);
 		setVirtualMemory(virtualMemory);
 		setResidentMemory(residentMemory);
 		setSharedMemory(sharedMemory);
+		setMemUsage(memUsage);
 	}
 
 	public String getApplication() {
@@ -53,6 +55,14 @@ public class MemoryMessage extends MetricMessage {
 		this.sharedMemory = sharedMemory;
 	}
 
+	public double getMemUsage() {
+		return memUsage;
+	}
+
+	public void setMemUsage(double memUsage) {
+		this.memUsage = memUsage;
+	}
+
 	@Override
 	public String getServiceName() {
 		return getApplication();
@@ -62,7 +72,8 @@ public class MemoryMessage extends MetricMessage {
 	public String toString() {
 		return "MemoryMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
 				+ ", getApplication()=" + getApplication() + ", getVirtualMemory()=" + getVirtualMemory()
-				+ ", getResidentMemory()=" + getResidentMemory() + ", getSharedMemory()=" + getSharedMemory() + "]";
+				+ ", getResidentMemory()=" + getResidentMemory() + ", getSharedMemory()=" + getSharedMemory()
+				+ ", getMemUsage()=" + getMemUsage() + "]";
 	}
 
 	@Override
@@ -73,6 +84,7 @@ public class MemoryMessage extends MetricMessage {
 				.add("virtualMemory")
 				.add("residentMemory")
 				.add("sharedMemory")
+				.add("memUsage")
 				.toString();
 	}
 
@@ -84,6 +96,7 @@ public class MemoryMessage extends MetricMessage {
 				.add(String.valueOf(getVirtualMemory()))
 				.add(String.valueOf(getResidentMemory()))
 				.add(String.valueOf(getSharedMemory()))
+				.add(String.valueOf(getMemUsage()))
 				.toString();
 	}
 
