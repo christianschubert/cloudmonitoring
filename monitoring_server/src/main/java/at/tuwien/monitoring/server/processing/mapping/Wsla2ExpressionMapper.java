@@ -35,9 +35,10 @@ public class Wsla2ExpressionMapper {
 	private final static Logger logger = Logger.getLogger(Wsla2ExpressionMapper.class);
 
 	private static final int AGGREGATION_MINIMUM_EVENT_SIZE = 3;
+	private static final int THROUGHPUT_EVAL_TIME = 10; // seconds
 
 	private static final String SIMPLE_EXPRESSION = "select %s as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s%s having %s %s %s";
-	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s%s group by ipAddress, serviceName having %s(%s) %s %s AND count(*) >= "
+	private static final String AGGREGATION_FUNCTION_EXPRESSION = "select %s(%s) as monitoredvalue, '%s' as metrictype, '%s' as requirementdesc, * from %s%s group by serviceName having %s(%s) %s %s AND count(*) >= "
 			+ AGGREGATION_MINIMUM_EVENT_SIZE;
 
 	private static final String RATIO_FUNCTION = "count(*, %s %s %s)/count(*)";
@@ -45,10 +46,10 @@ public class Wsla2ExpressionMapper {
 	private static final String WINDOW_TIME_SEC = ".win:time(%d sec)";
 
 	@SuppressWarnings("unused")
-	private static final String WINDOW_LENGTH = ".win:length(%d)";
+	private static final String WINDOW_TIME_MIN = ".win:time(%d min)";
 
 	@SuppressWarnings("unused")
-	private static final String WINDOW_TIME_MIN = ".win:time(%d min)";
+	private static final String WINDOW_LENGTH = ".win:length(%d)";
 
 	// map of basic metrics and their corresponding messages and variables
 	private static Map<String, MetricInformation> basicMetricMap;
@@ -56,7 +57,7 @@ public class Wsla2ExpressionMapper {
 		basicMetricMap = new HashMap<>();
 		basicMetricMap.put("responsetime", new MetricInformation("ClientInfoMessage", "responseTime"));
 		basicMetricMap.put("successability", new MetricInformation("ClientInfoMessage", "responseCode"));
-		basicMetricMap.put("throughput", new MetricInformation("ServerInfoMessage", "count(*)"));
+		basicMetricMap.put("throughput", new MetricInformation("ServerInfoMessage", "count(*)/" + THROUGHPUT_EVAL_TIME));
 		basicMetricMap.put("cpuload", new MetricInformation("CpuLoadMessage", "cpuLoad"));
 		basicMetricMap.put("totalmemory", new MetricInformation("MemoryMessage", "totalMemory"));
 		basicMetricMap.put("residentmemory", new MetricInformation("MemoryMessage", "residentMemory"));
@@ -96,25 +97,21 @@ public class Wsla2ExpressionMapper {
 		}
 
 		// parse service level objectives
-		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations()
-				.getServiceLevelObjective()) {
+		for (ServiceLevelObjectiveType serviceLevelObjective : wsla.getWSLA().getObligations().getServiceLevelObjective()) {
 			if (!checkValidity(serviceLevelObjective.getValidity())) {
 				logger.info("Validity of SLO \"" + serviceLevelObjective.getName() + "\" not given. Ignoring SLO.");
 				continue;
 			}
 
-			SimplePredicate simplePredicate = parseSimplePredicate(
-					serviceLevelObjective.getExpression().getPredicate());
+			SimplePredicate simplePredicate = parseSimplePredicate(serviceLevelObjective.getExpression().getPredicate());
 			if (simplePredicate == null) {
-				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName()
-						+ "\" not implemented yet or not valid.");
+				logger.info("Predicate of SLO \"" + serviceLevelObjective.getName() + "\" not implemented yet or not valid.");
 				continue;
 			}
 
 			String metricToObserve = slaMetricMap.get(simplePredicate.getSlaParameter());
 			if (metricToObserve == null) {
-				logger.info(
-						"SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
+				logger.info("SLA parameter for SLO \"" + serviceLevelObjective.getName() + "\" not defined. Ignoring SLO.");
 				continue;
 			}
 
@@ -127,9 +124,9 @@ public class Wsla2ExpressionMapper {
 
 		String expression = null;
 		String filter = String.format("(%s >= 0)", metricInformation.getPropertyName());
-		if (metricInformation.getPropertyName().equals("count(*)")) {
+		if (metricInformation.getPropertyName().startsWith("count(*)")) {
 			// throughput
-			filter = String.format(WINDOW_TIME_SEC, 1);
+			filter = String.format(WINDOW_TIME_SEC, THROUGHPUT_EVAL_TIME);
 		}
 
 		if (metricInformation.getPropertyName().toLowerCase().equals("responsecode")) {
@@ -140,22 +137,19 @@ public class Wsla2ExpressionMapper {
 
 			// success -> status code begins with 2 (i.e 200 ok)
 			String successPattern = "'2%'";
-			String ratioFunction = String.format(RATIO_FUNCTION, metricInformation.getPropertyName(), "like",
-					successPattern);
+			String ratioFunction = String.format(RATIO_FUNCTION, metricInformation.getPropertyName(), "like", successPattern);
 
 			expression = String.format(AGGREGATION_FUNCTION_EXPRESSION, aggregationFunction, ratioFunction,
-					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(),
-					filter, aggregationFunction, ratioFunction, simplePredicate.getDetectionSign(),
-					simplePredicate.getThreshold());
+					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(), filter,
+					aggregationFunction, ratioFunction, simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
 
 		} else if (metricInformation.getAggregationFunction() == null) {
 			// simple function
 			String requirementDesc = simplePredicate.getPredicateSign() + simplePredicate.getThreshold();
 
 			expression = String.format(SIMPLE_EXPRESSION, metricInformation.getPropertyName(),
-					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(),
-					filter, metricInformation.getPropertyName(), simplePredicate.getDetectionSign(),
-					simplePredicate.getThreshold());
+					metricInformation.getPropertyName(), requirementDesc, metricInformation.getEventMessageName(), filter,
+					metricInformation.getPropertyName(), simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
 
 		} else {
 			// aggregation function
@@ -165,8 +159,7 @@ public class Wsla2ExpressionMapper {
 			expression = String.format(AGGREGATION_FUNCTION_EXPRESSION, metricInformation.getAggregationFunction(),
 					metricInformation.getPropertyName(), metricInformation.getPropertyName(), requirementDesc,
 					metricInformation.getEventMessageName(), filter, metricInformation.getAggregationFunction(),
-					metricInformation.getPropertyName(), simplePredicate.getDetectionSign(),
-					simplePredicate.getThreshold());
+					metricInformation.getPropertyName(), simplePredicate.getDetectionSign(), simplePredicate.getThreshold());
 		}
 
 		metricProcessor.addExpression(expression);
