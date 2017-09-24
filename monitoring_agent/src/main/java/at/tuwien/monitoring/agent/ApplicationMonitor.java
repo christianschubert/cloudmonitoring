@@ -180,16 +180,18 @@ public class ApplicationMonitor {
 
 		private void monitorMemory() {
 
-			long sumTotalMemory = 0;
+			long sumVirtualMemory = 0;
 			long sumResidentMemory = 0;
+			long sumSharedMemory = 0;
 
 			linuxProcessCacheWorkaround();
 
 			for (Long pidToMonitor : processesToMonitor) {
 				try {
 					ProcMem procMem = sigar.getProcMem(pidToMonitor);
-					sumTotalMemory += procMem.getSize();
+					sumVirtualMemory += procMem.getSize();
 					sumResidentMemory += procMem.getResident();
+					sumSharedMemory += procMem.getShare();
 				} catch (SigarException e) {
 					logger.error("Error retrieving memory info from application");
 					stop();
@@ -197,7 +199,7 @@ public class ApplicationMonitor {
 			}
 
 			MemoryMessage memoryMessage = new MemoryMessage(null, new Date(), processRunner.getProcessName(),
-					sumTotalMemory, sumResidentMemory);
+					sumVirtualMemory, sumResidentMemory, sumSharedMemory);
 
 			if (lastMemoryMessage == null || !memoryMessage.equals(lastMemoryMessage)) {
 				// only if memory is different to last measuement, send it.

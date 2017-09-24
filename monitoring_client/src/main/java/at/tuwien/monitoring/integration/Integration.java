@@ -11,6 +11,7 @@ import at.tuwien.common.Utils;
 import at.tuwien.monitoring.agent.Application;
 import at.tuwien.monitoring.agent.MonitoringAgent;
 import at.tuwien.monitoring.agent.constants.MonitorTask;
+import at.tuwien.monitoring.client.MonitoringClient;
 import at.tuwien.monitoring.server.MonitoringServer;
 
 public class Integration {
@@ -50,6 +51,8 @@ public class Integration {
 
 		}
 		startApplications(5);
+
+		MonitoringClient monitoringClient = new MonitoringClient(settings);
 
 		// TODO: do something with applications
 

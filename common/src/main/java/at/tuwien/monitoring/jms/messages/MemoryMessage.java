@@ -8,17 +8,17 @@ public class MemoryMessage extends MetricMessage {
 	private static final long serialVersionUID = 1L;
 
 	private String application;
-	private long totalMemory;
+	private long virtualMemory;
 	private long residentMemory;
+	private long sharedMemory;
 
-	public MemoryMessage() {
-	}
-
-	public MemoryMessage(String ipAddress, Date timestamp, String application, long totalMemory, long residentMemory) {
+	public MemoryMessage(String ipAddress, Date timestamp, String application, long virtualMemory, long residentMemory,
+			long sharedMemory) {
 		super(timestamp, ipAddress);
 		setApplication(application);
-		setTotalMemory(totalMemory);
+		setVirtualMemory(virtualMemory);
 		setResidentMemory(residentMemory);
+		setSharedMemory(sharedMemory);
 	}
 
 	public String getApplication() {
@@ -29,12 +29,12 @@ public class MemoryMessage extends MetricMessage {
 		this.application = application;
 	}
 
-	public long getTotalMemory() {
-		return totalMemory;
+	public long getVirtualMemory() {
+		return virtualMemory;
 	}
 
-	public void setTotalMemory(long totalMemory) {
-		this.totalMemory = totalMemory;
+	public void setVirtualMemory(long virtualMemory) {
+		this.virtualMemory = virtualMemory;
 	}
 
 	public long getResidentMemory() {
@@ -45,6 +45,14 @@ public class MemoryMessage extends MetricMessage {
 		this.residentMemory = residentMemory;
 	}
 
+	public long getSharedMemory() {
+		return sharedMemory;
+	}
+
+	public void setSharedMemory(long sharedMemory) {
+		this.sharedMemory = sharedMemory;
+	}
+
 	@Override
 	public String getServiceName() {
 		return getApplication();
@@ -53,20 +61,30 @@ public class MemoryMessage extends MetricMessage {
 	@Override
 	public String toString() {
 		return "MemoryMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
-				+ ", getApplication()=" + getApplication() + ", getTotalMemory()=" + getTotalMemory() + ", getResidentMemory()="
-				+ getResidentMemory() + "]";
+				+ ", getApplication()=" + getApplication() + ", getVirtualMemory()=" + getVirtualMemory()
+				+ ", getResidentMemory()=" + getResidentMemory() + ", getSharedMemory()=" + getSharedMemory() + "]";
 	}
 
 	@Override
 	public String getCsvHeader() {
-		return new StringJoiner(";").add("timestamp").add("application").add("totalMemory").add("residentMemory")
+		return new StringJoiner(";")
+				.add("timestamp")
+				.add("application")
+				.add("virtualMemory")
+				.add("residentMemory")
+				.add("sharedMemory")
 				.toString();
 	}
 
 	@Override
 	public String toCsvEntry() {
-		return new StringJoiner(";").add(getTimestamp().toString()).add(getApplication())
-				.add(String.valueOf(getTotalMemory())).add(String.valueOf(getResidentMemory())).toString();
+		return new StringJoiner(";")
+				.add(getTimestamp().toString())
+				.add(getApplication())
+				.add(String.valueOf(getVirtualMemory()))
+				.add(String.valueOf(getResidentMemory()))
+				.add(String.valueOf(getSharedMemory()))
+				.toString();
 	}
 
 	@Override
@@ -75,7 +93,8 @@ public class MemoryMessage extends MetricMessage {
 		int result = 1;
 		result = prime * result + ((application == null) ? 0 : application.hashCode());
 		result = prime * result + (int) (residentMemory ^ (residentMemory >>> 32));
-		result = prime * result + (int) (totalMemory ^ (totalMemory >>> 32));
+		result = prime * result + (int) (sharedMemory ^ (sharedMemory >>> 32));
+		result = prime * result + (int) (virtualMemory ^ (virtualMemory >>> 32));
 		return result;
 	}
 
@@ -95,7 +114,9 @@ public class MemoryMessage extends MetricMessage {
 			return false;
 		if (residentMemory != other.residentMemory)
 			return false;
-		if (totalMemory != other.totalMemory)
+		if (sharedMemory != other.sharedMemory)
+			return false;
+		if (virtualMemory != other.virtualMemory)
 			return false;
 		return true;
 	}

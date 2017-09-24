@@ -48,7 +48,7 @@ public class MonitoringAgent {
 	private ScheduledExecutorService scheduler;
 	private ScheduledFuture<?> scheduledJmsSender;
 
-	private List<ApplicationMonitor> applicationList = Collections.synchronizedList(new ArrayList<ApplicationMonitor>());
+	private List<ApplicationMonitor> applicationList = Collections.synchronizedList(new ArrayList<>());
 
 	public MonitoringAgent(Settings settings) {
 		this.settings = settings;
@@ -153,9 +153,7 @@ public class MonitoringAgent {
 				settings, currentApplicationID.incrementAndGet());
 		long pid = applicationMonitor.start();
 		if (pid != -1) {
-			synchronized (applicationList) {
-				applicationList.add(applicationMonitor);
-			}
+			applicationList.add(applicationMonitor);
 		}
 
 		return pid;
