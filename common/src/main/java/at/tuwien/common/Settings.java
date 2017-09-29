@@ -13,6 +13,8 @@ public class Settings {
 	public int imageTargetSize = 300;
 	public int requestCount = 100;
 
+	public double responseTimeDelayRate = 0.0d;
+
 	public int metricsAggregationInterval = 5000;
 	public int processChildrenUpdateInterval = 2000;
 	public int systemMetricsMonitorInterval = 1000;

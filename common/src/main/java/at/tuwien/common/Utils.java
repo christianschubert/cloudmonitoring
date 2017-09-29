@@ -24,17 +24,14 @@ public class Utils {
 			URL checkIP = new URL("http://checkip.amazonaws.com");
 			reader = new BufferedReader(new InputStreamReader(checkIP.openStream()));
 			return reader.readLine();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			logger.error("Error looking up public IP address.");
 			e.printStackTrace();
-		}
-		finally {
+		} finally {
 			if (reader != null) {
 				try {
 					reader.close();
-				}
-				catch (IOException e) {
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
@@ -61,7 +58,8 @@ public class Utils {
 				settings.serviceUrl = serviceUrl.trim();
 			}
 
-			boolean logMetrics = (prop.getProperty("log.metrics") == null ? false : Boolean.valueOf(prop.getProperty("log.metrics").trim()));
+			boolean logMetrics = (prop.getProperty("log.metrics") == null ? false
+					: Boolean.valueOf(prop.getProperty("log.metrics").trim()));
 			settings.logMetrics = logMetrics;
 
 			String imageType = prop.getProperty("image.type");
@@ -84,6 +82,11 @@ public class Utils {
 				settings.requestCount = Integer.parseInt(requestCount);
 			}
 
+			String responseTimeDelayRate = prop.getProperty("response.time.delay.rate");
+			if (responseTimeDelayRate != null) {
+				settings.responseTimeDelayRate = Double.parseDouble(responseTimeDelayRate);
+			}
+
 			String metricsAggregationInterval = prop.getProperty("metrics.aggregation.interval");
 			if (metricsAggregationInterval != null) {
 				settings.metricsAggregationInterval = Integer.parseInt(metricsAggregationInterval);
@@ -100,16 +103,13 @@ public class Utils {
 			}
 
 			settings.etcFolderPath = new File(configPath).getParent();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
-		}
-		finally {
+		} finally {
 			if (in != null) {
 				try {
 					in.close();
-				}
-				catch (IOException e) {
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
