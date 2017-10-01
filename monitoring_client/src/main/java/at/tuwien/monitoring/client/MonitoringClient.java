@@ -47,14 +47,23 @@ public class MonitoringClient {
 	}
 
 	public void runTest() {
-		String image = "image_" + settings.imageType + ".jpg";
+		boolean batchMode = settings.imageType.equalsIgnoreCase("batch");
+
+		// batch mode starts with small image
+		String currentImageType = batchMode ? "small" : settings.imageType;
 
 		logger.info("Test running. Please wait...");
 
 		for (int i = 0; i < settings.requestCount; i++) {
+			if (batchMode && i != 0 && (i % (settings.requestCount / 4) == 0)) {
+				// switch to next image
+				currentImageType = getNextImageForBatch(currentImageType);
+			}
+
+			String image = "image_" + currentImageType + ".jpg";
+
 			// start measuring response time from client - to compare with aspect
 			long startTime = System.nanoTime();
-
 			requester.shrinkRequest(image, settings.imageTargetSize, Rotation.valueOf(settings.imageRotation));
 
 			if (settings.logMetrics) {
@@ -65,6 +74,19 @@ public class MonitoringClient {
 		}
 
 		logger.info("Test finished!");
+	}
+
+	private String getNextImageForBatch(String currentImageType) {
+		switch (currentImageType) {
+		case "small":
+			return "medium";
+		case "medium":
+			return "big";
+		case "big":
+			return "very_big";
+		default:
+			return currentImageType;
+		}
 	}
 
 	public void shutdown() {
