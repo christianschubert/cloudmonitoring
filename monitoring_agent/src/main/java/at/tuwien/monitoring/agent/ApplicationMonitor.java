@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -53,7 +54,7 @@ public class ApplicationMonitor {
 	private PrintWriter cpuLogFile, memoryLogFile;
 	private boolean addCsvHeaderCpu = true, addCsvHeaderMem = true;
 
-	public ApplicationMonitor(int cpuCount, long memTotal, String[] applicationWithParams, Application application,
+	public ApplicationMonitor(int cpuCount, long memTotal, List<String> applicationWithParams, Application application,
 			Settings settings, int applicationID) {
 		this.cpuCount = cpuCount;
 		this.memTotal = memTotal;
@@ -62,7 +63,7 @@ public class ApplicationMonitor {
 		this.applicationID = applicationID;
 		this.monitorTasks = application.getMonitorTasks();
 
-		processRunner = new ProcessRunner(applicationWithParams);
+		processRunner = new ProcessRunner(applicationWithParams.toArray(new String[applicationWithParams.size()]));
 		scheduler = Executors.newScheduledThreadPool(1);
 	}
 

@@ -3,6 +3,7 @@ package at.tuwien.monitoring.agent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -146,12 +147,14 @@ public class MonitoringAgent {
 			return -1;
 		}
 
-		String[] applicationWithParams = new String[] { application.getApplicationPath(), application.getParams() };
-
+		List<String> applicationWithParams = new ArrayList<>();
 		if (isJavaAplication) {
-			applicationWithParams = new String[] { "java", "-javaagent:" + Constants.ASPECTJ_WEAVER_PATH, "-jar",
-					application.getApplicationPath(), application.getParams() };
+			applicationWithParams.add("java");
+			applicationWithParams.add("-javaagent:" + Constants.ASPECTJ_WEAVER_PATH);
+			applicationWithParams.add("-jar");
 		}
+		applicationWithParams.add(application.getApplicationPath());
+		applicationWithParams.addAll(application.getParams());
 
 		ApplicationMonitor applicationMonitor = new ApplicationMonitor(cpuCount, memTotal, applicationWithParams,
 				application, settings, currentApplicationID.incrementAndGet());
@@ -261,8 +264,8 @@ public class MonitoringAgent {
 		if (agent.init()) {
 			// for test purposes monitor imageresizer application only
 			Application imageResizer = new Application(
-					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "8080",
-					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
+					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar",
+					Arrays.asList("-p8080"), EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
 
 			agent.startApplicationMonitoring(imageResizer, true);
 

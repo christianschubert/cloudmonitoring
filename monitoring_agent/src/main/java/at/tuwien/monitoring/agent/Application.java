@@ -1,19 +1,21 @@
 package at.tuwien.monitoring.agent;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import at.tuwien.monitoring.agent.constants.MonitorTask;
 
 public class Application {
 	private String applicationPath;
-	private String params;
+	private List<String> params;
 	private Set<MonitorTask> monitorTasks;
 
 	public Application(String applicationPath, Set<MonitorTask> monitorTasks) {
-		this(applicationPath, "", monitorTasks);
+		this(applicationPath, Collections.emptyList(), monitorTasks);
 	}
 
-	public Application(String applicationPath, String params, Set<MonitorTask> monitorTasks) {
+	public Application(String applicationPath, List<String> params, Set<MonitorTask> monitorTasks) {
 		super();
 		this.applicationPath = applicationPath;
 		this.params = params;
@@ -36,18 +38,18 @@ public class Application {
 		this.monitorTasks = monitorTasks;
 	}
 
-	public String getParams() {
+	public List<String> getParams() {
 		return params;
 	}
 
-	public void setParams(String params) {
+	public void setParams(List<String> params) {
 		this.params = params;
 	}
 
 	@Override
 	public String toString() {
-		return "Application [applicationPath=" + applicationPath + ", params=" + params + ", monitorTasks=" + monitorTasks
-				+ "]";
+		return "Application [applicationPath=" + applicationPath + ", params=" + params + ", monitorTasks="
+				+ monitorTasks + "]";
 	}
 
 	@Override

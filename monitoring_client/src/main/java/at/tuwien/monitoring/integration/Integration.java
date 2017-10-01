@@ -1,7 +1,9 @@
 package at.tuwien.monitoring.integration;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -73,7 +75,11 @@ public class Integration {
 
 	private void startApplications(int count, int firstPort) {
 		for (int i = 0; i < count; i++) {
-			Application application = new Application(APP_PATH, String.valueOf(firstPort + i),
+
+			List<String> params = Arrays.asList("config:" + settings.etcFolderPath + "/settings.properties",
+					" -p" + String.valueOf(firstPort + i));
+
+			Application application = new Application(APP_PATH, params,
 					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
 
 			monitoringAgent.startApplicationMonitoring(application, true);
