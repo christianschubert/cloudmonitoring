@@ -71,7 +71,7 @@ public class ServerInfoMessage extends MetricMessage {
 	@Override
 	public String toCsvEntry() {
 		return new StringJoiner(";")
-				.add(getTimestamp().toString())
+				.add(String.valueOf(getTimestamp().getTime()))
 				.add(getTarget())
 				.add(getMethod().toString())
 				.add(String.valueOf(getExecutionTime()))

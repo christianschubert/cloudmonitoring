@@ -88,7 +88,7 @@ public class CpuLoadMessage extends MetricMessage {
 	@Override
 	public String toCsvEntry() {
 		return new StringJoiner(";")
-				.add(getTimestamp().toString())
+				.add(String.valueOf(getTimestamp().getTime()))
 				.add(getApplication())
 				.add(String.valueOf(getCpuLoad()))
 				.add(String.valueOf(getCpuTotal()))
