@@ -16,6 +16,7 @@ public class Settings {
 	public int requestCount = 100;
 
 	public double responseTimeDelayRate = 0.0d;
+	public int responseTimeDelayTime = 2000;
 
 	public int metricsAggregationInterval = 5000;
 	public int processChildrenUpdateInterval = 2000;

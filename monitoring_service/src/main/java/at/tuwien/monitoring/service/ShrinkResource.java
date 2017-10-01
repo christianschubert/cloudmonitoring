@@ -7,8 +7,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.ws.rs.Consumes;
@@ -39,13 +42,8 @@ import at.tuwien.monitoring.service.message.Message;
 @Path("shrink")
 public class ShrinkResource {
 
-	private static final int INTENDED_DELEAY_TIME = 2000;
-
 	@Context
 	private Application app;
-
-	private static int delayEveryXRequests = -1;
-	private static int currentRequest = 0;
 
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -54,20 +52,21 @@ public class ShrinkResource {
 	public void uploadImage(@FormDataParam("image") InputStream uploadedInputStream,
 			@FormDataParam("image") FormDataContentDisposition detail, @FormDataParam("size") int size,
 			@FormDataParam("width") int width, @FormDataParam("height") int height,
-			@FormDataParam("rotation") String rotation, @Suspended final AsyncResponse asyncResponse) throws IOException {
+			@FormDataParam("rotation") String rotation, @Suspended final AsyncResponse asyncResponse)
+			throws IOException {
 
 		asyncResponse.setTimeoutHandler(new TimeoutHandler() {
 			@Override
 			public void handleTimeout(AsyncResponse asyncResponse) {
-				asyncResponse
-						.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
+				asyncResponse.resume(
+						Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
 			}
 		});
 		asyncResponse.setTimeout(20, TimeUnit.SECONDS);
 
 		if (uploadedInputStream == null || detail == null) {
-			asyncResponse
-					.resume(Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build());
+			asyncResponse.resume(
+					Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build());
 			return;
 		}
 
@@ -99,10 +98,7 @@ public class ShrinkResource {
 			}
 
 			// add intended response time delay for tests
-			if (addDelay()) {
-				System.out.println("Added intended delay");
-				Thread.sleep(INTENDED_DELEAY_TIME);
-			}
+			checkAddDelay();
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -119,28 +115,51 @@ public class ShrinkResource {
 			e.printStackTrace();
 		}
 
-		asyncResponse
-				.resume(Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
+		asyncResponse.resume(
+				Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
 	}
 
-	private boolean addDelay() {
-		if (delayEveryXRequests == 0) {
-			return false;
-		}
+	private static Set<Integer> delayRequests;
+	private static int currentRequest = 0;
 
-		if (delayEveryXRequests == -1) {
-			// initialize
-			delayEveryXRequests = 0;
+	private void checkAddDelay() {
+		// choose default delay time
+		int delayTime = 2000;
+
+		// init
+		if (currentRequest == 0) {
 			Map<String, Object> properties = app.getProperties();
 			if (properties != null) {
-				Integer value = (Integer) properties.get("delay.every.x.request");
-				if (value != null) {
-					delayEveryXRequests = value.intValue();
+				Integer total = (Integer) properties.get("total.requests");
+				Double rate = (Double) properties.get("delay.rate");
+				if (total != null && rate != null) {
+					int noDelays = (int) (total.intValue() * rate.doubleValue());
+
+					// generate a set of unique random numbers
+					delayRequests = ThreadLocalRandom.current().ints(0, total).distinct().limit(noDelays).boxed()
+							.collect(Collectors.toSet());
 				}
+
+				Integer time = (Integer) properties.get("delay.time");
+				delayTime = time.intValue();
+			}
+		}
+
+		// no setting for delay -> do not delay delay
+		if (delayRequests == null) {
+			return;
+		}
+
+		if (delayRequests.contains(currentRequest)) {
+			// add delay
+			System.out.println("!!! Intended delay !!!");
+			try {
+				Thread.sleep(delayTime);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 
 		currentRequest++;
-		return (currentRequest % delayEveryXRequests == 0);
 	}
 }

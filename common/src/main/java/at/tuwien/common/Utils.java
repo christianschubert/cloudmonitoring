@@ -108,6 +108,11 @@ public class Utils {
 				settings.responseTimeDelayRate = Double.parseDouble(responseTimeDelayRate);
 			}
 
+			String responseTimeDelayTime = prop.getProperty("response.time.delay.time");
+			if (responseTimeDelayTime != null) {
+				settings.responseTimeDelayTime = Integer.parseInt(responseTimeDelayTime);
+			}
+
 			String metricsAggregationInterval = prop.getProperty("metrics.aggregation.interval");
 			if (metricsAggregationInterval != null) {
 				settings.metricsAggregationInterval = Integer.parseInt(metricsAggregationInterval);

@@ -22,7 +22,6 @@ public class Integration {
 
 	private Settings settings;
 
-	private MonitoringServer monitoringServer;
 	private MonitoringAgent monitoringAgent;
 
 	private Set<Application> applications = new HashSet<>();
@@ -33,7 +32,7 @@ public class Integration {
 
 	private void init() {
 		// start ttp
-		monitoringServer = new MonitoringServer(settings);
+		MonitoringServer monitoringServer = new MonitoringServer(settings);
 		if (!monitoringServer.init()) {
 			logger.error("Error initializing monitoring server.");
 			monitoringServer.shutdown();
@@ -52,8 +51,13 @@ public class Integration {
 		}
 		startApplications(1, 8080);
 
+		// start client and run tests
 		MonitoringClient monitoringClient = new MonitoringClient(settings);
-		monitoringClient.start();
+		monitoringClient.init();
+		monitoringClient.runTest();
+
+		// stop client
+		monitoringClient.shutdown();
 
 		// stop monitoring of applications
 		for (Application application : applications) {

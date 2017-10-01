@@ -20,13 +20,15 @@ public class MonitoringClient {
 
 	private Settings settings;
 
+	private ServiceRequester requester;
+
 	private PrintWriter outLogFile;
 
 	public MonitoringClient(Settings settings) {
 		this.settings = settings;
 	}
 
-	public void start() {
+	public void init() {
 		if (settings.logMetrics) {
 			try {
 				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_client.csv");
@@ -41,9 +43,11 @@ public class MonitoringClient {
 			}
 		}
 
-		String image = "image_" + settings.imageType + ".jpg";
+		requester = new ServiceRequester(settings.serviceUrl + Constants.APP_PATH);
+	}
 
-		ServiceRequester requester = new ServiceRequester(settings.serviceUrl + Constants.APP_PATH);
+	public void runTest() {
+		String image = "image_" + settings.imageType + ".jpg";
 
 		logger.info("Test running. Please wait...");
 
@@ -61,10 +65,11 @@ public class MonitoringClient {
 		}
 
 		logger.info("Test finished!");
+	}
+
+	public void shutdown() {
 		logger.info("Monitoring client shutdown.");
 		requester.shutdown();
-
-		logger.info("abc.");
 
 		if (outLogFile != null) {
 			outLogFile.close();
@@ -74,6 +79,9 @@ public class MonitoringClient {
 	public static void main(final String[] args) {
 		Settings settings = Utils.parseArgsForSettings(args);
 		MonitoringClient monitoringClient = new MonitoringClient(settings);
-		monitoringClient.start();
+		monitoringClient.init();
+		monitoringClient.runTest();
+		monitoringClient.shutdown();
+		System.exit(0);
 	}
 }

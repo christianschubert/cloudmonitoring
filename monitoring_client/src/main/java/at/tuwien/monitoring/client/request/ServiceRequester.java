@@ -68,6 +68,8 @@ public class ServiceRequester {
 		} catch (IOException e) {
 			logger.error("Error while copying shrinked image (Request ID " + currentRequestID + ").");
 		}
+
+		response.close();
 	}
 
 	private Entity<FormDataMultiPart> buildPostEntity(String image, int size, Rotation rotation) {

@@ -10,18 +10,21 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import at.tuwien.common.Settings;
+import at.tuwien.common.Utils;
+
 /**
  * Main class.
  *
  */
 public class MonitoringService {
 
-	static final int DEFAULT_PORT = 8080;
+	private static final int DEFAULT_PORT = 8080;
 
 	// Base URI the Grizzly HTTP server will listen on
 	private static final String BASE_URI = "http://0.0.0.0:%d/imageresizer/";
 
-	static String getBaseUri(int port) {
+	private static String getBaseUri(int port) {
 		return String.format(BASE_URI, port);
 	}
 
@@ -29,32 +32,25 @@ public class MonitoringService {
 	 * Starts Grizzly HTTP server exposing JAX-RS resources defined in this
 	 * application.
 	 * 
-	 * @return Grizzly HTTP server.
-	 */
-	public static HttpServer startServer(int port) {
-		return startServer(port, 0, 0);
-	}
-
-	/**
-	 * Starts Grizzly HTTP server exposing JAX-RS resources defined in this
-	 * application.
+	 * @param settings
 	 * 
 	 * @return Grizzly HTTP server.
 	 */
-	public static HttpServer startServer(int port, double responseTimeInjectionRate, int expectedRequests) {
+	public static HttpServer startServer(Settings settings, int port) {
 		// create a resource config that scans for JAX-RS resources and
 		// providers
 		// in at.tuwien.monitoring.service package
 		final ResourceConfig rc = new ResourceConfig().packages("at.tuwien.monitoring.service");
 		rc.register(MultiPartFeature.class);
 
-		if (responseTimeInjectionRate != 0) {
+		if (settings.responseTimeDelayRate > 0) {
 			System.out.println(String.format(
 					"Service has enabled intended response time delay (Rate: %f, Total expected requests: %d)",
-					responseTimeInjectionRate, expectedRequests));
+					settings.responseTimeDelayRate, settings.requestCount));
 			Map<String, Object> properties = new HashMap<>();
-			properties.put("delay.every.x.request",
-					(int) (expectedRequests / (expectedRequests * responseTimeInjectionRate)));
+			properties.put("total.requests", settings.requestCount);
+			properties.put("delay.rate", settings.responseTimeDelayRate);
+			properties.put("delay.time", settings.responseTimeDelayTime);
 			rc.setProperties(properties);
 		}
 
@@ -71,31 +67,14 @@ public class MonitoringService {
 	 */
 	public static void main(final String[] args) throws IOException {
 
-		int port = DEFAULT_PORT;
-		double rate = 0.0d;
-		int expectedRequests = 0;
+		Settings settings = Utils.parseArgsForSettings(args);
 
+		int port = DEFAULT_PORT;
 		for (String arg : args) {
-			if (arg.startsWith("-d")) {
-				// longer response time injection rate
-				String rateArg = arg.split("-d")[1];
+			if (arg.startsWith("-p")) {
+				String portArg = arg.split("-p")[1];
 				try {
-					rate = Double.parseDouble(rateArg);
-				} catch (NumberFormatException e) {
-					System.err.println("Invalid argument for response time delay rate.");
-				}
-			} else if (arg.startsWith("-t")) {
-				// total expected requests (for response time rate)
-				String totalArg = arg.split("-t")[1];
-				try {
-					expectedRequests = Integer.parseInt(totalArg);
-				} catch (NumberFormatException e) {
-					System.err.println("Invalid argument for total expected requests.");
-				}
-			} else {
-				// port
-				try {
-					int tempPort = Integer.parseInt(arg);
+					int tempPort = Integer.parseInt(portArg);
 					if (tempPort >= 1 && tempPort <= 65535) {
 						port = tempPort;
 					} else {
@@ -107,7 +86,7 @@ public class MonitoringService {
 			}
 		}
 
-		final HttpServer server = startServer(port, rate, expectedRequests);
+		final HttpServer server = startServer(settings, port);
 		System.out.println(String.format(
 				"Jersey app started with WADL available at " + "%sapplication.wadl\nHit enter to stop it...",
 				getBaseUri(port)));
