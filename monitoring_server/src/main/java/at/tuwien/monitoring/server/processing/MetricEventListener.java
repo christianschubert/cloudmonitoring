@@ -14,7 +14,6 @@ import com.espertech.esper.event.WrapperEventBean;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
 import at.tuwien.monitoring.server.db.dao.ViolationDAO;
 import at.tuwien.monitoring.server.db.dto.ViolationDTO;
-import at.tuwien.monitoring.server.types.ViolationType;
 
 public class MetricEventListener implements StatementAwareUpdateListener {
 
@@ -44,7 +43,7 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 
 		ViolationDTO violationDTO = new ViolationDTO();
 		violationDTO.setRequiredDesc((String) properties.get("requirementdesc"));
-		violationDTO.setViolationType(ViolationType.get((String) properties.get("metrictype")));
+		violationDTO.setViolationType((String) properties.get("metrictype"));
 		violationDTO.setSourceIpAddress(metricMessage.getIpAddress());
 		violationDTO.setViolationTimestamp(metricMessage.getTimestamp());
 		violationDTO.setServiceName(metricMessage.getServiceName());

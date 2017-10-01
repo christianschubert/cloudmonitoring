@@ -256,19 +256,7 @@ public class MonitoringAgent {
 	}
 
 	public static void main(final String[] args) {
-		Settings settings = new Settings();
-
-		for (String arg : args) {
-			if (!arg.startsWith("config:")) {
-				continue;
-			}
-			String split[] = arg.split("config:");
-			if (split.length != 2) {
-				continue;
-			}
-			settings = Utils.readProperties(split[1]);
-		}
-
+		Settings settings = Utils.parseArgsForSettings(args);
 		MonitoringAgent agent = new MonitoringAgent(settings);
 		if (agent.init()) {
 			// for test purposes monitor imageresizer application only

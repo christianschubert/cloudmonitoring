@@ -11,16 +11,16 @@ public class MemoryMessage extends MetricMessage {
 	private long virtualMemory;
 	private long residentMemory;
 	private long sharedMemory;
-	private double memUsage;
+	private double memoryUsagePerc;
 
 	public MemoryMessage(String ipAddress, Date timestamp, String application, long virtualMemory, long residentMemory,
-			long sharedMemory, double memUsage) {
+			long sharedMemory, double memoryUsagePerc) {
 		super(timestamp, ipAddress);
 		setApplication(application);
 		setVirtualMemory(virtualMemory);
 		setResidentMemory(residentMemory);
 		setSharedMemory(sharedMemory);
-		setMemUsage(memUsage);
+		setMemoryUsagePerc(memoryUsagePerc);
 	}
 
 	public String getApplication() {
@@ -55,12 +55,12 @@ public class MemoryMessage extends MetricMessage {
 		this.sharedMemory = sharedMemory;
 	}
 
-	public double getMemUsage() {
-		return memUsage;
+	public double getMemoryUsagePerc() {
+		return memoryUsagePerc;
 	}
 
-	public void setMemUsage(double memUsage) {
-		this.memUsage = memUsage;
+	public void setMemoryUsagePerc(double memoryUsagePerc) {
+		this.memoryUsagePerc = memoryUsagePerc;
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class MemoryMessage extends MetricMessage {
 		return "MemoryMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
 				+ ", getApplication()=" + getApplication() + ", getVirtualMemory()=" + getVirtualMemory()
 				+ ", getResidentMemory()=" + getResidentMemory() + ", getSharedMemory()=" + getSharedMemory()
-				+ ", getMemUsage()=" + getMemUsage() + "]";
+				+ ", getMemoryUsagePerc()=" + getMemoryUsagePerc() + "]";
 	}
 
 	@Override
@@ -81,10 +81,10 @@ public class MemoryMessage extends MetricMessage {
 		return new StringJoiner(";")
 				.add("timestamp")
 				.add("application")
+				.add("memoryUsagePerc")
 				.add("virtualMemory")
 				.add("residentMemory")
 				.add("sharedMemory")
-				.add("memUsage")
 				.toString();
 	}
 
@@ -93,10 +93,10 @@ public class MemoryMessage extends MetricMessage {
 		return new StringJoiner(";")
 				.add(String.valueOf(getTimestamp().getTime()))
 				.add(getApplication())
+				.add(String.valueOf(getMemoryUsagePerc()))
 				.add(String.valueOf(getVirtualMemory()))
 				.add(String.valueOf(getResidentMemory()))
 				.add(String.valueOf(getSharedMemory()))
-				.add(String.valueOf(getMemUsage()))
 				.toString();
 	}
 

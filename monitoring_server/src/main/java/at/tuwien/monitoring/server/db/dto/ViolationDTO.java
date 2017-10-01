@@ -2,14 +2,12 @@ package at.tuwien.monitoring.server.db.dto;
 
 import java.util.Date;
 
-import at.tuwien.monitoring.server.types.ViolationType;
-
 public class ViolationDTO {
 
 	private int id;
 	private String sourceIpAddress;
 	private String serviceName;
-	private ViolationType violationType;
+	private String violationType;
 	private double monitoredValue;
 	private String requiredDesc;
 	private Date violationTimestamp;
@@ -17,7 +15,7 @@ public class ViolationDTO {
 	public ViolationDTO() {
 	}
 
-	public ViolationDTO(String sourceIpAddress, String serviceName, ViolationType violationType, double monitoredValue,
+	public ViolationDTO(String sourceIpAddress, String serviceName, String violationType, double monitoredValue,
 			String requiredDesc, Date violationTimestamp) {
 		super();
 		this.sourceIpAddress = sourceIpAddress;
@@ -52,11 +50,11 @@ public class ViolationDTO {
 		this.serviceName = serviceName;
 	}
 
-	public ViolationType getViolationType() {
+	public String getViolationType() {
 		return violationType;
 	}
 
-	public void setViolationType(ViolationType violationType) {
+	public void setViolationType(String violationType) {
 		this.violationType = violationType;
 	}
 

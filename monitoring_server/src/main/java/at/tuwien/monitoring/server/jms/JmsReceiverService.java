@@ -35,21 +35,21 @@ public class JmsReceiverService implements MessageListener {
 
 	private MetricProcessor metricProcessor;
 
-	private boolean embeddedJmsBroker;
+	private boolean embeddedJmsBroker = true;
 	private boolean connected = false;
 
-	public JmsReceiverService(boolean embeddedJmsBroker, MetricProcessor metricProcessor) {
+	public JmsReceiverService(MetricProcessor metricProcessor) {
 		// use default broker URL
-		this(null, embeddedJmsBroker, metricProcessor);
+		this(null, metricProcessor);
 	}
 
-	public JmsReceiverService(String brokerURL, final boolean embeddedJmsBroker, MetricProcessor metricProcessor) {
+	public JmsReceiverService(String brokerURL, MetricProcessor metricProcessor) {
 		// use default broker URL if null
 		if (brokerURL != null) {
 			this.brokerURL = brokerURL;
+			embeddedJmsBroker = false;
 		}
 
-		this.embeddedJmsBroker = embeddedJmsBroker;
 		this.metricProcessor = metricProcessor;
 	}
 

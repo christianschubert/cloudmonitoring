@@ -26,7 +26,7 @@ public class MonitoringClient {
 		this.settings = settings;
 	}
 
-	private void start() {
+	public void start() {
 		if (settings.logMetrics) {
 			try {
 				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_client.csv");
@@ -64,27 +64,15 @@ public class MonitoringClient {
 		logger.info("Monitoring client shutdown.");
 		requester.shutdown();
 
+		logger.info("abc.");
+
 		if (outLogFile != null) {
 			outLogFile.close();
 		}
-
-		System.exit(0);
 	}
 
 	public static void main(final String[] args) {
-		Settings settings = new Settings();
-
-		for (String arg : args) {
-			if (!arg.startsWith("config:")) {
-				continue;
-			}
-			String split[] = arg.split("config:");
-			if (split.length != 2) {
-				continue;
-			}
-			settings = Utils.readProperties(split[1]);
-		}
-
+		Settings settings = Utils.parseArgsForSettings(args);
 		MonitoringClient monitoringClient = new MonitoringClient(settings);
 		monitoringClient.start();
 	}

@@ -24,7 +24,7 @@ import at.tuwien.monitoring.agent.constants.Constants;
 import at.tuwien.monitoring.agent.constants.MonitorTask;
 import at.tuwien.monitoring.agent.process.ProcessRunner;
 import at.tuwien.monitoring.agent.process.ProcessTools;
-import at.tuwien.monitoring.jms.messages.CpuLoadMessage;
+import at.tuwien.monitoring.jms.messages.CpuMessage;
 import at.tuwien.monitoring.jms.messages.MemoryMessage;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
 
@@ -224,7 +224,7 @@ public class ApplicationMonitor {
 
 		private void monitorCpu() {
 
-			double sumCpuLoad = 0;
+			double sumCpuUsagePerc = 0;
 			long sumCpuTotal = 0;
 			long sumCpuUser = 0;
 			long sumCpuKernel = 0;
@@ -234,7 +234,7 @@ public class ApplicationMonitor {
 			for (Long pidToMonitor : processesToMonitor) {
 				try {
 					ProcCpu procCpu = sigar.getProcCpu(pidToMonitor);
-					sumCpuLoad += procCpu.getPercent() * 100 / cpuCount;
+					sumCpuUsagePerc += procCpu.getPercent() * 100 / cpuCount;
 					sumCpuTotal += procCpu.getTotal();
 					sumCpuUser += procCpu.getUser();
 					sumCpuKernel += procCpu.getSys();
@@ -244,13 +244,13 @@ public class ApplicationMonitor {
 				}
 			}
 
-			CpuLoadMessage message = new CpuLoadMessage(null, new Date(), processRunner.getProcessName());
-			message.setCpuLoad(sumCpuLoad);
+			CpuMessage message = new CpuMessage(null, new Date(), processRunner.getProcessName());
+			message.setCpuUsagePerc(sumCpuUsagePerc);
 			message.setCpuTotal(sumCpuTotal);
 			message.setCpuKernel(sumCpuKernel);
 			message.setCpuUser(sumCpuUser);
 
-			if (sumCpuLoad > 0) {
+			if (sumCpuUsagePerc > 0) {
 				// only if load is greater than zero, send it.
 				// if load is zero, there is also no change in the other cpu metrics
 				collectedMetrics.offer(message);

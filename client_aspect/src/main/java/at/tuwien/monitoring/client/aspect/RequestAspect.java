@@ -33,7 +33,7 @@ public class RequestAspect {
 
 	private final static Logger logger = Logger.getLogger(RequestAspect.class);
 
-	private static Settings settings = new Settings();
+	private static Settings settings;
 
 	private JmsSenderService jmsService;
 	private String publicIPAddress;
@@ -69,16 +69,7 @@ public class RequestAspect {
 		Object[] args = joinPoint.getArgs();
 		String[] stringArgs = (String[]) args[0];
 
-		for (String arg : stringArgs) {
-			if (!arg.startsWith("config:")) {
-				continue;
-			}
-			String split[] = arg.split("config:");
-			if (split.length != 2) {
-				continue;
-			}
-			settings = Utils.readProperties(split[1]);
-		}
+		settings = Utils.parseArgsForSettings(stringArgs);
 
 		jmsService = new JmsSenderService(settings.brokerUrl, GlobalConstants.QUEUE_CLIENTS);
 		jmsService.start();

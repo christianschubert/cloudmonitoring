@@ -49,9 +49,9 @@ public class MonitoringService {
 		rc.register(MultiPartFeature.class);
 
 		if (responseTimeInjectionRate != 0) {
-			System.out.println(
-					String.format("Service has enabled intended response time delay (Rate: %f, Total expected requests: %d)",
-							responseTimeInjectionRate, expectedRequests));
+			System.out.println(String.format(
+					"Service has enabled intended response time delay (Rate: %f, Total expected requests: %d)",
+					responseTimeInjectionRate, expectedRequests));
 			Map<String, Object> properties = new HashMap<>();
 			properties.put("delay.every.x.request",
 					(int) (expectedRequests / (expectedRequests * responseTimeInjectionRate)));
@@ -108,11 +108,10 @@ public class MonitoringService {
 		}
 
 		final HttpServer server = startServer(port, rate, expectedRequests);
-		System.out.println(
-				String.format("Jersey app started with WADL available at " + "%sapplication.wadl\nHit enter to stop it...",
-						getBaseUri(port)));
+		System.out.println(String.format(
+				"Jersey app started with WADL available at " + "%sapplication.wadl\nHit enter to stop it...",
+				getBaseUri(port)));
 		System.in.read();
 		server.shutdownNow();
-		System.exit(0);
 	}
 }

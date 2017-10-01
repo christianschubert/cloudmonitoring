@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import at.tuwien.common.Settings;
+import at.tuwien.common.Utils;
 import at.tuwien.monitoring.server.db.dao.ViolationDAO;
 import at.tuwien.monitoring.server.http.EmbeddedHttpServer;
 import at.tuwien.monitoring.server.jms.JmsReceiverService;
@@ -15,16 +17,18 @@ public class MonitoringServer {
 
 	private final static Logger logger = Logger.getLogger(MonitoringServer.class);
 
+	private Settings settings;
+
 	private JmsReceiverService jmsService;
 	private EmbeddedHttpServer httpServer;
 	private MetricProcessor metricProcessor;
 	private Wsla2ExpressionMapper wsla2ExpressionMapper;
 
-	public boolean init() {
-		return init(null, true);
+	public MonitoringServer(Settings settings) {
+		this.settings = settings;
 	}
 
-	public boolean init(String jmsBrokerURL, boolean embeddedJmsBroker) {
+	public boolean init() {
 
 		metricProcessor = new MetricProcessor();
 		if (!metricProcessor.start()) {
@@ -34,7 +38,12 @@ public class MonitoringServer {
 
 		wsla2ExpressionMapper = new Wsla2ExpressionMapper(metricProcessor);
 
-		jmsService = new JmsReceiverService(jmsBrokerURL, embeddedJmsBroker, metricProcessor);
+		if (settings.embeddedBroker) {
+			jmsService = new JmsReceiverService(metricProcessor);
+		} else {
+			jmsService = new JmsReceiverService(settings.brokerUrl, metricProcessor);
+		}
+
 		jmsService.start();
 		if (!jmsService.isConnected()) {
 			logger.error("Error creating JMS service.");
@@ -82,24 +91,9 @@ public class MonitoringServer {
 	}
 
 	public static void main(final String[] args) {
-		String jmsBrokerURL = null;
-		boolean embeddedJmsBroker = true;
-
-		if (args.length > 2) {
-			logger.error("Invalid number of arguments.");
-			return;
-		}
-
-		for (int i = 0; i < args.length; i++) {
-			if (args[i].contains("-prod")) {
-				embeddedJmsBroker = false;
-			} else {
-				jmsBrokerURL = args[i];
-			}
-		}
-
-		MonitoringServer server = new MonitoringServer();
-		if (server.init(jmsBrokerURL, embeddedJmsBroker)) {
+		Settings settings = Utils.parseArgsForSettings(args);
+		MonitoringServer server = new MonitoringServer(settings);
+		if (server.init()) {
 			server.startSLAMonitoring("src/main/resources/image_service_agreement.xml");
 			logger.info("Monitoring server running. Press RETURN to exit.");
 			try {

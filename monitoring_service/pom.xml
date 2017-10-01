@@ -78,6 +78,7 @@
 						<argument>-classpath</argument>
 						<classpath />
 						<argument>${main.class}</argument>
+						<argument>config:${main.basedir}/etc/settings.properties</argument>
 					</arguments>
 				</configuration>
 				<executions>
@@ -92,6 +93,7 @@
 								<argument>-classpath</argument>
 								<classpath />
 								<argument>${main.class}</argument>
+								<argument>config:${main.basedir}/etc/settings.properties</argument>
 							</arguments>
 						</configuration>
 					</execution>

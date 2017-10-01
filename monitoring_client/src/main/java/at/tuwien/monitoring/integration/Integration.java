@@ -33,7 +33,7 @@ public class Integration {
 
 	private void init() {
 		// start ttp
-		monitoringServer = new MonitoringServer();
+		monitoringServer = new MonitoringServer(settings);
 		if (!monitoringServer.init()) {
 			logger.error("Error initializing monitoring server.");
 			monitoringServer.shutdown();
@@ -50,11 +50,10 @@ public class Integration {
 			return;
 
 		}
-		startApplications(5);
+		startApplications(1, 8080);
 
 		MonitoringClient monitoringClient = new MonitoringClient(settings);
-
-		// TODO: do something with applications
+		monitoringClient.start();
 
 		// stop monitoring of applications
 		for (Application application : applications) {
@@ -68,9 +67,9 @@ public class Integration {
 		monitoringServer.shutdown();
 	}
 
-	private void startApplications(int count) {
+	private void startApplications(int count, int firstPort) {
 		for (int i = 0; i < count; i++) {
-			Application application = new Application(APP_PATH, String.valueOf(8070 + i),
+			Application application = new Application(APP_PATH, String.valueOf(firstPort + i),
 					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
 
 			monitoringAgent.startApplicationMonitoring(application, true);
@@ -85,19 +84,7 @@ public class Integration {
 	}
 
 	public static void main(String[] args) {
-		Settings settings = new Settings();
-
-		for (String arg : args) {
-			if (!arg.startsWith("config:")) {
-				continue;
-			}
-			String split[] = arg.split("config:");
-			if (split.length != 2) {
-				continue;
-			}
-			settings = Utils.readProperties(split[1]);
-		}
-
+		Settings settings = Utils.parseArgsForSettings(args);
 		Integration integration = new Integration(settings);
 		integration.init();
 	}

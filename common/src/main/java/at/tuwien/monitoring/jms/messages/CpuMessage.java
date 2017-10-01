@@ -3,20 +3,20 @@ package at.tuwien.monitoring.jms.messages;
 import java.util.Date;
 import java.util.StringJoiner;
 
-public class CpuLoadMessage extends MetricMessage {
+public class CpuMessage extends MetricMessage {
 
 	private static final long serialVersionUID = 1L;
 
 	private String application;
-	private double cpuLoad;
 	private long cpuTotal;
 	private long cpuUser;
 	private long cpuKernel;
+	private double cpuUsagePerc;
 
-	public CpuLoadMessage() {
+	public CpuMessage() {
 	}
 
-	public CpuLoadMessage(String ipAddress, Date timestamp, String application) {
+	public CpuMessage(String ipAddress, Date timestamp, String application) {
 		super(timestamp, ipAddress);
 		setApplication(application);
 	}
@@ -29,12 +29,12 @@ public class CpuLoadMessage extends MetricMessage {
 		this.application = application;
 	}
 
-	public double getCpuLoad() {
-		return cpuLoad;
+	public double getCpuUsagePerc() {
+		return cpuUsagePerc;
 	}
 
-	public void setCpuLoad(double cpuLoad) {
-		this.cpuLoad = cpuLoad;
+	public void setCpuUsagePerc(double cpuUsagePerc) {
+		this.cpuUsagePerc = cpuUsagePerc;
 	}
 
 	public long getCpuTotal() {
@@ -69,7 +69,7 @@ public class CpuLoadMessage extends MetricMessage {
 	@Override
 	public String toString() {
 		return "CpuLoadMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress() + ", getApplication=" + getApplication()
-				+ ", getCpuLoad=" + getCpuLoad() + ", getCpuTotal=" + getCpuTotal() + ", getCpuUser=" + getCpuUser() + ", getCpuKernel=" + getCpuKernel()
+				+ ", getCpuUsagePerc=" + getCpuUsagePerc() + ", getCpuTotal=" + getCpuTotal() + ", getCpuUser=" + getCpuUser() + ", getCpuKernel=" + getCpuKernel()
 				+ "]";
 	}
 
@@ -78,7 +78,7 @@ public class CpuLoadMessage extends MetricMessage {
 		return new StringJoiner(";")
 				.add("timestamp")
 				.add("application")
-				.add("cpuLoad")
+				.add("cpuUsagePerc")
 				.add("cpuTotal")
 				.add("cpuUser")
 				.add("cpuKernel")
@@ -90,7 +90,7 @@ public class CpuLoadMessage extends MetricMessage {
 		return new StringJoiner(";")
 				.add(String.valueOf(getTimestamp().getTime()))
 				.add(getApplication())
-				.add(String.valueOf(getCpuLoad()))
+				.add(String.valueOf(getCpuUsagePerc()))
 				.add(String.valueOf(getCpuTotal()))
 				.add(String.valueOf(getCpuUser()))
 				.add(String.valueOf(getCpuKernel()))

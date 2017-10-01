@@ -38,16 +38,16 @@
 			<artifactId>client_aspect</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>at.tuwien.monitoring</groupId>
-            <artifactId>monitoring_server</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>at.tuwien.monitoring</groupId>
-            <artifactId>monitoring_agent</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>at.tuwien.monitoring</groupId>
+			<artifactId>monitoring_server</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>at.tuwien.monitoring</groupId>
+			<artifactId>monitoring_agent</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-client</artifactId>
@@ -97,12 +97,13 @@
 						<configuration>
 							<executable>java</executable>
 							<arguments>
+								<argument>-javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar</argument>
 								<argument>-classpath</argument>
 								<classpath />
 								<argument>${integration.test.class}</argument>
 								<argument>config:${main.basedir}/etc/settings.properties</argument>
 							</arguments>
-							<workingDirectory>${main.basedir}/monitoring_agent</workingDirectory>           
+							<workingDirectory>${main.basedir}/monitoring_agent</workingDirectory>
 						</configuration>
 					</execution>
 					<execution>

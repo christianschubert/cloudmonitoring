@@ -39,7 +39,24 @@ public class Utils {
 		return null;
 	}
 
-	public static Settings readProperties(String configPath) {
+	public static Settings parseArgsForSettings(String[] args) {
+		Settings settings = new Settings();
+
+		for (String arg : args) {
+			if (!arg.startsWith("config:")) {
+				continue;
+			}
+			String split[] = arg.split("config:");
+			if (split.length != 2) {
+				continue;
+			}
+			settings = Utils.readProperties(split[1]);
+		}
+
+		return settings;
+	}
+
+	private static Settings readProperties(String configPath) {
 		Settings settings = new Settings();
 
 		Properties prop = new Properties();
@@ -57,6 +74,10 @@ public class Utils {
 			if (serviceUrl != null) {
 				settings.serviceUrl = serviceUrl.trim();
 			}
+
+			boolean embeddedBroker = (prop.getProperty("embedded.broker") == null ? false
+					: Boolean.valueOf(prop.getProperty("embedded.broker").trim()));
+			settings.embeddedBroker = embeddedBroker;
 
 			boolean logMetrics = (prop.getProperty("log.metrics") == null ? false
 					: Boolean.valueOf(prop.getProperty("log.metrics").trim()));
