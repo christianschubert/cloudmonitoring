@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -17,6 +18,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.container.TimeoutHandler;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -35,6 +38,14 @@ import at.tuwien.monitoring.service.message.Message;
  */
 @Path("shrink")
 public class ShrinkResource {
+
+	private static final int INTENDED_DELEAY_TIME = 2000;
+
+	@Context
+	private Application app;
+
+	private static int delayEveryXRequests = -1;
+	private static int currentRequest = 0;
 
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -87,6 +98,12 @@ public class ShrinkResource {
 				}
 			}
 
+			// add intended response time delay for tests
+			if (addDelay()) {
+				System.out.println("Added intended delay");
+				Thread.sleep(INTENDED_DELEAY_TIME);
+			}
+
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 			// return source image if no parameters for resizing where given
@@ -104,5 +121,26 @@ public class ShrinkResource {
 
 		asyncResponse
 				.resume(Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
+	}
+
+	private boolean addDelay() {
+		if (delayEveryXRequests == 0) {
+			return false;
+		}
+
+		if (delayEveryXRequests == -1) {
+			// initialize
+			delayEveryXRequests = 0;
+			Map<String, Object> properties = app.getProperties();
+			if (properties != null) {
+				Integer value = (Integer) properties.get("delay.every.x.request");
+				if (value != null) {
+					delayEveryXRequests = value.intValue();
+				}
+			}
+		}
+
+		currentRequest++;
+		return (currentRequest % delayEveryXRequests == 0);
 	}
 }

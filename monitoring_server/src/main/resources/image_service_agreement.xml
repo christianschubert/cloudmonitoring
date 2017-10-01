@@ -114,25 +114,25 @@
 			<Expression>
 				<Predicate xsi:type="LessEqual">
 					<SLAParameter>ResponseTimeImageResize</SLAParameter>
-					<Value>3000</Value>
+					<Value>2000</Value>
 				</Predicate>
 			</Expression>
 			<EvaluationEvent>NewValue</EvaluationEvent>
 		</ServiceLevelObjective>
-		<ServiceLevelObjective name="AverageResponseTimeSLO">
-			<Obliged>ImageServiceProvider</Obliged>
-			<Validity>
-				<Start>2017-01-01T14:00:00.000-05:00</Start>
-				<End>2018-01-01T14:00:00.000-05:00</End>
-			</Validity>
-			<Expression>
-				<Predicate xsi:type="Less">
-					<SLAParameter>AverageResponseTimeImageResize</SLAParameter>
-					<Value>200</Value>
-				</Predicate>
-			</Expression>
-			<EvaluationEvent>NewValue</EvaluationEvent>
-		</ServiceLevelObjective>
+<!-- 		<ServiceLevelObjective name="AverageResponseTimeSLO"> -->
+<!-- 			<Obliged>ImageServiceProvider</Obliged> -->
+<!-- 			<Validity> -->
+<!-- 				<Start>2017-01-01T14:00:00.000-05:00</Start> -->
+<!-- 				<End>2018-01-01T14:00:00.000-05:00</End> -->
+<!-- 			</Validity> -->
+<!-- 			<Expression> -->
+<!-- 				<Predicate xsi:type="Less"> -->
+<!-- 					<SLAParameter>AverageResponseTimeImageResize</SLAParameter> -->
+<!-- 					<Value>200</Value> -->
+<!-- 				</Predicate> -->
+<!-- 			</Expression> -->
+<!-- 			<EvaluationEvent>NewValue</EvaluationEvent> -->
+<!-- 		</ServiceLevelObjective> -->
 		<ServiceLevelObjective name="RequestMaxThroughputSLO">
 			<Obliged>ImageServiceProvider</Obliged>
 			<Validity>
