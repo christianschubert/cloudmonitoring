@@ -129,7 +129,7 @@ public class ShrinkResource {
 		// init
 		if (currentRequest == 0) {
 			Map<String, Object> properties = app.getProperties();
-			if (properties != null) {
+			if (properties != null && !properties.isEmpty()) {
 				Integer total = (Integer) properties.get("total.requests");
 				Double rate = (Double) properties.get("delay.rate");
 				if (total != null && rate != null) {
@@ -141,7 +141,9 @@ public class ShrinkResource {
 				}
 
 				Integer time = (Integer) properties.get("delay.time");
-				delayTime = time.intValue();
+				if (time != null) {
+					delayTime = time.intValue();
+				}
 			}
 		}
 
