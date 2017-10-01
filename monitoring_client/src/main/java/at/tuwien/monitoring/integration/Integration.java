@@ -1,5 +1,6 @@
 package at.tuwien.monitoring.integration;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -75,9 +76,10 @@ public class Integration {
 
 	private void startApplications(int count, int firstPort) {
 		for (int i = 0; i < count; i++) {
-
-			List<String> params = Arrays.asList("config:" + settings.etcFolderPath + "/settings.properties",
-					" -p" + String.valueOf(firstPort + i));
+			List<String> params = Arrays.asList("-p8080");
+			if (new File(settings.etcFolderPath + "/settings.properties").exists()) {
+				params = Arrays.asList("config:" + settings.etcFolderPath + "/settings.properties", " -p8080");
+			}
 
 			Application application = new Application(APP_PATH, params,
 					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));

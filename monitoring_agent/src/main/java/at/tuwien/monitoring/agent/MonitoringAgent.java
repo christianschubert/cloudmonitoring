@@ -3,6 +3,7 @@ package at.tuwien.monitoring.agent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -261,9 +262,15 @@ public class MonitoringAgent {
 		Settings settings = Utils.parseArgsForSettings(args);
 		MonitoringAgent agent = new MonitoringAgent(settings);
 		if (agent.init()) {
+
+			List<String> params = Arrays.asList("-p8080");
+			if (new File(settings.etcFolderPath + "/settings.properties").exists()) {
+				params = Arrays.asList("config:" + settings.etcFolderPath + "/settings.properties", " -p8080");
+			}
+
 			// for test purposes monitor imageresizer application only
 			Application imageResizer = new Application(
-					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar",
+					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar", params,
 					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
 
 			agent.startApplicationMonitoring(imageResizer, true);
