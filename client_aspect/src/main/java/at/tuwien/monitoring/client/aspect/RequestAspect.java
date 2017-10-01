@@ -45,16 +45,13 @@ public class RequestAspect {
 		publicIPAddress = Utils.lookupPublicIPAddress();
 		logger.info("Public IP address of client: " + publicIPAddress);
 
-		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-			@Override
-			public void run() {
-				if (jmsService != null) {
-					jmsService.stop();
-				}
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			if (jmsService != null) {
+				jmsService.stop();
+			}
 
-				if (outLogFile != null) {
-					outLogFile.close();
-				}
+			if (outLogFile != null) {
+				outLogFile.close();
 			}
 		}));
 	}
@@ -72,7 +69,6 @@ public class RequestAspect {
 		settings = Utils.parseArgsForSettings(stringArgs);
 
 		jmsService = new JmsSenderService(settings.brokerUrl, GlobalConstants.QUEUE_CLIENTS);
-		jmsService.start();
 
 		if (settings.logMetrics) {
 			try {
@@ -181,6 +177,9 @@ public class RequestAspect {
 	}
 
 	public void sendMessage(String target, Method method, long responseTime, int responseCode) {
+		if (!jmsService.isConnected()) {
+			jmsService.start();
+		}
 
 		if (jmsService.isConnected() || settings.logMetrics) {
 
