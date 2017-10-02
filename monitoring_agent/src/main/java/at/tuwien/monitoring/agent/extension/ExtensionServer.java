@@ -120,10 +120,9 @@ public class ExtensionServer {
 
 				while ((line = clientReader.readLine()) != null) {
 					try {
-						ServerInfoMessage message = objectMapper.readValue(line,
-								ServerInfoMessage.class);
+						ServerInfoMessage message = objectMapper.readValue(line, ServerInfoMessage.class);
 
-						logger.info("New message: " + message);
+						logger.trace("New message: " + message);
 
 						collectedMetrics.offer(message);
 

@@ -47,7 +47,7 @@ public class MetricProcessor {
 	}
 
 	public void addEvent(MetricMessage metricMessage) {
-		logger.info("New Event: " + metricMessage);
+		logger.trace("New Event: " + metricMessage);
 		epService.getEPRuntime().sendEvent(metricMessage);
 	}
 
