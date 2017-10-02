@@ -1,5 +1,9 @@
 package at.tuwien.monitoring.server.processing;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -11,6 +15,7 @@ import com.espertech.esper.client.StatementAwareUpdateListener;
 import com.espertech.esper.collection.Pair;
 import com.espertech.esper.event.WrapperEventBean;
 
+import at.tuwien.common.Settings;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
 import at.tuwien.monitoring.server.db.dao.ViolationDAO;
 import at.tuwien.monitoring.server.db.dto.ViolationDTO;
@@ -19,7 +24,32 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 
 	private final static Logger logger = Logger.getLogger(MetricEventListener.class);
 
+	private Settings settings;
+	private PrintWriter outLogFile;
+	private boolean writeHeader = true;
+
 	private ViolationDAO violationDAO = new ViolationDAO();
+
+	public MetricEventListener(Settings settings) {
+		this.settings = settings;
+
+		if (settings.logMetrics) {
+			try {
+				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_ttp_violations.csv");
+				BufferedWriter bw = new BufferedWriter(fw);
+				outLogFile = new PrintWriter(bw);
+			} catch (IOException e) {
+				settings.logMetrics = false;
+				logger.error("Error logging metrics to file.");
+			}
+		}
+	}
+
+	public void stop() {
+		if (outLogFile != null) {
+			outLogFile.close();
+		}
+	}
 
 	@Override
 	public void update(EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement,
@@ -63,5 +93,14 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 		}
 
 		violationDAO.insert(violationDTO);
+
+		if (settings.logMetrics) {
+			if (writeHeader) {
+				outLogFile.println(violationDTO.getCsvHeader());
+				writeHeader = false;
+			}
+			outLogFile.println(violationDTO.toCsvEntry());
+			outLogFile.flush();
+		}
 	}
 }

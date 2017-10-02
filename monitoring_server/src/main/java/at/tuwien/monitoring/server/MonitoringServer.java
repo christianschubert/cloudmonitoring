@@ -31,7 +31,7 @@ public class MonitoringServer {
 
 	public boolean init() {
 
-		metricProcessor = new MetricProcessor();
+		metricProcessor = new MetricProcessor(settings);
 		if (!metricProcessor.start()) {
 			logger.error("Error creating metric processor.");
 			return false;

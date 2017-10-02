@@ -1,8 +1,11 @@
 package at.tuwien.monitoring.server.db.dto;
 
 import java.util.Date;
+import java.util.StringJoiner;
 
-public class ViolationDTO {
+import at.tuwien.common.Loggable;
+
+public class ViolationDTO implements Loggable {
 
 	private int id;
 	private String sourceIpAddress;
@@ -85,7 +88,31 @@ public class ViolationDTO {
 	@Override
 	public String toString() {
 		return "ViolationDTO [id=" + id + ", sourceIpAddress=" + sourceIpAddress + ", serviceName=" + serviceName
-				+ ", violationType=" + violationType + ", monitoredValue=" + monitoredValue + ", requiredDesc=" + requiredDesc
-				+ ", violationTimestamp=" + violationTimestamp + "]";
+				+ ", violationType=" + violationType + ", monitoredValue=" + monitoredValue + ", requiredDesc="
+				+ requiredDesc + ", violationTimestamp=" + violationTimestamp + "]";
+	}
+
+	@Override
+	public String getCsvHeader() {
+		return new StringJoiner(";")
+				.add("timestamp")
+				.add("serviceName")
+				.add("sourceIp")
+				.add("violationType")
+				.add("monitoredValue")
+				.add("requiredDesc")
+				.toString();
+	}
+
+	@Override
+	public String toCsvEntry() {
+		return new StringJoiner(";")
+				.add(String.valueOf(getViolationTimestamp().getTime()))
+				.add(getServiceName())
+				.add(getSourceIpAddress())
+				.add(getViolationType())
+				.add(String.valueOf(getMonitoredValue()))
+				.add(getRequiredDesc())
+				.toString();
 	}
 }

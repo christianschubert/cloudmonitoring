@@ -3,7 +3,9 @@ package at.tuwien.monitoring.jms.messages;
 import java.io.Serializable;
 import java.util.Date;
 
-public abstract class MetricMessage implements Serializable {
+import at.tuwien.common.Loggable;
+
+public abstract class MetricMessage implements Serializable, Loggable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -35,8 +37,4 @@ public abstract class MetricMessage implements Serializable {
 	}
 
 	public abstract String getServiceName();
-
-	public abstract String getCsvHeader();
-
-	public abstract String toCsvEntry();
 }

@@ -31,7 +31,7 @@ public class MonitoringClient {
 	public void init() {
 		if (settings.logMetrics) {
 			try {
-				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_client.csv");
+				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_client_responsetime.csv");
 				BufferedWriter bw = new BufferedWriter(fw);
 				outLogFile = new PrintWriter(bw);
 

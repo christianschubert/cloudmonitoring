@@ -79,6 +79,8 @@ public class Integration {
 
 		// stop ttp
 		monitoringServer.shutdown();
+
+		System.exit(0);
 	}
 
 	private void startApplications(int count, int firstPort) {
