@@ -8,6 +8,8 @@ public class Settings {
 	public String brokerUrl = "tcp://localhost:61616";
 	public String serviceUrl = "http://localhost:8080";
 
+	public String wslaFile = "image_service_agreement.xml";
+
 	public boolean logMetrics = true;
 
 	public String imageRotation = "NONE";

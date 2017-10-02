@@ -41,8 +41,15 @@ public class Integration {
 			monitoringServer.shutdown();
 			return;
 		}
-		// add sample agreement
-		monitoringServer.startSLAMonitoring(settings.etcFolderPath + "/image_service_agreement.xml");
+
+		String wslaFilePath = settings.etcFolderPath + "/agreements/" + settings.wslaFile;
+		if (!new File(wslaFilePath).exists()) {
+			logger.error("Specified WLSA file does not exist. Shutdown.");
+			monitoringServer.shutdown();
+			return;
+		}
+		// add specified agreement
+		monitoringServer.startSLAMonitoring(wslaFilePath);
 
 		// start agent
 		monitoringAgent = new MonitoringAgent(settings);

@@ -1,5 +1,6 @@
 package at.tuwien.monitoring.server;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
@@ -94,7 +95,16 @@ public class MonitoringServer {
 		Settings settings = Utils.parseArgsForSettings(args);
 		MonitoringServer server = new MonitoringServer(settings);
 		if (server.init()) {
-			server.startSLAMonitoring("src/main/resources/image_service_agreement.xml");
+
+			String wslaFilePath = settings.etcFolderPath + "/agreements/" + settings.wslaFile;
+			if (new File(wslaFilePath).exists()) {
+				server.startSLAMonitoring(wslaFilePath);
+			} else {
+				// no settings provided or file
+				logger.info("No WSLA file provided or file not found, using default file of resources folder.");
+				server.startSLAMonitoring("src/main/resources/image_service_agreement.xml");
+			}
+
 			logger.info("Monitoring server running. Press RETURN to exit.");
 			try {
 				System.in.read();

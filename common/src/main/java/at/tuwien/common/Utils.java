@@ -75,6 +75,11 @@ public class Utils {
 				settings.serviceUrl = serviceUrl.trim();
 			}
 
+			String wslaFile = prop.getProperty("wsla.file");
+			if (wslaFile != null) {
+				settings.wslaFile = wslaFile.trim();
+			}
+
 			boolean embeddedBroker = (prop.getProperty("embedded.broker") == null ? false
 					: Boolean.valueOf(prop.getProperty("embedded.broker").trim()));
 			settings.embeddedBroker = embeddedBroker;
