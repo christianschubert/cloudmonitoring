@@ -31,6 +31,12 @@ public class Integration {
 
 	public Integration(Settings settings) {
 		this.settings = settings;
+
+		// this is a local integration test ->
+		// use (localhost) default urls for broker and service
+		Settings defaultSettings = new Settings();
+		this.settings.brokerUrl = defaultSettings.brokerUrl;
+		this.settings.serviceUrl = defaultSettings.serviceUrl;
 	}
 
 	private void init() {

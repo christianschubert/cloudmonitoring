@@ -95,16 +95,12 @@ public class ServiceRequester {
 			outLogFile.flush();
 		}
 
-		long startTimeRead = System.nanoTime();
-
 		InputStream is = response.readEntity(InputStream.class);
 		try {
 			Files.copy(is, Paths.get(Constants.DOWNLOAD_PATH + image), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
 			logger.error("Error while copying shrinked image (Request ID " + currentRequestID + ").");
 		}
-
-		System.out.println(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTimeRead));
 
 		response.close();
 	}
