@@ -1,11 +1,15 @@
 package at.tuwien.monitoring.client.request;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -20,6 +24,7 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 
+import at.tuwien.common.Settings;
 import at.tuwien.monitoring.client.constants.Constants;
 
 public class ServiceRequester {
@@ -31,10 +36,29 @@ public class ServiceRequester {
 	private WebTarget target;
 	private Client client;
 
-	public ServiceRequester(String serviceURI) {
+	private Settings settings;
+	private PrintWriter outLogFile;
+
+	public ServiceRequester(String serviceURI, Settings settings) {
+		this.settings = settings;
+
 		client = ClientBuilder.newClient();
 		client.register(MultiPartFeature.class);
 		target = client.target(serviceURI);
+
+		if (settings.logMetrics) {
+			try {
+				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_client_responsetime.csv");
+				BufferedWriter bw = new BufferedWriter(fw);
+				outLogFile = new PrintWriter(bw);
+
+				// csv header
+				outLogFile.println("responseTime");
+			} catch (IOException e) {
+				settings.logMetrics = false;
+				logger.error("Error logging metrics to file.");
+			}
+		}
 	}
 
 	public void shrinkRequest(String image, int size) {
@@ -47,6 +71,9 @@ public class ServiceRequester {
 
 	public void shrinkRequest(String image, int size, Rotation rotation) {
 		int currentRequestID = ++requestID;
+
+		// start measuring response time from client - to compare with aspect
+		long startTime = System.nanoTime();
 
 		Response response = null;
 		try {
@@ -62,12 +89,22 @@ public class ServiceRequester {
 			return;
 		}
 
+		if (settings.logMetrics) {
+			long responseTime = System.nanoTime() - startTime;
+			outLogFile.println(TimeUnit.NANOSECONDS.toMillis(responseTime));
+			outLogFile.flush();
+		}
+
+		long startTimeRead = System.nanoTime();
+
 		InputStream is = response.readEntity(InputStream.class);
 		try {
 			Files.copy(is, Paths.get(Constants.DOWNLOAD_PATH + image), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
 			logger.error("Error while copying shrinked image (Request ID " + currentRequestID + ").");
 		}
+
+		System.out.println(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTimeRead));
 
 		response.close();
 	}
@@ -91,6 +128,10 @@ public class ServiceRequester {
 	}
 
 	public void shutdown() {
+		if (outLogFile != null) {
+			outLogFile.close();
+		}
+
 		if (client != null) {
 			client.close();
 		}

@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -69,6 +70,7 @@ public class RequestAspect {
 		settings = Utils.parseArgsForSettings(stringArgs);
 
 		jmsService = new JmsSenderService(settings.brokerUrl, GlobalConstants.QUEUE_CLIENTS);
+		jmsService.start();
 
 		if (settings.logMetrics) {
 			try {
@@ -79,6 +81,18 @@ public class RequestAspect {
 				settings.logMetrics = false;
 				logger.error("Error logging metrics to file.");
 			}
+		}
+	}
+
+	@Pointcut("execution(* at.tuwien.monitoring.server.MonitoringServer.init(..))")
+	public void serverInit() {
+	}
+
+	// for integration test; client can only connect to server after it has started
+	@After("serverInit()")
+	public void serverInitAdvice() {
+		if (!jmsService.isConnected()) {
+			jmsService.start();
 		}
 	}
 
@@ -177,10 +191,6 @@ public class RequestAspect {
 	}
 
 	public void sendMessage(String target, Method method, long responseTime, int responseCode) {
-		if (!jmsService.isConnected()) {
-			jmsService.start();
-		}
-
 		if (jmsService.isConnected() || settings.logMetrics) {
 
 			// convert nanoseconds to milliseconds, responsetime is -1 for requests with

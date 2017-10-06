@@ -108,7 +108,7 @@ public class ProcessRunner {
 					logger.info("Process \"" + getProcessName() + "\": " + line);
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.info("Stream to process closed.");
 			} finally {
 				cleanup();
 			}

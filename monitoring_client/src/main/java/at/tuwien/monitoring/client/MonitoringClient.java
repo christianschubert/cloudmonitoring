@@ -1,11 +1,5 @@
 package at.tuwien.monitoring.client;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.log4j.Logger;
 
 import at.tuwien.common.Settings;
@@ -22,28 +16,18 @@ public class MonitoringClient {
 
 	private ServiceRequester requester;
 
-	private PrintWriter outLogFile;
-
 	public MonitoringClient(Settings settings) {
 		this.settings = settings;
+
+		// this is a local integration test ->
+		// use (localhost) default urls for broker and service
+		Settings defaultSettings = new Settings();
+		this.settings.brokerUrl = defaultSettings.brokerUrl;
+		this.settings.serviceUrl = defaultSettings.serviceUrl;
 	}
 
 	public void init() {
-		if (settings.logMetrics) {
-			try {
-				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_client_responsetime.csv");
-				BufferedWriter bw = new BufferedWriter(fw);
-				outLogFile = new PrintWriter(bw);
-
-				// csv header
-				outLogFile.println("responseTime");
-			} catch (IOException e) {
-				settings.logMetrics = false;
-				logger.error("Error logging metrics to file.");
-			}
-		}
-
-		requester = new ServiceRequester(settings.serviceUrl + Constants.APP_PATH);
+		requester = new ServiceRequester(settings.serviceUrl + Constants.APP_PATH, settings);
 	}
 
 	public void runTest() {
@@ -61,16 +45,7 @@ public class MonitoringClient {
 			}
 
 			String image = "image_" + currentImageType + ".jpg";
-
-			// start measuring response time from client - to compare with aspect
-			long startTime = System.nanoTime();
 			requester.shrinkRequest(image, settings.imageTargetSize, Rotation.valueOf(settings.imageRotation));
-
-			if (settings.logMetrics) {
-				long responseTime = System.nanoTime() - startTime;
-				outLogFile.println(TimeUnit.NANOSECONDS.toMillis(responseTime));
-				outLogFile.flush();
-			}
 		}
 
 		logger.info("Test finished!");
@@ -92,10 +67,6 @@ public class MonitoringClient {
 	public void shutdown() {
 		logger.info("Monitoring client shutdown.");
 		requester.shutdown();
-
-		if (outLogFile != null) {
-			outLogFile.close();
-		}
 	}
 
 	public static void main(final String[] args) {

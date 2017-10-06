@@ -92,5 +92,6 @@ public class MonitoringService {
 				getBaseUri(port)));
 		System.in.read();
 		server.shutdownNow();
+		System.exit(0);
 	}
 }
