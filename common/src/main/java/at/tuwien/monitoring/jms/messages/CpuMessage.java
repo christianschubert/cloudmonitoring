@@ -96,4 +96,43 @@ public class CpuMessage extends MetricMessage {
 				.add(String.valueOf(getCpuKernel()))
 				.toString();
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((application == null) ? 0 : application.hashCode());
+		result = prime * result + (int) (cpuKernel ^ (cpuKernel >>> 32));
+		result = prime * result + (int) (cpuTotal ^ (cpuTotal >>> 32));
+		long temp;
+		temp = Double.doubleToLongBits(cpuUsagePerc);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + (int) (cpuUser ^ (cpuUser >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CpuMessage other = (CpuMessage) obj;
+		if (application == null) {
+			if (other.application != null)
+				return false;
+		} else if (!application.equals(other.application))
+			return false;
+		if (cpuKernel != other.cpuKernel)
+			return false;
+		if (cpuTotal != other.cpuTotal)
+			return false;
+		if (Double.doubleToLongBits(cpuUsagePerc) != Double.doubleToLongBits(other.cpuUsagePerc))
+			return false;
+		if (cpuUser != other.cpuUser)
+			return false;
+		return true;
+	}
 }

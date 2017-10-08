@@ -81,7 +81,7 @@ public class MonitoringAgent {
 		}
 
 		scheduler = Executors.newScheduledThreadPool(1);
-		scheduledJmsSender = scheduler.scheduleAtFixedRate(new JmsMetricSenderTask(), 0,
+		scheduledJmsSender = scheduler.scheduleAtFixedRate(() -> aggregateAndSend(), 0,
 				settings.metricsAggregationInterval, TimeUnit.MILLISECONDS);
 
 		return true;
@@ -168,67 +168,70 @@ public class MonitoringAgent {
 
 	public void stopApplicationMonitoring(Application application) {
 		synchronized (applicationList) {
-			Iterator<ApplicationMonitor> itAppList = applicationList.iterator();
-			while (itAppList.hasNext()) {
-				ApplicationMonitor applicationMonitor = itAppList.next();
+			for (ApplicationMonitor applicationMonitor : applicationList) {
 				if (applicationMonitor.getApplication().equals(application)) {
 					applicationMonitor.stop();
-					itAppList.remove();
 					return;
 				}
 			}
 		}
 	}
 
-	public class JmsMetricSenderTask implements Runnable {
-		@Override
-		public void run() {
-			MetricAggregationMessage aggregationMessage = new MetricAggregationMessage();
+	private void aggregateAndSend() {
+		MetricAggregationMessage aggregationMessage = new MetricAggregationMessage();
 
-			// aggregate all messages into one message -> collect all queues
-			// from the running applications
-			synchronized (applicationList) {
-				Iterator<ApplicationMonitor> itAppList = applicationList.iterator();
-				while (itAppList.hasNext()) {
-					ApplicationMonitor applicationMonitor = itAppList.next();
-					if (applicationMonitor.isMonitoring()) {
-						Queue<MetricMessage> metrics = applicationMonitor.getCollectedMetrics();
-						MetricMessage message = null;
-						while ((message = metrics.poll()) != null) {
-							message.setIpAddress(publicIPAddress);
-							aggregationMessage.addMetricMessage(message);
-						}
-					} else {
-						// Monitoring stopped -> remove from watchlist
-						itAppList.remove();
-					}
+		// aggregate all messages into one message -> collect all queues
+		// from the running applications
+		synchronized (applicationList) {
+			Iterator<ApplicationMonitor> itAppList = applicationList.iterator();
+			while (itAppList.hasNext()) {
+				ApplicationMonitor applicationMonitor = itAppList.next();
+
+				aggregate(aggregationMessage, applicationMonitor.getCollectedMetrics());
+
+				if (!applicationMonitor.isMonitoring()) {
+					// Monitoring stopped -> aggregate remaining messages and remove from watchlist
+					itAppList.remove();
 				}
 			}
+		}
 
-			// add messages from extension server
-			if (extensionServer != null) {
-				Queue<MetricMessage> extensionMetric = extensionServer.getCollectedMetrics();
-				MetricMessage message = null;
-				while ((message = extensionMetric.poll()) != null) {
-					message.setIpAddress(publicIPAddress);
-					aggregationMessage.addMetricMessage(message);
-				}
-			}
+		// add messages from extension server
+		if (extensionServer != null) {
+			aggregate(aggregationMessage, extensionServer.getCollectedMetrics());
+		}
 
-			// send aggregated message
-			if (!aggregationMessage.getMessageList().isEmpty()) {
-				jmsService.sendObjectMessage(aggregationMessage);
-			}
-			aggregationMessage = null;
+		// send aggregated message
+		if (!aggregationMessage.getMessageList().isEmpty()) {
+			jmsService.sendObjectMessage(aggregationMessage);
+		}
+		aggregationMessage = null;
+	}
+
+	private void aggregate(MetricAggregationMessage aggregationMessage, Queue<MetricMessage> queue) {
+		MetricMessage message = null;
+		while ((message = queue.poll()) != null) {
+			message.setIpAddress(publicIPAddress);
+			aggregationMessage.addMetricMessage(message);
 		}
 	}
 
 	public void shutdown() {
 		logger.info("Shutting down agent...");
 
+		// stop all monitorings and their processes
+		synchronized (applicationList) {
+			for (ApplicationMonitor applicationMonitor : applicationList) {
+				applicationMonitor.stop();
+			}
+		}
+
 		if (extensionServer != null) {
 			extensionServer.stop();
 		}
+
+		// send remaining messages
+		aggregateAndSend();
 
 		if (scheduledJmsSender != null) {
 			scheduledJmsSender.cancel(true);
@@ -244,13 +247,6 @@ public class MonitoringAgent {
 
 		if (jmsService != null) {
 			jmsService.stop();
-		}
-
-		// stop all monitorings and their processes
-		synchronized (applicationList) {
-			for (ApplicationMonitor applicationMonitor : applicationList) {
-				applicationMonitor.stop();
-			}
 		}
 
 		closeSigar();

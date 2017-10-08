@@ -153,6 +153,7 @@ public class ApplicationMonitor {
 		private long lastUpdatedPidList = 0;
 		private Sigar sigar;
 		private MemoryMessage lastMemoryMessage;
+		private CpuMessage lastCpuMessage;
 
 		public MonitorTimerTask(long pid) {
 			this.pid = pid;
@@ -245,26 +246,27 @@ public class ApplicationMonitor {
 				}
 			}
 
-			CpuMessage message = new CpuMessage(null, new Date(), processRunner.getProcessName());
-			message.setCpuUsagePerc(sumCpuUsagePerc);
-			message.setCpuTotal(sumCpuTotal);
-			message.setCpuKernel(sumCpuKernel);
-			message.setCpuUser(sumCpuUser);
+			CpuMessage cpuMessage = new CpuMessage(null, new Date(), processRunner.getProcessName());
+			cpuMessage.setCpuUsagePerc(sumCpuUsagePerc);
+			cpuMessage.setCpuTotal(sumCpuTotal);
+			cpuMessage.setCpuKernel(sumCpuKernel);
+			cpuMessage.setCpuUser(sumCpuUser);
 
-			if (sumCpuUsagePerc > 0) {
-				// only if load is greater than zero, send it.
-				// if load is zero, there is also no change in the other cpu metrics
-				collectedMetrics.offer(message);
+			if (lastCpuMessage == null || !cpuMessage.equals(lastCpuMessage)) {
+				// only if memory is different to last measuement, send it.
+				collectedMetrics.offer(cpuMessage);
 			}
 
 			if (settings.logMetrics) {
 				if (addCsvHeaderCpu) {
-					cpuLogFile.println(message.getCsvHeader());
+					cpuLogFile.println(cpuMessage.getCsvHeader());
 					addCsvHeaderCpu = false;
 				}
-				cpuLogFile.println(message.toCsvEntry());
+				cpuLogFile.println(cpuMessage.toCsvEntry());
 				cpuLogFile.flush();
 			}
+
+			lastCpuMessage = cpuMessage;
 		}
 
 		/**
