@@ -51,7 +51,7 @@ public class MonitoringServer {
 			return false;
 		}
 
-		httpServer = new EmbeddedHttpServer();
+		httpServer = new EmbeddedHttpServer(settings);
 		if (!httpServer.start()) {
 			logger.error("Error starting HTTP-Server.");
 			return false;

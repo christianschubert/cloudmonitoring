@@ -13,7 +13,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -39,6 +41,7 @@ import at.tuwien.monitoring.service.message.Message;
 /**
  * Root resource (exposed at "shrink" path)
  */
+@Singleton
 @Path("shrink")
 public class ShrinkResource {
 
@@ -52,21 +55,20 @@ public class ShrinkResource {
 	public void uploadImage(@FormDataParam("image") InputStream uploadedInputStream,
 			@FormDataParam("image") FormDataContentDisposition detail, @FormDataParam("size") int size,
 			@FormDataParam("width") int width, @FormDataParam("height") int height,
-			@FormDataParam("rotation") String rotation, @Suspended final AsyncResponse asyncResponse)
-			throws IOException {
+			@FormDataParam("rotation") String rotation, @Suspended final AsyncResponse asyncResponse) throws IOException {
 
 		asyncResponse.setTimeoutHandler(new TimeoutHandler() {
 			@Override
 			public void handleTimeout(AsyncResponse asyncResponse) {
-				asyncResponse.resume(
-						Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
+				asyncResponse
+						.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
 			}
 		});
 		asyncResponse.setTimeout(20, TimeUnit.SECONDS);
 
 		if (uploadedInputStream == null || detail == null) {
-			asyncResponse.resume(
-					Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build());
+			asyncResponse
+					.resume(Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build());
 			return;
 		}
 
@@ -115,38 +117,36 @@ public class ShrinkResource {
 			e.printStackTrace();
 		}
 
-		asyncResponse.resume(
-				Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
+		asyncResponse
+				.resume(Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
 	}
 
-	private static Set<Integer> delayRequests;
-	private static int currentRequest = 0;
+	private Set<Integer> delayRequests;
+	private int currentRequest = 0;
+	private int delayTime = 2000;
 
-	private void checkAddDelay() {
-		// choose default delay time
-		int delayTime = 2000;
+	@PostConstruct
+	public void postConstruct() {
+		Map<String, Object> properties = app.getProperties();
+		if (properties != null && !properties.isEmpty()) {
+			Integer total = (Integer) properties.get("total.requests");
+			Double rate = (Double) properties.get("delay.rate");
+			if (total != null && rate != null) {
+				int noDelays = (int) (total.intValue() * rate.doubleValue());
 
-		// init
-		if (currentRequest == 0) {
-			Map<String, Object> properties = app.getProperties();
-			if (properties != null && !properties.isEmpty()) {
-				Integer total = (Integer) properties.get("total.requests");
-				Double rate = (Double) properties.get("delay.rate");
-				if (total != null && rate != null) {
-					int noDelays = (int) (total.intValue() * rate.doubleValue());
+				// generate a set of unique random numbers
+				delayRequests = ThreadLocalRandom.current().ints(0, total).distinct().limit(noDelays).boxed()
+						.collect(Collectors.toSet());
+			}
 
-					// generate a set of unique random numbers
-					delayRequests = ThreadLocalRandom.current().ints(0, total).distinct().limit(noDelays).boxed()
-							.collect(Collectors.toSet());
-				}
-
-				Integer time = (Integer) properties.get("delay.time");
-				if (time != null) {
-					delayTime = time.intValue();
-				}
+			Integer time = (Integer) properties.get("delay.time");
+			if (time != null) {
+				delayTime = time.intValue();
 			}
 		}
+	}
 
+	private void checkAddDelay() {
 		// no setting for delay -> do not delay delay
 		if (delayRequests == null) {
 			return;
