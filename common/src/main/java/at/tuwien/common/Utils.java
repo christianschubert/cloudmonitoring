@@ -59,10 +59,12 @@ public class Utils {
 	private static Settings readProperties(String configPath) {
 		Settings settings = new Settings();
 
+		boolean isFile = configPath.endsWith(".properties");
+
 		Properties prop = new Properties();
 		InputStream in = null;
 		try {
-			in = new FileInputStream(configPath);
+			in = isFile ? new FileInputStream(configPath) : new URL(configPath).openStream();
 			prop.load(in);
 
 			String brokerUrl = prop.getProperty("broker.url");
