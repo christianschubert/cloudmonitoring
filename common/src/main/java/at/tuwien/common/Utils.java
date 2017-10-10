@@ -66,6 +66,10 @@ public class Utils {
 		try {
 			in = isFile ? new FileInputStream(configPath) : new URL(configPath).openStream();
 			prop.load(in);
+			
+			if(isFile) {
+				settings.etcFolderPath = new File(configPath).getParent();
+			}
 
 			String brokerUrl = prop.getProperty("broker.url");
 			if (brokerUrl != null) {
@@ -134,8 +138,11 @@ public class Utils {
 			if (systemMetricsMonitorInterval != null) {
 				settings.systemMetricsMonitorInterval = Integer.parseInt(systemMetricsMonitorInterval);
 			}
-
-			settings.etcFolderPath = new File(configPath).getParent();
+			
+			boolean logUsageTop = (prop.getProperty("log.usage.top") == null ? false
+					: Boolean.valueOf(prop.getProperty("log.usage.top").trim()));
+			settings.logUsageTop = logUsageTop;
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {

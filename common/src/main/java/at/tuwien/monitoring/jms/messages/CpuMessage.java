@@ -13,12 +13,13 @@ public class CpuMessage extends MetricMessage {
 	private long cpuKernel;
 	private double cpuUsagePerc;
 
-	public CpuMessage() {
-	}
-
-	public CpuMessage(String ipAddress, Date timestamp, String application) {
+	public CpuMessage(String ipAddress, Date timestamp, String application, double cpuUsagePerc, long cpuTotal, long cpuKernel, long cpuUser) {
 		super(timestamp, ipAddress);
 		setApplication(application);
+		setCpuUsagePerc(cpuUsagePerc);
+		setCpuTotal(cpuTotal);
+		setCpuKernel(cpuKernel);
+		setCpuUser(cpuUser);
 	}
 
 	public String getApplication() {

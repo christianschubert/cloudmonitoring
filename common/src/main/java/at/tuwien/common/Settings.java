@@ -23,4 +23,6 @@ public class Settings {
 	public int metricsAggregationInterval = 5000;
 	public int processChildrenUpdateInterval = 2000;
 	public int systemMetricsMonitorInterval = 1000;
+	
+	public boolean logUsageTop = false;
 }

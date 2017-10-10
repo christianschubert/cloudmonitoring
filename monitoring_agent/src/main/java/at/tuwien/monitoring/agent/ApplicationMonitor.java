@@ -1,13 +1,18 @@
 package at.tuwien.monitoring.agent;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.security.InvalidParameterException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -51,8 +56,14 @@ public class ApplicationMonitor {
 
 	private boolean monitoring;
 
-	private PrintWriter cpuLogFile, memoryLogFile;
-	private boolean addCsvHeaderCpu = true, addCsvHeaderMem = true;
+	private PrintWriter cpuLogFile;
+	private boolean addCsvHeaderCpu = true;
+	
+	private PrintWriter memoryLogFile;
+	private boolean addCsvHeaderMem = true;
+	
+	private TopMonitor topMonitor;
+	private PrintWriter topLogFile;
 
 	public ApplicationMonitor(int cpuCount, long memTotal, List<String> applicationWithParams, Application application,
 			Settings settings, int applicationID) {
@@ -64,7 +75,7 @@ public class ApplicationMonitor {
 		this.monitorTasks = application.getMonitorTasks();
 
 		processRunner = new ProcessRunner(applicationWithParams.toArray(new String[applicationWithParams.size()]));
-		scheduler = Executors.newScheduledThreadPool(1);
+		scheduler = Executors.newScheduledThreadPool(2);
 	}
 
 	public long start() {
@@ -75,6 +86,25 @@ public class ApplicationMonitor {
 			return pid;
 		}
 
+		initLogging();
+		
+		if(settings.logUsageTop) {
+			topMonitor = new TopMonitor(pid);
+			scheduler.submit(topMonitor);
+		}
+		
+		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
+				Constants.PROCESS_MONITOR_START_DELAY, settings.systemMetricsMonitorInterval, TimeUnit.MILLISECONDS);
+		
+		monitoring = true;
+
+		logger.info("Started monitoring of application \"" + processRunner.getProcessName() + "\" with ID "
+				+ applicationID);
+
+		return pid;
+	}
+
+	private void initLogging() {
 		if (settings.logMetrics) {
 			try {
 				FileWriter fwCpu = new FileWriter(
@@ -91,16 +121,19 @@ public class ApplicationMonitor {
 				logger.error("Error logging metrics to file.");
 			}
 		}
-
-		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
-				Constants.PROCESS_MONITOR_START_DELAY, settings.systemMetricsMonitorInterval, TimeUnit.MILLISECONDS);
-
-		monitoring = true;
-
-		logger.info("Started monitoring of application \"" + processRunner.getProcessName() + "\" with ID "
-				+ applicationID);
-
-		return pid;
+		if(settings.logUsageTop) {
+			try {
+				FileWriter fwTop = new FileWriter(
+						settings.etcFolderPath + "/logs/logs_agent_topusage_application_" + applicationID + ".csv");
+				BufferedWriter bwTop = new BufferedWriter(fwTop);
+				topLogFile = new PrintWriter(bwTop);
+				topLogFile.println("timestamp;cpuUsagePerc;memoryUsagePerc");
+				topLogFile.flush();
+			} catch (IOException e) {
+				settings.logUsageTop = false;
+				logger.error("Error logging top usage to file.");
+			}
+		}
 	}
 
 	public boolean isMonitoring() {
@@ -117,6 +150,10 @@ public class ApplicationMonitor {
 				+ applicationID + "...");
 
 		monitoring = false;
+		
+		if(topMonitor != null) {
+			topMonitor.stop();
+		}
 
 		if (scheduledMonitor != null) {
 			scheduledMonitor.cancel(true);
@@ -139,13 +176,16 @@ public class ApplicationMonitor {
 		if (cpuLogFile != null) {
 			cpuLogFile.close();
 		}
+		if(topLogFile != null) {
+			topLogFile.close();
+		}
 	}
 
 	public Queue<MetricMessage> getCollectedMetrics() {
 		return collectedMetrics;
 	}
 
-	public class MonitorTimerTask implements Runnable {
+	class MonitorTimerTask implements Runnable {
 
 		private long pid;
 		private Set<Long> processesToMonitor;
@@ -246,11 +286,8 @@ public class ApplicationMonitor {
 				}
 			}
 
-			CpuMessage cpuMessage = new CpuMessage(null, new Date(), processRunner.getProcessName());
-			cpuMessage.setCpuUsagePerc(sumCpuUsagePerc);
-			cpuMessage.setCpuTotal(sumCpuTotal);
-			cpuMessage.setCpuKernel(sumCpuKernel);
-			cpuMessage.setCpuUser(sumCpuUser);
+			CpuMessage cpuMessage = new CpuMessage(null, new Date(), processRunner.getProcessName(), 
+					sumCpuUsagePerc, sumCpuTotal, sumCpuKernel, sumCpuUser);
 
 			if (lastCpuMessage == null || !cpuMessage.equals(lastCpuMessage)) {
 				// only if memory is different to last measuement, send it.
@@ -284,6 +321,67 @@ public class ApplicationMonitor {
 					e.printStackTrace();
 				}
 			}
+		}
+	}
+	
+	
+	class TopMonitor implements Runnable {
+		private boolean logTopRunning = false;
+		private long pid;
+		
+		public TopMonitor(long pid) {
+			if(pid < 1) {
+				throw new InvalidParameterException();
+			}
+			this.pid = pid;
+		}
+
+		@Override
+		public void run() {
+			logTopRunning = true;
+			
+			int interval = (int) TimeUnit.MILLISECONDS.toSeconds(settings.systemMetricsMonitorInterval);
+			
+			ProcessBuilder builder = new ProcessBuilder(Arrays.asList("top", "-b", "-d", String.valueOf(interval), "-p", String.valueOf(pid)));
+			builder.redirectErrorStream(true);
+			
+			try {
+				Process process = builder.start();
+				BufferedReader bufferedReader = new BufferedReader(
+		                new InputStreamReader(process.getInputStream()));
+				
+				String line;
+				while (logTopRunning && (line = bufferedReader.readLine().trim()) != null) {
+					if(!line.startsWith(String.valueOf(pid))) {
+						continue;
+					}
+					
+					String[] lineSplit = line.split("\\s+");
+					double cpuUsage = Double.NaN;
+					double memoryUsage = Double.NaN;
+					try {
+						cpuUsage = Double.parseDouble(lineSplit[8].replaceAll(",", "."));
+						memoryUsage = Double.parseDouble(lineSplit[9].replaceAll(",", "."));
+					} catch (NumberFormatException e) {
+						logger.error("Error parsing usage from top command. Stopping top logging.");
+						logTopRunning = false;
+					}
+					
+					topLogFile.println(new StringJoiner(";")
+							.add(String.valueOf(new Date().getTime()))
+							.add(String.valueOf(cpuUsage / cpuCount))
+							.add(String.valueOf(memoryUsage)).toString());
+					topLogFile.flush();
+				}
+			} catch (IOException e) {
+				logger.error("Error retrieving usage from top command. Stopping top logging.");
+			} finally {
+				logTopRunning = false;
+			}
+		}
+
+		public void stop() {
+			logTopRunning = false;
 		}
 	}
 }
