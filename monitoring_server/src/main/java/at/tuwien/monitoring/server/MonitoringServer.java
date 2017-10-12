@@ -57,8 +57,8 @@ public class MonitoringServer {
 			return false;
 		}
 
-		// delete database data
-		new ViolationDAO().deleteAll();
+		// create table for in-memory database
+		new ViolationDAO().ceateTable();
 
 		return true;
 	}
