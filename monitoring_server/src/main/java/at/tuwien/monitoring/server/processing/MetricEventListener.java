@@ -16,6 +16,7 @@ import com.espertech.esper.collection.Pair;
 import com.espertech.esper.event.WrapperEventBean;
 
 import at.tuwien.common.Settings;
+import at.tuwien.monitoring.jms.messages.ClientInfoMessage;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
 import at.tuwien.monitoring.server.db.dao.ViolationDAO;
 import at.tuwien.monitoring.server.db.dto.ViolationDTO;
@@ -99,6 +100,11 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 				outLogFile.println(violationDTO.getCsvHeader());
 				writeHeader = false;
 			}
+
+			if (metricMessage instanceof ClientInfoMessage) {
+				violationDTO.setSourceMessageId(((ClientInfoMessage) metricMessage).getId());
+			}
+
 			outLogFile.println(violationDTO.toCsvEntry());
 			outLogFile.flush();
 		}

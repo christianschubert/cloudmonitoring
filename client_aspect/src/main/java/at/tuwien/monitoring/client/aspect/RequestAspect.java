@@ -34,7 +34,11 @@ public class RequestAspect {
 
 	private final static Logger logger = Logger.getLogger(RequestAspect.class);
 
-	private static Settings settings;
+	// id gets appended to the client messages so that the messages can be
+	// distinguished for the ttp violation (evaluation)
+	private int id = 1;
+
+	private Settings settings;
 
 	private JmsSenderService jmsService;
 	private String publicIPAddress;
@@ -193,12 +197,12 @@ public class RequestAspect {
 	public void sendMessage(String target, Method method, long responseTime, int responseCode) {
 		if (jmsService.isConnected() || settings.logMetrics) {
 
-			// convert nanoseconds to milliseconds, responsetime is -1 for requests with
-			// errors
+			// convert nanoseconds to milliseconds;
+			// responsetime is -1 for requests with errors
 			long responseTimeMillis = (responseTime == -1 ? -1 : TimeUnit.NANOSECONDS.toMillis(responseTime));
 
-			ClientInfoMessage clientResponseTimeMessage = new ClientInfoMessage(publicIPAddress, new Date(), target,
-					method, responseTimeMillis, responseCode);
+			ClientInfoMessage clientResponseTimeMessage = new ClientInfoMessage(id++, publicIPAddress, new Date(),
+					target, method, responseTimeMillis, responseCode);
 
 			if (settings.logMetrics) {
 				if (writeHeader) {

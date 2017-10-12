@@ -14,6 +14,7 @@ public class ViolationDTO implements Loggable {
 	private double monitoredValue;
 	private String requiredDesc;
 	private Date violationTimestamp;
+	private int sourceMessageId;
 
 	public ViolationDTO() {
 	}
@@ -35,6 +36,14 @@ public class ViolationDTO implements Loggable {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	public int getSourceMessageId() {
+		return sourceMessageId;
+	}
+
+	public void setSourceMessageId(int sourceMessageId) {
+		this.sourceMessageId = sourceMessageId;
 	}
 
 	public String getSourceIpAddress() {
@@ -101,6 +110,7 @@ public class ViolationDTO implements Loggable {
 				.add("violationType")
 				.add("monitoredValue")
 				.add("requiredDesc")
+				.add("sourceMessageId")
 				.toString();
 	}
 
@@ -113,6 +123,7 @@ public class ViolationDTO implements Loggable {
 				.add(getViolationType())
 				.add(String.valueOf(getMonitoredValue()))
 				.add(getRequiredDesc())
+				.add(sourceMessageId == 0 ? "" : String.valueOf(getSourceMessageId()))
 				.toString();
 	}
 }

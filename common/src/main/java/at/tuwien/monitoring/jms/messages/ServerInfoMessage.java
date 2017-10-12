@@ -12,7 +12,7 @@ public class ServerInfoMessage extends MetricMessage {
 	private String target;
 	private Method method;
 	private long executionTime; // milliseconds
-
+	
 	public ServerInfoMessage() {
 	}
 
