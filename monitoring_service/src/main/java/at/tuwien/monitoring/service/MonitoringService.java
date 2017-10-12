@@ -22,7 +22,7 @@ public class MonitoringService {
 	private static final int DEFAULT_PORT = 8080;
 
 	// Base URI the Grizzly HTTP server will listen on
-	private static final String BASE_URI = "http://0.0.0.0:%d/imageresizer/";
+	private static final String BASE_URI = "http://0.0.0.0:%d/imageprocessor/";
 
 	private static String getBaseUri(int port) {
 		return String.format(BASE_URI, port);

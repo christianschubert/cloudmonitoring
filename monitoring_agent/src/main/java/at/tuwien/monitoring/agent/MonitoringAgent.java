@@ -81,8 +81,8 @@ public class MonitoringAgent {
 		}
 
 		scheduler = Executors.newScheduledThreadPool(1);
-		scheduledJmsSender = scheduler.scheduleAtFixedRate(() -> aggregateAndSend(), 0,
-				settings.metricsAggregationInterval, TimeUnit.MILLISECONDS);
+		scheduledJmsSender = scheduler.scheduleAtFixedRate(() -> aggregateAndSend(), 0, settings.metricsAggregationInterval,
+				TimeUnit.MILLISECONDS);
 
 		return true;
 	}
@@ -190,7 +190,8 @@ public class MonitoringAgent {
 				aggregate(aggregationMessage, applicationMonitor.getCollectedMetrics());
 
 				if (!applicationMonitor.isMonitoring()) {
-					// Monitoring stopped -> aggregate remaining messages and remove from watchlist
+					// Monitoring stopped -> aggregate remaining messages and remove from
+					// watchlist
 					itAppList.remove();
 				}
 			}
@@ -264,12 +265,12 @@ public class MonitoringAgent {
 				params = Arrays.asList("config:" + settings.etcFolderPath + "/settings.properties", " -p8080");
 			}
 
-			// for test purposes monitor imageresizer application only
-			Application imageResizer = new Application(
+			// for test purposes monitor imageprocessor application only
+			Application imageProcessor = new Application(
 					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar", params,
 					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
 
-			agent.startApplicationMonitoring(imageResizer, true);
+			agent.startApplicationMonitoring(imageProcessor, true);
 
 			// monitor till user hits RETURN
 			try {

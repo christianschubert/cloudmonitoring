@@ -45,8 +45,8 @@
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>
 
-			<WSDLFile>http://localhost:8080/imageresizer/application.wadl</WSDLFile>
-			<SOAPBindingName>http://localhost:8080/imageresizer/shrink</SOAPBindingName>
+			<WSDLFile>http://localhost:8080/imageprocessor/application.wadl</WSDLFile>
+			<SOAPBindingName>http://localhost:8080/imageprocessor/shrink</SOAPBindingName>
 			<SOAPOperationName>POST</SOAPOperationName>
 		</Operation>
 	</ServiceDefinition>
