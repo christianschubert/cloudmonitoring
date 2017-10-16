@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -139,6 +140,8 @@ public class ShrinkResource {
 				// generate a set of unique random numbers
 				delayRequests = ThreadLocalRandom.current().ints(0, total).distinct().limit(noDelays).boxed()
 						.collect(Collectors.toSet());
+
+				System.out.println("Delays at: " + new TreeSet<>(delayRequests));
 			}
 
 			Integer time = (Integer) properties.get("delay.time");
