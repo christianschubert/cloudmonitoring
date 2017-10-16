@@ -62,7 +62,7 @@
 			<Expression>
 				<Predicate xsi:type="LessEqual">
 					<SLAParameter>ResponseTimeService</SLAParameter>
-					<Value>2000</Value>
+					<Value>1000</Value>
 				</Predicate>
 			</Expression>
 			<EvaluationEvent>NewValue</EvaluationEvent>
