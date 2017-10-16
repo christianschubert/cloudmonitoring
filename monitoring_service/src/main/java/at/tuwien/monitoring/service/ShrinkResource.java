@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
@@ -55,20 +56,21 @@ public class ShrinkResource {
 	public void uploadImage(@FormDataParam("image") InputStream uploadedInputStream,
 			@FormDataParam("image") FormDataContentDisposition detail, @FormDataParam("size") int size,
 			@FormDataParam("width") int width, @FormDataParam("height") int height,
-			@FormDataParam("rotation") String rotation, @Suspended final AsyncResponse asyncResponse) throws IOException {
+			@FormDataParam("rotation") String rotation, @Suspended final AsyncResponse asyncResponse)
+			throws IOException {
 
 		asyncResponse.setTimeoutHandler(new TimeoutHandler() {
 			@Override
 			public void handleTimeout(AsyncResponse asyncResponse) {
-				asyncResponse
-						.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
+				asyncResponse.resume(
+						Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
 			}
 		});
 		asyncResponse.setTimeout(20, TimeUnit.SECONDS);
 
 		if (uploadedInputStream == null || detail == null) {
-			asyncResponse
-					.resume(Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build());
+			asyncResponse.resume(
+					Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build());
 			return;
 		}
 
@@ -117,8 +119,8 @@ public class ShrinkResource {
 			e.printStackTrace();
 		}
 
-		asyncResponse
-				.resume(Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
+		asyncResponse.resume(
+				Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
 	}
 
 	private Set<Integer> delayRequests;
@@ -154,9 +156,14 @@ public class ShrinkResource {
 
 		if (delayRequests.contains(currentRequest)) {
 			// add delay
-			System.out.println("!!! Intended delay !!!");
+
+			// add random time from 0 to 100 to delay
+			int randomAddTime = new Random().ints(0, 100).findFirst().getAsInt();
+
+			System.out.println(String.format("!!! Intended delay (%d ms)!!!", delayTime + randomAddTime));
+
 			try {
-				Thread.sleep(delayTime);
+				Thread.sleep(delayTime + randomAddTime);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
