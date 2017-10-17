@@ -66,8 +66,8 @@ public class Utils {
 		try {
 			in = isFile ? new FileInputStream(configPath) : new URL(configPath).openStream();
 			prop.load(in);
-			
-			if(isFile) {
+
+			if (isFile) {
 				settings.etcFolderPath = new File(configPath).getParent();
 			}
 
@@ -114,14 +114,14 @@ public class Utils {
 				settings.requestCount = Integer.parseInt(requestCount);
 			}
 
-			String responseTimeDelayRate = prop.getProperty("response.time.delay.rate");
-			if (responseTimeDelayRate != null) {
-				settings.responseTimeDelayRate = Double.parseDouble(responseTimeDelayRate);
+			String executionTimeDelayRate = prop.getProperty("execution.time.delay.rate");
+			if (executionTimeDelayRate != null) {
+				settings.executionTimeDelayRate = Double.parseDouble(executionTimeDelayRate);
 			}
 
-			String responseTimeDelayTime = prop.getProperty("response.time.delay.time");
-			if (responseTimeDelayTime != null) {
-				settings.responseTimeDelayTime = Integer.parseInt(responseTimeDelayTime);
+			String executionTimeDelayTime = prop.getProperty("execution.time.delay.time");
+			if (executionTimeDelayTime != null) {
+				settings.executionTimeDelayTime = Integer.parseInt(executionTimeDelayTime);
 			}
 
 			String metricsAggregationInterval = prop.getProperty("metrics.aggregation.interval");
@@ -138,11 +138,11 @@ public class Utils {
 			if (systemMetricsMonitorInterval != null) {
 				settings.systemMetricsMonitorInterval = Integer.parseInt(systemMetricsMonitorInterval);
 			}
-			
+
 			boolean logUsageTop = (prop.getProperty("log.usage.top") == null ? false
 					: Boolean.valueOf(prop.getProperty("log.usage.top").trim()));
 			settings.logUsageTop = logUsageTop;
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
