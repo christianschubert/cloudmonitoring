@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<SLA xmlns="http://www.ibm.com/wsla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.ibm.com/wsla wsla.xsd" name="ImageServiceAgreement">
+
+	<!-- Definition of the Involved Parties, the signatory parties as well as 
+		the supporting ones -->
+	<Parties>
+		<ServiceProvider name="ImageServiceProvider">
+			<Contact>
+				<Street>PO BOX 218</Street>
+				<City>Yorktown, NY 10598, USA</City>
+			</Contact>
+		</ServiceProvider>
+		<ServiceConsumer name="ImageServiceConsumer">
+			<Contact>
+				<Street>19 Skyline Drive</Street>
+				<City>Hawthorne, NY 10532, USA</City>
+			</Contact>
+		</ServiceConsumer>
+		<SupportingParty name="Trusted3rdParty">
+			<Contact>
+				<Street>Hursley Park</Street>
+				<City>Winchester, England, SO21 2JN</City>
+			</Contact>
+			<Sponsor>ImageServiceProvider</Sponsor>
+			<Sponsor>ImageServiceConsumer</Sponsor>
+			<Role>ConditionEvaluationService</Role>
+		</SupportingParty>
+	</Parties>
+
+	<!-- The definition of the service in terms of the service parameters and 
+		their measurement. -->
+	<ServiceDefinition>
+	</ServiceDefinition>
+
+	<!-- The obligations of the parties, referring to parameters defined above. -->
+	<Obligations>
+	</Obligations>
+</SLA>

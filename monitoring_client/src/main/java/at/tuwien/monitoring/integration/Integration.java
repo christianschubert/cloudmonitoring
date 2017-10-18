@@ -91,9 +91,10 @@ public class Integration {
 
 	private void startApplications(int count, int firstPort) {
 		for (int i = 0; i < count; i++) {
-			List<String> params = Arrays.asList("-p8080");
+			List<String> params = Arrays.asList("-p" + (firstPort + i));
 			if (new File(settings.etcFolderPath + "/settings.properties").exists()) {
-				params = Arrays.asList("config:" + settings.etcFolderPath + "/settings.properties", " -p8080");
+				params = Arrays.asList("config:" + settings.etcFolderPath + "/settings.properties",
+						" -p" + (firstPort + i));
 			}
 
 			Application application = new Application(APP_PATH, params,

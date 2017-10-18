@@ -96,6 +96,8 @@ public class RequestAspect {
 	@After("serverInit()")
 	public void serverInitAdvice() {
 		if (!jmsService.isConnected()) {
+			// for integration use local broker
+			jmsService = new JmsSenderService(new Settings().brokerUrl, GlobalConstants.QUEUE_CLIENTS);
 			jmsService.start();
 		}
 	}

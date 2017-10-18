@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<SLA xmlns="http://www.ibm.com/wsla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.ibm.com/wsla wsla.xsd" name="ImageServiceAgreement">
+
+	<!-- Definition of the Involved Parties, the signatory parties as well as 
+		the supporting ones -->
+	<Parties>
+		<ServiceProvider name="ImageServiceProvider">
+			<Contact>
+				<Street>PO BOX 218</Street>
+				<City>Yorktown, NY 10598, USA</City>
+			</Contact>
+		</ServiceProvider>
+		<ServiceConsumer name="ImageServiceConsumer">
+			<Contact>
+				<Street>19 Skyline Drive</Street>
+				<City>Hawthorne, NY 10532, USA</City>
+			</Contact>
+		</ServiceConsumer>
+		<SupportingParty name="Trusted3rdParty">
+			<Contact>
+				<Street>Hursley Park</Street>
+				<City>Winchester, England, SO21 2JN</City>
+			</Contact>
+			<Sponsor>ImageServiceProvider</Sponsor>
+			<Sponsor>ImageServiceConsumer</Sponsor>
+			<Role>ConditionEvaluationService</Role>
+		</SupportingParty>
+	</Parties>
+
+	<!-- The definition of the service in terms of the service parameters and 
+		their measurement. -->
+	<ServiceDefinition>
+		<Operation name="ShrinkImage" xsi:type="WSDLSOAPOperationDescriptionType">
+			<SLAParameter name="SuccessabilityService" type="double"
+				unit="percent">
+				<Metric>Successability</Metric>
+				<Communication>
+					<Source>ImageServiceConsumer</Source>
+				</Communication>
+			</SLAParameter>
+
+			<Metric name="Successability" type="long" unit="percent">
+				<Source>ImageServiceConsumer</Source>
+				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
+			</Metric>
+
+			<WSDLFile>http://localhost:8080/imageprocessor/application.wadl</WSDLFile>
+			<SOAPBindingName>http://localhost:8080/imageprocessor/shrink</SOAPBindingName>
+			<SOAPOperationName>POST</SOAPOperationName>
+		</Operation>
+	</ServiceDefinition>
+
+	<!-- The obligations of the parties, referring to parameters defined above. -->
+	<Obligations>
+		<ServiceLevelObjective name="SuccessabilitySLO">
+			<Obliged>ImageServiceProvider</Obliged>
+			<Validity>
+				<Start>2017-01-01T14:00:00.000-05:00</Start>
+				<End>2099-01-01T14:00:00.000-05:00</End>
+			</Validity>
+			<Expression>
+				<Predicate xsi:type="Greater">
+					<SLAParameter>SuccessabilityService</SLAParameter>
+					<Value>0.95</Value>
+				</Predicate>
+			</Expression>
+			<EvaluationEvent>NewValue</EvaluationEvent>
+		</ServiceLevelObjective>
+	</Obligations>
+</SLA>
