@@ -7,7 +7,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
@@ -49,6 +48,8 @@ public class ShrinkResource {
 
 	@Context
 	private Application app;
+
+	private int currentRequest = 0;
 
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -105,6 +106,16 @@ public class ShrinkResource {
 			// add intended response time delay for tests
 			checkAddDelay();
 
+			// add intended fail for tests
+			boolean shouldFail = checkAddFail();
+			currentRequest++;
+
+			if (shouldFail) {
+				asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+						.entity(new Message("Error processing request.")).build());
+				return;
+			}
+
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 			// return source image if no parameters for resizing where given
@@ -125,17 +136,18 @@ public class ShrinkResource {
 	}
 
 	private Set<Integer> delayRequests;
-	private int currentRequest = 0;
+	private Set<Integer> failRequests;
 	private int delayTime = 2000;
+	private int delayVariation = 100;
 
 	@PostConstruct
 	public void postConstruct() {
 		Map<String, Object> properties = app.getProperties();
 		if (properties != null && !properties.isEmpty()) {
 			Integer total = (Integer) properties.get("total.requests");
-			Double rate = (Double) properties.get("delay.rate");
-			if (total != null && rate != null) {
-				int noDelays = (int) (total.intValue() * rate.doubleValue());
+			Double delayRate = (Double) properties.get("delay.rate");
+			if (total != null && delayRate != null) {
+				int noDelays = (int) (total.intValue() * delayRate.doubleValue());
 
 				// generate a set of unique random numbers
 				delayRequests = ThreadLocalRandom.current().ints(0, total).distinct().limit(noDelays).boxed()
@@ -144,15 +156,30 @@ public class ShrinkResource {
 				System.out.println("Delays at: " + new TreeSet<>(delayRequests));
 			}
 
+			Double failRate = (Double) properties.get("fail.rate");
+			if (total != null && failRate != null) {
+				int noFails = (int) (total.intValue() * failRate.doubleValue());
+
+				failRequests = ThreadLocalRandom.current().ints(0, total).distinct().limit(noFails).boxed()
+						.collect(Collectors.toSet());
+
+				System.out.println("Fails at: " + new TreeSet<>(failRequests));
+			}
+
 			Integer time = (Integer) properties.get("delay.time");
 			if (time != null) {
 				delayTime = time.intValue();
+			}
+
+			Integer variation = (Integer) properties.get("delay.variation");
+			if (variation != null) {
+				delayVariation = variation.intValue();
 			}
 		}
 	}
 
 	private void checkAddDelay() {
-		// no setting for delay -> do not delay delay
+		// no setting for delay -> do not delay
 		if (delayRequests == null) {
 			return;
 		}
@@ -161,7 +188,7 @@ public class ShrinkResource {
 			// add delay
 
 			// add random time from 0 to 100 to delay
-			int randomAddTime = new Random().ints(0, 100).findFirst().getAsInt();
+			int randomAddTime = ThreadLocalRandom.current().ints(0, delayVariation).findFirst().getAsInt();
 
 			System.out.println(String.format("!!! Intended delay (%d ms)!!!", delayTime + randomAddTime));
 
@@ -171,7 +198,14 @@ public class ShrinkResource {
 				e.printStackTrace();
 			}
 		}
+	}
 
-		currentRequest++;
+	private boolean checkAddFail() {
+		if (failRequests != null && failRequests.contains(currentRequest)) {
+			System.out.println("!!! Intended fail!!!");
+			return true;
+		}
+
+		return false;
 	}
 }

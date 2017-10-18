@@ -43,14 +43,28 @@ public class MonitoringService {
 		final ResourceConfig rc = new ResourceConfig().packages("at.tuwien.monitoring.service");
 		rc.register(MultiPartFeature.class);
 
+		Map<String, Object> properties = new HashMap<>();
+		properties.put("total.requests", settings.requestCount);
+
 		if (settings.executionTimeDelayRate > 0) {
 			System.out.println(String.format(
-					"Service has enabled intended response time delay (Rate: %f, Total expected requests: %d)",
+					"Service has enabled intended response time delay (Delay rate: %f, Total expected requests: %d)",
 					settings.executionTimeDelayRate, settings.requestCount));
-			Map<String, Object> properties = new HashMap<>();
-			properties.put("total.requests", settings.requestCount);
+
 			properties.put("delay.rate", settings.executionTimeDelayRate);
 			properties.put("delay.time", settings.executionTimeDelayTime);
+			properties.put("delay.variation", settings.executionTimeDelayVariation);
+		}
+
+		if (settings.requestFailRate > 0) {
+			System.out.println(
+					String.format("Service has enabled intended fail rate (Fail rate: %f, Total expected requests: %d)",
+							settings.requestFailRate, settings.requestCount));
+
+			properties.put("fail.rate", settings.requestFailRate);
+		}
+
+		if (!properties.isEmpty()) {
 			rc.setProperties(properties);
 		}
 

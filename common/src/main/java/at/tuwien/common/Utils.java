@@ -124,6 +124,16 @@ public class Utils {
 				settings.executionTimeDelayTime = Integer.parseInt(executionTimeDelayTime);
 			}
 
+			String executionTimeDelayVariation = prop.getProperty("execution.time.delay.variation");
+			if (executionTimeDelayVariation != null) {
+				settings.executionTimeDelayVariation = Integer.parseInt(executionTimeDelayVariation);
+			}
+
+			String requestFailRate = prop.getProperty("request.fail.rate");
+			if (requestFailRate != null) {
+				settings.requestFailRate = Double.parseDouble(requestFailRate);
+			}
+
 			String metricsAggregationInterval = prop.getProperty("metrics.aggregation.interval");
 			if (metricsAggregationInterval != null) {
 				settings.metricsAggregationInterval = Integer.parseInt(metricsAggregationInterval);
