@@ -54,8 +54,6 @@ public class Integration {
 			monitoringServer.shutdown();
 			return;
 		}
-		// add specified agreement
-		monitoringServer.startSLAMonitoring(wslaFilePath);
 
 		// start agent
 		monitoringAgent = new MonitoringAgent(settings);
@@ -65,12 +63,23 @@ public class Integration {
 			return;
 
 		}
-		startApplications(1, 8080);
 
 		// start client and run tests
 		MonitoringClient monitoringClient = new MonitoringClient(settings);
 		monitoringClient.init();
+
+		startApplications(1, 8080);
+
+		// add specified agreement to server
+		monitoringServer.startSLAMonitoring(wslaFilePath);
+
 		monitoringClient.runTest();
+
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 
 		// stop client
 		monitoringClient.shutdown();

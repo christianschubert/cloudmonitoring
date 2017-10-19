@@ -55,9 +55,11 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 	@Override
 	public void update(EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement,
 			EPServiceProvider epServiceProvider) {
+		if (newEvents == null) {
+			return;
+		}
 
 		EventBean event = newEvents[0];
-
 		MetricMessage metricMessage = null;
 		Map<String, Object> properties = null;
 

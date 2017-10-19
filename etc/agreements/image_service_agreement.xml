@@ -86,11 +86,11 @@
 				<Source>ImageServiceProvider</Source>
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>
-			<Metric name="Successability" type="long" unit="percent">
+			<Metric name="Successability" type="double" unit="percent">
 				<Source>ImageServiceConsumer</Source>
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>
-			<Metric name="Throughput" type="long" unit="percent">
+			<Metric name="Throughput" type="double" unit="percent">
 				<Source>ImageServiceProvider</Source>
 				<MeasurementDirectiveVariable></MeasurementDirectiveVariable>
 			</Metric>

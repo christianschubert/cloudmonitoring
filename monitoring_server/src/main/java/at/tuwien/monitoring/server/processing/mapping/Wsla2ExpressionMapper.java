@@ -43,13 +43,15 @@ public class Wsla2ExpressionMapper {
 
 	private static final String RATIO_FUNCTION = "count(*, %s %s %s)/count(*)";
 
-	private static final String WINDOW_TIME_SEC = ".win:time(%d sec)";
+	private static final String OUTPUT_SNAPSHOT = "output snapshot every %d sec";
+
+	private static final String WINDOW_TIME_SEC = "#time(%d sec)";
 
 	@SuppressWarnings("unused")
-	private static final String WINDOW_TIME_MIN = ".win:time(%d min)";
+	private static final String WINDOW_TIME_MIN = "#time(%d min)";
 
 	@SuppressWarnings("unused")
-	private static final String WINDOW_LENGTH = ".win:length(%d)";
+	private static final String WINDOW_LENGTH = "#length(%d)";
 
 	// map of basic metrics and their corresponding messages and variables
 	private static Map<String, MetricInformation> basicMetricMap;
@@ -168,6 +170,11 @@ public class Wsla2ExpressionMapper {
 					metricInformation.getEventMessageName(), filter, metricInformation.getAggregationFunction(),
 					metricInformation.getPropertyName(), simplePredicate.getDetectionSign(),
 					simplePredicate.getThreshold());
+		}
+
+		if (metricInformation.getPropertyName().startsWith("count(*)")) {
+			// throughput
+			expression += " " + String.format(OUTPUT_SNAPSHOT, THROUGHPUT_EVAL_TIME);
 		}
 
 		metricProcessor.addExpression(expression);
