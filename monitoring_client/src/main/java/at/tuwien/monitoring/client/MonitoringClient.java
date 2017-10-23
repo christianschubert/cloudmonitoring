@@ -40,6 +40,8 @@ public class MonitoringClient {
 
 			String image = "image_" + currentImageType + ".jpg";
 			requester.shrinkRequest(image, settings.imageTargetSize, Rotation.valueOf(settings.imageRotation));
+
+			System.out.println("Request " + i + " finished");
 		}
 
 		logger.info("Test finished!");
