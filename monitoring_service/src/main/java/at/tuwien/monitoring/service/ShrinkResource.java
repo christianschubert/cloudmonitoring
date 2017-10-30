@@ -117,7 +117,8 @@ public class ShrinkResource {
 			byte[] imageData = baos.toByteArray();
 
 			if (shouldFail) {
-				asyncResponse.resume(Response.serverError().entity(new ByteArrayInputStream(imageData)).build());
+				asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST)
+						.entity(new ByteArrayInputStream(imageData)).build());
 				return;
 			}
 
