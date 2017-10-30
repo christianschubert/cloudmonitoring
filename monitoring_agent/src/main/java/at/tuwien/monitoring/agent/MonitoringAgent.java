@@ -81,8 +81,8 @@ public class MonitoringAgent {
 		}
 
 		scheduler = Executors.newScheduledThreadPool(1);
-		scheduledJmsSender = scheduler.scheduleAtFixedRate(() -> aggregateAndSend(), 0, settings.metricsAggregationInterval,
-				TimeUnit.MILLISECONDS);
+		scheduledJmsSender = scheduler.scheduleAtFixedRate(() -> aggregateAndSend(), 0,
+				settings.metricsAggregationInterval, TimeUnit.MILLISECONDS);
 
 		return true;
 	}

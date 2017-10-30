@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <SLA xmlns="http://www.ibm.com/wsla" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.ibm.com/wsla wsla.xsd" name="ImageServiceAgreement">
+	xsi:schemaLocation="http://www.ibm.com/wsla wsla.xsd" name="ResponseTimeAgreement">
 
 	<!-- Definition of the Involved Parties, the signatory parties as well as 
 		the supporting ones -->
