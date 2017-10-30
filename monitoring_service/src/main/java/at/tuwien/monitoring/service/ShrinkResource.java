@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -21,9 +20,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
-import javax.ws.rs.container.TimeoutHandler;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -55,33 +51,20 @@ public class ShrinkResource {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces({ "image/jpg", "image/png", "image/gif", MediaType.APPLICATION_JSON })
 	@ManagedAsync
-	public void uploadImage(@FormDataParam("image") InputStream uploadedInputStream,
+	public Response uploadImage(@FormDataParam("image") InputStream uploadedInputStream,
 			@FormDataParam("image") FormDataContentDisposition detail, @FormDataParam("size") int size,
 			@FormDataParam("width") int width, @FormDataParam("height") int height,
-			@FormDataParam("rotation") String rotation, @Suspended final AsyncResponse asyncResponse)
-			throws IOException {
-
-		asyncResponse.setTimeoutHandler(new TimeoutHandler() {
-			@Override
-			public void handleTimeout(AsyncResponse asyncResponse) {
-				asyncResponse.resume(
-						Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.").build());
-			}
-		});
-		asyncResponse.setTimeout(20, TimeUnit.SECONDS);
+			@FormDataParam("rotation") String rotation) throws IOException {
 
 		if (uploadedInputStream == null || detail == null) {
-			asyncResponse.resume(
-					Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build());
-			return;
+			return Response.status(Response.Status.BAD_REQUEST).entity(new Message("No image provided.")).build();
 		}
 
 		String extension = detail.getFileName().substring(detail.getFileName().lastIndexOf(".") + 1);
 		if (!(extension.toLowerCase().equals("jpg") || extension.toLowerCase().equals("png")
 				|| extension.toLowerCase().equals("gif"))) {
-			asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST)
-					.entity(new Message("Invalid image extension. (Use *.jpg, *.png or *.gif)")).build());
-			return;
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new Message("Invalid image extension. (Use *.jpg, *.png or *.gif)")).build();
 		}
 
 		try {
@@ -117,8 +100,7 @@ public class ShrinkResource {
 			byte[] imageData = baos.toByteArray();
 
 			if (!shouldFail) {
-				asyncResponse.resume(Response.ok(new ByteArrayInputStream(imageData)).build());
-				return;
+				return Response.ok(new ByteArrayInputStream(imageData)).build();
 			}
 
 		} catch (IOException e) {
@@ -127,7 +109,7 @@ public class ShrinkResource {
 			e.printStackTrace();
 		}
 
-		asyncResponse.resume(Response.serverError().entity(new Message("Error resizing image.")).build());
+		return Response.serverError().entity(new Message("Error resizing image.")).build();
 	}
 
 	private Set<Integer> delayRequests;
