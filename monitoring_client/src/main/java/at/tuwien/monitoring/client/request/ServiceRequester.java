@@ -91,13 +91,12 @@ public class ServiceRequester {
 			outLogFile.flush();
 		}
 
-		// if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-		// logger.info("Service status code is not ok. Code: " + response.getStatus() +
-		// "; (Request ID "
-		// + currentRequestID + ")");
-		// response.close();
-		// return;
-		// }
+		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+			logger.info("Service status code is not ok. Code: " + response.getStatus() + "; (Request ID "
+					+ currentRequestID + ")");
+			response.close();
+			return;
+		}
 
 		InputStream is = response.readEntity(InputStream.class);
 		try {
