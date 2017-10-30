@@ -37,7 +37,7 @@ public class MonitoringServer {
 			return false;
 		}
 
-		wsla2ExpressionMapper = new Wsla2ExpressionMapper(metricProcessor);
+		wsla2ExpressionMapper = new Wsla2ExpressionMapper(metricProcessor, settings);
 
 		if (settings.embeddedBroker) {
 			jmsService = new JmsReceiverService(metricProcessor);
@@ -74,7 +74,7 @@ public class MonitoringServer {
 				wsla.getWSLA().getParties().getServiceProvider().getName());
 		logger.info(info);
 
-		wsla2ExpressionMapper.doMapping(wsla);
+		wsla2ExpressionMapper.mapAgreement(wsla);
 	}
 
 	public void shutdown() {

@@ -27,6 +27,7 @@ import com.ibm.wsla.ServiceDefinitionType;
 import com.ibm.wsla.ServiceLevelObjectiveType;
 import com.ibm.wsla.Sum;
 
+import at.tuwien.common.Settings;
 import at.tuwien.monitoring.server.processing.MetricProcessor;
 import at.tuwien.monitoring.server.wsla.WebServiceLevelAgreement;
 
@@ -67,11 +68,15 @@ public class Wsla2ExpressionMapper {
 
 	private MetricProcessor metricProcessor;
 
-	public Wsla2ExpressionMapper(MetricProcessor metricProcessor) {
+	public Wsla2ExpressionMapper(MetricProcessor metricProcessor, Settings settings) {
 		this.metricProcessor = metricProcessor;
+
+		if (settings.logMetrics) {
+			addSnapshotStatementsForLogging();
+		}
 	}
 
-	public void doMapping(WebServiceLevelAgreement wsla) {
+	public void mapAgreement(WebServiceLevelAgreement wsla) {
 
 		Map<String, String> slaMetricMap = new HashMap<>();
 		Map<String, MetricInformation> processingMetricMap = new HashMap<>();
@@ -276,6 +281,21 @@ public class Wsla2ExpressionMapper {
 		}
 
 		return null;
+	}
+
+	private void addSnapshotStatementsForLogging() {
+		// successability
+		String successPattern = "'2%'";
+		String ratioFunction = String.format(RATIO_FUNCTION, basicMetricMap.get("successability").getPropertyName(),
+				"like", successPattern);
+		String expressionSuccessability = "select " + ratioFunction
+				+ " as monitoredvalue, 'successability' as logging, * from "
+				+ basicMetricMap.get("successability").getEventMessageName();
+		metricProcessor.addExpression(expressionSuccessability);
+
+		// throughput
+		String expressionThroughput = "select count(*) as monitoredvalue, 'throughput' as logging, * from ClientInfoMessage#time(1 sec) output last every 1 sec";
+		metricProcessor.addExpression(expressionThroughput);
 	}
 
 	private boolean checkValidity(List<PeriodType> validity) {

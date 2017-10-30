@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Date;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -26,7 +27,9 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 	private final static Logger logger = Logger.getLogger(MetricEventListener.class);
 
 	private Settings settings;
-	private PrintWriter outLogFile;
+	private PrintWriter outLogFileViolations;
+	private PrintWriter outLogFileSuccessability;
+	private PrintWriter outLogFileThroughput;
 	private boolean writeHeader = true;
 
 	private ViolationDAO violationDAO = new ViolationDAO();
@@ -36,9 +39,21 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 
 		if (settings.logMetrics) {
 			try {
-				FileWriter fw = new FileWriter(settings.etcFolderPath + "/logs/logs_ttp_violations.csv");
-				BufferedWriter bw = new BufferedWriter(fw);
-				outLogFile = new PrintWriter(bw);
+				FileWriter fwViolations = new FileWriter(settings.etcFolderPath + "/logs/logs_ttp_violations.csv");
+				BufferedWriter bwViolations = new BufferedWriter(fwViolations);
+				outLogFileViolations = new PrintWriter(bwViolations);
+
+				FileWriter fwSuccessability = new FileWriter(
+						settings.etcFolderPath + "/logs/logs_ttp_successability.csv");
+				BufferedWriter bwSuccessability = new BufferedWriter(fwSuccessability);
+				outLogFileSuccessability = new PrintWriter(bwSuccessability);
+				outLogFileSuccessability.println("sourceMessageId;monitoredValue");
+
+				FileWriter fwThroughput = new FileWriter(settings.etcFolderPath + "/logs/logs_ttp_throughput.csv");
+				BufferedWriter bwThroughput = new BufferedWriter(fwThroughput);
+				outLogFileThroughput = new PrintWriter(bwThroughput);
+				outLogFileThroughput.println("timestamp;monitoredValue");
+
 			} catch (IOException e) {
 				settings.logMetrics = false;
 				logger.error("Error logging metrics to file.");
@@ -47,14 +62,23 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 	}
 
 	public void stop() {
-		if (outLogFile != null) {
-			outLogFile.close();
+		if (outLogFileViolations != null) {
+			outLogFileViolations.close();
+		}
+
+		if (outLogFileSuccessability != null) {
+			outLogFileSuccessability.close();
+		}
+
+		if (outLogFileThroughput != null) {
+			outLogFileThroughput.close();
 		}
 	}
 
 	@Override
 	public void update(EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement,
 			EPServiceProvider epServiceProvider) {
+
 		if (newEvents == null) {
 			return;
 		}
@@ -69,6 +93,12 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 			properties = ((WrapperEventBean) event).getDecoratingProperties();
 		} else {
 			logger.error("Unknown EventBean.");
+			return;
+		}
+
+		Object logging = properties.get("logging");
+		if (logging != null) {
+			logSnapshot((String) logging, properties, metricMessage);
 			return;
 		}
 
@@ -99,7 +129,7 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 
 		if (settings.logMetrics) {
 			if (writeHeader) {
-				outLogFile.println(violationDTO.getCsvHeader());
+				outLogFileViolations.println(violationDTO.getCsvHeader());
 				writeHeader = false;
 			}
 
@@ -107,8 +137,27 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 				violationDTO.setSourceMessageId(((ClientInfoMessage) metricMessage).getId());
 			}
 
-			outLogFile.println(violationDTO.toCsvEntry());
-			outLogFile.flush();
+			outLogFileViolations.println(violationDTO.toCsvEntry());
+			outLogFileViolations.flush();
+		}
+	}
+
+	private void logSnapshot(String type, Map<String, Object> properties, MetricMessage metricMessage) {
+
+		Object monitoredValue = properties.get("monitoredvalue");
+
+		if (type.equalsIgnoreCase("successability")) {
+			int id = -1;
+			if (metricMessage instanceof ClientInfoMessage) {
+				id = ((ClientInfoMessage) metricMessage).getId();
+			}
+
+			outLogFileSuccessability.println(id + ";" + monitoredValue);
+			outLogFileSuccessability.flush();
+
+		} else if (type.equalsIgnoreCase("throughput")) {
+			outLogFileThroughput.println(new Date().getTime() + ";" + monitoredValue);
+			outLogFileThroughput.flush();
 		}
 	}
 }
