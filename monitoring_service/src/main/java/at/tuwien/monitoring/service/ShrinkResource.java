@@ -116,10 +116,14 @@ public class ShrinkResource {
 			ImageIO.write(resized != null ? resized : src, extension, baos);
 			byte[] imageData = baos.toByteArray();
 
-			if (!shouldFail) {
-				asyncResponse.resume(Response.ok(new ByteArrayInputStream(imageData)).build());
+			if (shouldFail) {
+				asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+						.entity(new ByteArrayInputStream(imageData)).build());
 				return;
 			}
+
+			asyncResponse.resume(Response.ok(new ByteArrayInputStream(imageData)).build());
+			return;
 
 		} catch (IOException e) {
 			e.printStackTrace();
