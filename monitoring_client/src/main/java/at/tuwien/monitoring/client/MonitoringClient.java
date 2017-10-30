@@ -10,7 +10,7 @@ import at.tuwien.monitoring.client.request.ServiceRequester;
 
 public class MonitoringClient {
 
-	private final static Logger logger = Logger.getLogger(MonitoringClient.class);
+	private static final Logger logger = Logger.getLogger(MonitoringClient.class);
 
 	private Settings settings;
 

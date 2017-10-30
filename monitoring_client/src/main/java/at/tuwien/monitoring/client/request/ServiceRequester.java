@@ -29,7 +29,7 @@ import at.tuwien.monitoring.client.constants.Constants;
 
 public class ServiceRequester {
 
-	private final static Logger logger = Logger.getLogger(ServiceRequester.class);
+	private static final Logger logger = Logger.getLogger(ServiceRequester.class);
 
 	private static int requestID = 0;
 
@@ -83,16 +83,19 @@ public class ServiceRequester {
 			return;
 		}
 
-		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-			logger.error("Service status code is not ok. Code: " + response.getStatus() + "; (Request ID "
-					+ currentRequestID + ")");
-			return;
-		}
+		response.getStatus();
 
 		if (settings.logMetrics) {
 			long responseTime = System.nanoTime() - startTime;
 			outLogFile.println(TimeUnit.NANOSECONDS.toMillis(responseTime));
 			outLogFile.flush();
+		}
+
+		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+			logger.info("Service status code is not ok. Code: " + response.getStatus() + "; (Request ID "
+					+ currentRequestID + ")");
+			response.close();
+			return;
 		}
 
 		InputStream is = response.readEntity(InputStream.class);

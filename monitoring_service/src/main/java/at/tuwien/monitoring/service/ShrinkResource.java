@@ -110,20 +110,16 @@ public class ShrinkResource {
 			boolean shouldFail = checkAddFail();
 			currentRequest++;
 
-			if (shouldFail) {
-				asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-						.entity(new Message("Error processing request.")).build());
-				return;
-			}
-
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 			// return source image if no parameters for resizing where given
 			ImageIO.write(resized != null ? resized : src, extension, baos);
 			byte[] imageData = baos.toByteArray();
 
-			asyncResponse.resume(Response.ok(new ByteArrayInputStream(imageData)).build());
-			return;
+			if (!shouldFail) {
+				asyncResponse.resume(Response.ok(new ByteArrayInputStream(imageData)).build());
+				return;
+			}
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -131,8 +127,8 @@ public class ShrinkResource {
 			e.printStackTrace();
 		}
 
-		asyncResponse.resume(
-				Response.status(Response.Status.BAD_REQUEST).entity(new Message("Error resizing image.")).build());
+		asyncResponse.resume(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+				.entity(new Message("Error resizing image.")).build());
 	}
 
 	private Set<Integer> delayRequests;
