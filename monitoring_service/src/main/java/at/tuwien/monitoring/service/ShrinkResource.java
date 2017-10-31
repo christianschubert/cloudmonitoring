@@ -165,7 +165,9 @@ public class ShrinkResource {
 			// add delay
 
 			// add random time from 0 to 100 to delay
-			int randomAddTime = ThreadLocalRandom.current().ints(0, delayVariation).findFirst().getAsInt();
+			int randomAddTime = delayVariation > 0
+					? ThreadLocalRandom.current().ints(0, delayVariation).findFirst().getAsInt()
+					: 0;
 
 			System.out.println(String.format("!!! Intended delay (%d ms)!!!", delayTime + randomAddTime));
 
