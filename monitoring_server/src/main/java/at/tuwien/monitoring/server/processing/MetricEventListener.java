@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -80,6 +81,10 @@ public class MetricEventListener implements StatementAwareUpdateListener {
 			EPServiceProvider epServiceProvider) {
 
 		if (newEvents == null) {
+			// throughput is zero
+			Map<String, Object> properties = new HashMap<>();
+			properties.put("monitoredvalue", 0);
+			logSnapshot("throughput", properties, null);
 			return;
 		}
 
