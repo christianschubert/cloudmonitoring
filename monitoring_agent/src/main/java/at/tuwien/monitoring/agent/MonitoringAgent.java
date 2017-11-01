@@ -289,6 +289,9 @@ public class MonitoringAgent {
 		}
 
 		if (isUberAgent) {
+			// set monitoring interval
+			settings.systemMetricsMonitorInterval = settings.uberAgentMonitorInterval;
+
 			// monitor agent application
 			Application agentApplication = new Application(
 					"../monitoring_agent/target/monitoring_agent-0.0.1-SNAPSHOT-jar-with-dependencies.jar", params,

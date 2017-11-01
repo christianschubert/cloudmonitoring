@@ -149,6 +149,11 @@ public class Utils {
 				settings.systemMetricsMonitorInterval = Integer.parseInt(systemMetricsMonitorInterval);
 			}
 
+			String uberAgentMonitorInterval = prop.getProperty("uber.agent.monitor.interval");
+			if (uberAgentMonitorInterval != null) {
+				settings.uberAgentMonitorInterval = Integer.parseInt(uberAgentMonitorInterval);
+			}
+
 			boolean logUsageTop = (prop.getProperty("log.usage.top") == null ? false
 					: Boolean.valueOf(prop.getProperty("log.usage.top").trim()));
 			settings.logUsageTop = logUsageTop;
