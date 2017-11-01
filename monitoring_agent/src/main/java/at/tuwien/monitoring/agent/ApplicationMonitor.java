@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -53,24 +54,26 @@ public class ApplicationMonitor {
 	private Queue<MetricMessage> collectedMetrics = new ConcurrentLinkedQueue<MetricMessage>();
 
 	private Settings settings;
+	private boolean isUberAgent;
 
 	private boolean monitoring;
 
 	private PrintWriter cpuLogFile;
 	private boolean addCsvHeaderCpu = true;
-	
+
 	private PrintWriter memoryLogFile;
 	private boolean addCsvHeaderMem = true;
-	
+
 	private TopMonitor topMonitor;
 	private PrintWriter topLogFile;
 
 	public ApplicationMonitor(int cpuCount, long memTotal, List<String> applicationWithParams, Application application,
-			Settings settings, int applicationID) {
+			Settings settings, boolean isUberAgent, int applicationID) {
 		this.cpuCount = cpuCount;
 		this.memTotal = memTotal;
 		this.application = application;
 		this.settings = settings;
+		this.isUberAgent = isUberAgent;
 		this.applicationID = applicationID;
 		this.monitorTasks = application.getMonitorTasks();
 
@@ -87,15 +90,15 @@ public class ApplicationMonitor {
 		}
 
 		initLogging();
-		
-		if(settings.logUsageTop) {
+
+		if (settings.logUsageTop) {
 			topMonitor = new TopMonitor(pid);
 			scheduler.submit(topMonitor);
 		}
-		
+
 		scheduledMonitor = scheduler.scheduleAtFixedRate(new MonitorTimerTask(pid),
 				Constants.PROCESS_MONITOR_START_DELAY, settings.systemMetricsMonitorInterval, TimeUnit.MILLISECONDS);
-		
+
 		monitoring = true;
 
 		logger.info("Started monitoring of application \"" + processRunner.getProcessName() + "\" with ID "
@@ -106,14 +109,17 @@ public class ApplicationMonitor {
 
 	private void initLogging() {
 		if (settings.logMetrics) {
+
+			String appendix = isUberAgent ? "_uber" : "";
+
 			try {
-				FileWriter fwCpu = new FileWriter(
-						settings.etcFolderPath + "/logs/logs_agent_cpu_application_" + applicationID + ".csv");
+				FileWriter fwCpu = new FileWriter(settings.etcFolderPath + "/logs/logs_agent_cpu_application_"
+						+ applicationID + appendix + ".csv");
 				BufferedWriter bwCpu = new BufferedWriter(fwCpu);
 				cpuLogFile = new PrintWriter(bwCpu);
 
-				FileWriter fwMem = new FileWriter(
-						settings.etcFolderPath + "/logs/logs_agent_mem_application_" + applicationID + ".csv");
+				FileWriter fwMem = new FileWriter(settings.etcFolderPath + "/logs/logs_agent_mem_application_"
+						+ applicationID + appendix + ".csv");
 				BufferedWriter bwMem = new BufferedWriter(fwMem);
 				memoryLogFile = new PrintWriter(bwMem);
 			} catch (IOException e) {
@@ -121,7 +127,7 @@ public class ApplicationMonitor {
 				logger.error("Error logging metrics to file.");
 			}
 		}
-		if(settings.logUsageTop) {
+		if (settings.logUsageTop) {
 			try {
 				FileWriter fwTop = new FileWriter(
 						settings.etcFolderPath + "/logs/logs_agent_topusage_application_" + applicationID + ".csv");
@@ -150,8 +156,8 @@ public class ApplicationMonitor {
 				+ applicationID + "...");
 
 		monitoring = false;
-		
-		if(topMonitor != null) {
+
+		if (topMonitor != null) {
 			topMonitor.stop();
 		}
 
@@ -176,7 +182,7 @@ public class ApplicationMonitor {
 		if (cpuLogFile != null) {
 			cpuLogFile.close();
 		}
-		if(topLogFile != null) {
+		if (topLogFile != null) {
 			topLogFile.close();
 		}
 	}
@@ -198,8 +204,15 @@ public class ApplicationMonitor {
 		public MonitorTimerTask(long pid) {
 			this.pid = pid;
 			sigar = ProcessTools.getSigar();
-			processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
-			lastTime = System.currentTimeMillis();
+
+			if (!isUberAgent) {
+				processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
+				lastTime = System.currentTimeMillis();
+			} else {
+				// as uber agent only monitor main process
+				processesToMonitor = new HashSet<>();
+				processesToMonitor.add(pid);
+			}
 		}
 
 		@Override
@@ -211,15 +224,17 @@ public class ApplicationMonitor {
 				monitorMemory();
 			}
 
-			// check if the child process list should be updated
-			long currentTime = System.currentTimeMillis();
-			lastUpdatedPidList += (currentTime - lastTime);
-			if (lastUpdatedPidList > settings.processChildrenUpdateInterval) {
-				// update child process list
-				processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
-				lastUpdatedPidList = 0;
+			if (!isUberAgent) {
+				// check if the child process list should be updated
+				long currentTime = System.currentTimeMillis();
+				lastUpdatedPidList += (currentTime - lastTime);
+				if (lastUpdatedPidList > settings.processChildrenUpdateInterval) {
+					// update child process list
+					processesToMonitor = ProcessTools.findProcessesToMonitor(pid);
+					lastUpdatedPidList = 0;
+				}
+				lastTime = currentTime;
 			}
-			lastTime = currentTime;
 		}
 
 		private void monitorMemory() {
@@ -286,8 +301,8 @@ public class ApplicationMonitor {
 				}
 			}
 
-			CpuMessage cpuMessage = new CpuMessage(null, new Date(), processRunner.getProcessName(), 
-					sumCpuUsagePerc, sumCpuTotal, sumCpuKernel, sumCpuUser);
+			CpuMessage cpuMessage = new CpuMessage(null, new Date(), processRunner.getProcessName(), sumCpuUsagePerc,
+					sumCpuTotal, sumCpuKernel, sumCpuUser);
 
 			if (lastCpuMessage == null || !cpuMessage.equals(lastCpuMessage)) {
 				// only if memory is different to last measuement, send it.
@@ -323,14 +338,13 @@ public class ApplicationMonitor {
 			}
 		}
 	}
-	
-	
+
 	class TopMonitor implements Runnable {
 		private boolean logTopRunning = false;
 		private long pid;
-		
+
 		public TopMonitor(long pid) {
-			if(pid < 1) {
+			if (pid < 1) {
 				throw new InvalidParameterException();
 			}
 			this.pid = pid;
@@ -339,23 +353,23 @@ public class ApplicationMonitor {
 		@Override
 		public void run() {
 			logTopRunning = true;
-			
+
 			int interval = (int) TimeUnit.MILLISECONDS.toSeconds(settings.systemMetricsMonitorInterval);
-			
-			ProcessBuilder builder = new ProcessBuilder(Arrays.asList("top", "-b", "-d", String.valueOf(interval), "-p", String.valueOf(pid)));
+
+			ProcessBuilder builder = new ProcessBuilder(
+					Arrays.asList("top", "-b", "-d", String.valueOf(interval), "-p", String.valueOf(pid)));
 			builder.redirectErrorStream(true);
-			
+
 			try {
 				Process process = builder.start();
-				BufferedReader bufferedReader = new BufferedReader(
-		                new InputStreamReader(process.getInputStream()));
-				
+				BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
 				String line;
 				while (logTopRunning && (line = bufferedReader.readLine().trim()) != null) {
-					if(!line.startsWith(String.valueOf(pid))) {
+					if (!line.startsWith(String.valueOf(pid))) {
 						continue;
 					}
-					
+
 					String[] lineSplit = line.split("\\s+");
 					double cpuUsage = Double.NaN;
 					double memoryUsage = Double.NaN;
@@ -366,11 +380,9 @@ public class ApplicationMonitor {
 						logger.error("Error parsing usage from top command. Stopping top logging.");
 						logTopRunning = false;
 					}
-					
-					topLogFile.println(new StringJoiner(";")
-							.add(String.valueOf(new Date().getTime()))
-							.add(String.valueOf(cpuUsage / cpuCount))
-							.add(String.valueOf(memoryUsage)).toString());
+
+					topLogFile.println(new StringJoiner(";").add(String.valueOf(new Date().getTime()))
+							.add(String.valueOf(cpuUsage / cpuCount)).add(String.valueOf(memoryUsage)).toString());
 					topLogFile.flush();
 				}
 			} catch (IOException e) {

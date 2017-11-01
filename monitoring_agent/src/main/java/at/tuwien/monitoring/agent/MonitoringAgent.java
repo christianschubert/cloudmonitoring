@@ -35,6 +35,7 @@ public class MonitoringAgent {
 	private final static Logger logger = Logger.getLogger(MonitoringAgent.class);
 
 	private Settings settings;
+	private boolean isUberAgent;
 
 	private AtomicInteger currentApplicationID = new AtomicInteger(0);
 
@@ -54,6 +55,12 @@ public class MonitoringAgent {
 
 	public MonitoringAgent(Settings settings) {
 		this.settings = settings;
+		this.isUberAgent = false;
+	}
+
+	public MonitoringAgent(Settings settings, boolean isUberAgent) {
+		this.settings = settings;
+		this.isUberAgent = isUberAgent;
 	}
 
 	public boolean init() {
@@ -67,22 +74,24 @@ public class MonitoringAgent {
 
 		publicIPAddress = Utils.lookupPublicIPAddress();
 
-		jmsService = new JmsSenderService(settings.brokerUrl, GlobalConstants.QUEUE_AGENTS);
-		jmsService.start();
-		if (!jmsService.isConnected()) {
-			logger.error("Error creating JMS service.");
-			return false;
-		}
+		if (!isUberAgent) {
+			jmsService = new JmsSenderService(settings.brokerUrl, GlobalConstants.QUEUE_AGENTS);
+			jmsService.start();
+			if (!jmsService.isConnected()) {
+				logger.error("Error creating JMS service.");
+				return false;
+			}
 
-		extensionServer = new ExtensionServer();
-		if (!extensionServer.start()) {
-			logger.error("Error starting extension server.");
-			return false;
-		}
+			extensionServer = new ExtensionServer();
+			if (!extensionServer.start()) {
+				logger.error("Error starting extension server.");
+				return false;
+			}
 
-		scheduler = Executors.newScheduledThreadPool(1);
-		scheduledJmsSender = scheduler.scheduleAtFixedRate(() -> aggregateAndSend(), 0,
-				settings.metricsAggregationInterval, TimeUnit.MILLISECONDS);
+			scheduler = Executors.newScheduledThreadPool(1);
+			scheduledJmsSender = scheduler.scheduleAtFixedRate(() -> aggregateAndSend(), 0,
+					settings.metricsAggregationInterval, TimeUnit.MILLISECONDS);
+		}
 
 		return true;
 	}
@@ -141,7 +150,7 @@ public class MonitoringAgent {
 		}
 	}
 
-	public long startApplicationMonitoring(Application application, boolean isJavaAplication) {
+	public long startApplicationMonitoring(Application application, boolean isJavaAplication, boolean useWeaver) {
 		if (!new File(application.getApplicationPath()).exists()) {
 			logger.error("Application " + application.getApplicationPath() + " does not exist. Ignoring application.");
 			return -1;
@@ -150,14 +159,16 @@ public class MonitoringAgent {
 		List<String> applicationWithParams = new ArrayList<>();
 		if (isJavaAplication) {
 			applicationWithParams.add("java");
-			applicationWithParams.add("-javaagent:" + Constants.ASPECTJ_WEAVER_PATH);
+			if (useWeaver) {
+				applicationWithParams.add("-javaagent:" + Constants.ASPECTJ_WEAVER_PATH);
+			}
 			applicationWithParams.add("-jar");
 		}
 		applicationWithParams.add(application.getApplicationPath());
 		applicationWithParams.addAll(application.getParams());
 
 		ApplicationMonitor applicationMonitor = new ApplicationMonitor(cpuCount, memTotal, applicationWithParams,
-				application, settings, currentApplicationID.incrementAndGet());
+				application, settings, isUberAgent, currentApplicationID.incrementAndGet());
 		long pid = applicationMonitor.start();
 		if (pid != -1) {
 			applicationList.add(applicationMonitor);
@@ -231,10 +242,9 @@ public class MonitoringAgent {
 			extensionServer.stop();
 		}
 
-		// send remaining messages
-		aggregateAndSend();
-
 		if (scheduledJmsSender != null) {
+			// send remaining messages
+			aggregateAndSend();
 			scheduledJmsSender.cancel(true);
 		}
 		if (scheduler != null) {
@@ -257,31 +267,48 @@ public class MonitoringAgent {
 
 	public static void main(final String[] args) {
 		Settings settings = Utils.parseArgsForSettings(args);
-		MonitoringAgent agent = new MonitoringAgent(settings);
-		if (agent.init()) {
 
-			List<String> params = Arrays.asList("-p8080");
-			if (new File(settings.etcFolderPath + "/settings.properties").exists()) {
-				params = Arrays.asList("config:" + settings.etcFolderPath + "/settings.properties", " -p8080");
+		boolean isUberAgent = false;
+		for (String arg : args) {
+			if (arg.equalsIgnoreCase("-uberagent")) {
+				logger.info("Agent started as uber-agent.");
+				isUberAgent = true;
+				break;
 			}
+		}
 
-			// for test purposes monitor imageprocessor application only
+		MonitoringAgent agent = new MonitoringAgent(settings, isUberAgent);
+		if (!agent.init()) {
+			agent.shutdown();
+			return;
+		}
+
+		List<String> params = Arrays.asList("-p8080");
+		if (new File(settings.etcFolderPath + "/settings.properties").exists()) {
+			params = Arrays.asList("config:" + settings.etcFolderPath + "/settings.properties", " -p8080");
+		}
+
+		if (isUberAgent) {
+			// monitor agent application
+			Application agentApplication = new Application(
+					"../monitoring_agent/target/monitoring_agent-0.0.1-SNAPSHOT-jar-with-dependencies.jar", params,
+					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
+			agent.startApplicationMonitoring(agentApplication, true, false);
+		} else {
+			// monitor imageprocessor application by default
 			Application imageProcessor = new Application(
 					"../monitoring_service/target/monitoring_service-0.0.1-SNAPSHOT-jar-with-dependencies.jar", params,
 					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
-
-			agent.startApplicationMonitoring(imageProcessor, true);
-
-			// monitor till user hits RETURN
-			try {
-				System.in.read();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			agent.shutdown();
-		} else {
-			agent.shutdown();
+			agent.startApplicationMonitoring(imageProcessor, true, true);
 		}
+
+		// monitor till user hits RETURN
+		try {
+			System.in.read();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		agent.shutdown();
 	}
 }

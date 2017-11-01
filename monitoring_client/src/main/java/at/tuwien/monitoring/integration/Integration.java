@@ -109,7 +109,7 @@ public class Integration {
 			Application application = new Application(APP_PATH, params,
 					EnumSet.of(MonitorTask.Cpu, MonitorTask.Memory));
 
-			monitoringAgent.startApplicationMonitoring(application, true);
+			monitoringAgent.startApplicationMonitoring(application, true, true);
 			applications.add(application);
 			try {
 				// wait for process to start
