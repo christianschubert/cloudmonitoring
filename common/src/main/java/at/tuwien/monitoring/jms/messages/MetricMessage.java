@@ -11,7 +11,7 @@ public abstract class MetricMessage implements Serializable, Loggable {
 
 	private Date timestamp;
 	private String ipAddress;
-	
+
 	public MetricMessage() {
 	}
 

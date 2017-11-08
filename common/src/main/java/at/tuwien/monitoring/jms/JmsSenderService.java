@@ -15,6 +15,8 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.log4j.Logger;
 
+import at.tuwien.common.Utils;
+
 public class JmsSenderService {
 
 	private final static Logger logger = Logger.getLogger(JmsSenderService.class);
@@ -76,9 +78,11 @@ public class JmsSenderService {
 			logger.error("Cannot send message. Not connected or message is null");
 			return false;
 		}
+
 		try {
-			// Create a messages
+			// Create a message
 			ObjectMessage objectMessage = session.createObjectMessage(object);
+			objectMessage.setStringProperty("hmac", Utils.calculateHMac("secret", object.toString()));
 
 			// Tell the producer to send the message
 			producer.send(objectMessage);

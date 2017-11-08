@@ -48,18 +48,15 @@ public class ExecutionAspect {
 			logger.error("Error connecting to agent. " + e.getMessage());
 		}
 
-		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-			@Override
-			public void run() {
-				if (toServer != null) {
-					toServer.close();
-				}
-				if (socket != null) {
-					try {
-						socket.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			if (toServer != null) {
+				toServer.close();
+			}
+			if (socket != null) {
+				try {
+					socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			}
 		}));
@@ -114,73 +111,91 @@ public class ExecutionAspect {
 		}
 
 		long executionTime = System.nanoTime() - startTime;
-
-		Method method = null;
-		String target = "";
-
 		MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
 
-		// check annotations of the surrounding class for path annotation
-		Annotation[] annotationsClass = signature.getDeclaringType().getAnnotations();
-		for (Annotation annotation : annotationsClass) {
-			if (annotation instanceof Path) {
-				Path path = (Path) annotation;
-				target += path.value();
-				break;
-			}
-		}
-
-		// check annotations of function - find out method (POST, GET, etc.) and
-		// path/target of operation
-		Annotation[] annotationsMethod = signature.getMethod().getAnnotations();
-		for (Annotation annotation : annotationsMethod) {
-			if (annotation instanceof MonitorRequest) {
-				MonitorRequest monitorRequest = (MonitorRequest) annotation;
-				method = monitorRequest.method();
-				target = monitorRequest.target();
-			} else if (annotation instanceof Path) {
-				Path path = (Path) annotation;
-
-				// append to path of class
-				if (target != null && !target.isEmpty()) {
-					target += "/";
-				}
-				target += path.value();
-			} else if (method == null) {
-				method = resolveMethodAnnotation(annotation);
-			}
-		}
-
-		if (method != null && target != null && !target.isEmpty()) {
-			sendExecutionTime(target, method, executionTime);
-		} else {
-			logger.error("Cannot send execution time. Reason: Error finding out method or target.");
-		}
+		ExtracterSender extracterSender = new ExtracterSender(executionTime, signature);
+		new Thread(extracterSender).start();
 
 		if (ex != null) {
 			throw ex;
 		}
 
 		return response;
+
 	}
 
-	private Method resolveMethodAnnotation(Annotation annotation) {
-		for (Method method : Method.values()) {
-			if (annotation.toString().toLowerCase().contains(method.toString().toLowerCase())) {
-				return method;
+	class ExtracterSender implements Runnable {
+
+		private long executionTime;
+		private MethodSignature signature;
+
+		public ExtracterSender(long executionTime, MethodSignature signature) {
+			this.executionTime = executionTime;
+			this.signature = signature;
+		}
+
+		@Override
+		public void run() {
+			Method method = null;
+			String target = "";
+
+			// check annotations of the surrounding class for path annotation
+			Annotation[] annotationsClass = signature.getDeclaringType().getAnnotations();
+			for (Annotation annotation : annotationsClass) {
+				if (annotation instanceof Path) {
+					Path path = (Path) annotation;
+					target += path.value();
+					break;
+				}
+			}
+
+			// check annotations of function - find out method (POST, GET, etc.) and
+			// path/target of operation
+			Annotation[] annotationsMethod = signature.getMethod().getAnnotations();
+			for (Annotation annotation : annotationsMethod) {
+				if (annotation instanceof MonitorRequest) {
+					MonitorRequest monitorRequest = (MonitorRequest) annotation;
+					method = monitorRequest.method();
+					target = monitorRequest.target();
+				} else if (annotation instanceof Path) {
+					Path path = (Path) annotation;
+
+					// append to path of class
+					if (target != null && !target.isEmpty()) {
+						target += "/";
+					}
+					target += path.value();
+				} else if (method == null) {
+					method = resolveMethodAnnotation(annotation);
+				}
+			}
+
+			if (method != null && target != null && !target.isEmpty()) {
+				sendExecutionTime(target, method, executionTime);
+			} else {
+				logger.error("Cannot send execution time. Reason: Error finding out method or target.");
 			}
 		}
-		return null;
-	}
 
-	private void sendExecutionTime(String target, Method method, long executionTime) {
-		ServerInfoMessage message = new ServerInfoMessage(publicIPAddress, new Date(), target, method,
-				TimeUnit.NANOSECONDS.toMillis(executionTime));
+		private Method resolveMethodAnnotation(Annotation annotation) {
+			for (Method method : Method.values()) {
+				if (annotation.toString().toLowerCase().contains(method.toString().toLowerCase())) {
+					return method;
+				}
+			}
+			return null;
+		}
 
-		try {
-			toServer.println(mapper.writeValueAsString(message));
-		} catch (JsonProcessingException e) {
-			logger.error("Error mapping object to json. " + e.getMessage());
+		private void sendExecutionTime(String target, Method method, long executionTime) {
+			ServerInfoMessage message = new ServerInfoMessage(publicIPAddress, new Date(), target, method,
+					TimeUnit.NANOSECONDS.toMillis(executionTime));
+			synchronized (toServer) {
+				try {
+					toServer.println(mapper.writeValueAsString(message));
+				} catch (JsonProcessingException e) {
+					logger.error("Error mapping object to json. " + e.getMessage());
+				}
+			}
 		}
 	}
 }

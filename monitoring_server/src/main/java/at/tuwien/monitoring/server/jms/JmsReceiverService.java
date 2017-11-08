@@ -15,13 +15,17 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.log4j.Logger;
 
 import at.tuwien.common.GlobalConstants;
+import at.tuwien.common.Utils;
 import at.tuwien.monitoring.jms.messages.MetricAggregationMessage;
 import at.tuwien.monitoring.jms.messages.MetricMessage;
 import at.tuwien.monitoring.server.processing.MetricProcessor;
 
 public class JmsReceiverService implements MessageListener {
+
+	private final static Logger logger = Logger.getLogger(JmsReceiverService.class);
 
 	private String brokerURL = "tcp://0.0.0.0:61616";
 
@@ -59,11 +63,22 @@ public class JmsReceiverService implements MessageListener {
 			if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
 				String text = textMessage.getText();
-				System.out.println("Received: " + text);
+				logger.info("Received: " + text);
 
 			} else if (message instanceof ObjectMessage) {
 				ObjectMessage objectMessage = (ObjectMessage) message;
 				Serializable serializable = objectMessage.getObject();
+
+				String hmac = objectMessage.getStringProperty("hmac");
+				if (hmac == null || hmac.trim().isEmpty()) {
+					logger.error("No HMAC found in message. Cannot verify integrity of message.");
+					return;
+				}
+
+				if (!hmac.equals(Utils.calculateHMac("secret", serializable.toString()))) {
+					logger.error("HMAC not matching. Cannot verify integrity of message.");
+					return;
+				}
 
 				if (serializable instanceof MetricAggregationMessage) {
 					MetricAggregationMessage metricAggregationMessage = (MetricAggregationMessage) serializable;
