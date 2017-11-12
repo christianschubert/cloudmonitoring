@@ -14,11 +14,9 @@ import java.util.Base64;
 import java.util.Properties;
 
 import javax.crypto.Mac;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.log4j.Logger;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class Utils {
 
@@ -49,24 +47,22 @@ public class Utils {
 	}
 
 	public static String calculateHMac(String key, String message) {
-		String algorithm = "HmacSHA256";
+		String alg = "HmacSHA1";
+
+		byte[] hmacData = null;
 
 		try {
-			SecretKey secretKey = new SecretKeySpec(key.getBytes("UTF-8"), algorithm);
-			Mac mac = Mac.getInstance(algorithm, new BouncyCastleProvider());
+			SecretKeySpec secretKey = new SecretKeySpec(key.getBytes("UTF-8"), alg);
+			Mac mac = Mac.getInstance(alg);
 			mac.init(secretKey);
-			mac.update(message.getBytes("UTF-8"));
 
-			byte[] encrypted = mac.doFinal();
+			hmacData = mac.doFinal(message.getBytes("ASCII"));
 
-			return Base64.getEncoder().encodeToString(encrypted);
-
-		} catch (NoSuchAlgorithmException | InvalidKeyException | IllegalStateException
-				| UnsupportedEncodingException e) {
+		} catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
 
-		return "";
+		return hmacData != null ? Base64.getEncoder().encodeToString(hmacData) : "";
 	}
 
 	public static Settings parseArgsForSettings(String[] args) {
