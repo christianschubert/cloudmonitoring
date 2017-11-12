@@ -6,13 +6,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Properties;
 
-import org.apache.commons.codec.digest.HmacAlgorithms;
-import org.apache.commons.codec.digest.HmacUtils;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.apache.log4j.Logger;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class Utils {
 
@@ -43,8 +49,24 @@ public class Utils {
 	}
 
 	public static String calculateHMac(String key, String message) {
-		byte[] hmac = new HmacUtils(HmacAlgorithms.HMAC_SHA_256, key).hmac(message);
-		return Base64.getEncoder().encodeToString(hmac);
+		String algorithm = "HmacSHA256";
+
+		try {
+			SecretKey secretKey = new SecretKeySpec(key.getBytes("UTF-8"), algorithm);
+			Mac mac = Mac.getInstance(algorithm, new BouncyCastleProvider());
+			mac.init(secretKey);
+			mac.update(message.getBytes("UTF-8"));
+
+			byte[] encrypted = mac.doFinal();
+
+			return Base64.getEncoder().encodeToString(encrypted);
+
+		} catch (NoSuchAlgorithmException | InvalidKeyException | IllegalStateException
+				| UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+
+		return "";
 	}
 
 	public static Settings parseArgsForSettings(String[] args) {
