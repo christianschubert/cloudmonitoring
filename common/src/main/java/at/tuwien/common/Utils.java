@@ -6,16 +6,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Properties;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
+import org.apache.commons.codec.digest.HmacAlgorithms;
+import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.log4j.Logger;
 
 public class Utils {
@@ -47,22 +43,8 @@ public class Utils {
 	}
 
 	public static String calculateHMac(String key, String message) {
-		String alg = "HmacSHA256";
-
-		byte[] hmacData = null;
-
-		try {
-			SecretKeySpec secretKey = new SecretKeySpec(key.getBytes("UTF-8"), alg);
-			Mac mac = Mac.getInstance(alg);
-			mac.init(secretKey);
-
-			hmacData = mac.doFinal(message.getBytes("UTF-8"));
-
-		} catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-
-		return hmacData != null ? Base64.getEncoder().encodeToString(hmacData) : "";
+		byte[] hmac = new HmacUtils(HmacAlgorithms.HMAC_SHA_256, key).hmac(message);
+		return Base64.getEncoder().encodeToString(hmac);
 	}
 
 	public static Settings parseArgsForSettings(String[] args) {
