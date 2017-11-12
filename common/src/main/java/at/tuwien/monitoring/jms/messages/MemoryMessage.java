@@ -70,7 +70,7 @@ public class MemoryMessage extends MetricMessage {
 
 	@Override
 	public String toString() {
-		return "MemoryMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
+		return "MemoryMessage [getTimestamp()=" + String.valueOf(getTimestamp().getTime()) + ", getIpAddress()=" + getIpAddress()
 				+ ", getApplication()=" + getApplication() + ", getVirtualMemory()=" + getVirtualMemory()
 				+ ", getResidentMemory()=" + getResidentMemory() + ", getSharedMemory()=" + getSharedMemory()
 				+ ", getMemoryUsagePerc()=" + getMemoryUsagePerc() + "]";

@@ -69,7 +69,7 @@ public class CpuMessage extends MetricMessage {
 
 	@Override
 	public String toString() {
-		return "CpuLoadMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress() + ", getApplication=" + getApplication()
+		return "CpuLoadMessage [getTimestamp()=" + String.valueOf(getTimestamp().getTime()) + ", getIpAddress()=" + getIpAddress() + ", getApplication=" + getApplication()
 				+ ", getCpuUsagePerc=" + getCpuUsagePerc() + ", getCpuTotal=" + getCpuTotal() + ", getCpuUser=" + getCpuUser() + ", getCpuKernel=" + getCpuKernel()
 				+ "]";
 	}

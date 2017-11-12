@@ -74,7 +74,7 @@ public class ClientInfoMessage extends MetricMessage {
 
 	@Override
 	public String toString() {
-		return "ClientResponseTimeMessage [getId()=" + getId() + ", getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress()
+		return "ClientResponseTimeMessage [getId()=" + getId() + ", getTimestamp()=" + String.valueOf(getTimestamp().getTime()) + ", getIpAddress()=" + getIpAddress()
 				+ ", getTarget()=" + getTarget() + ", getMethod()=" + getMethod() + ", getResponseTime()="
 				+ getResponseTime() + ", getResponseCode()=" + getResponseCode() + "]";
 	}

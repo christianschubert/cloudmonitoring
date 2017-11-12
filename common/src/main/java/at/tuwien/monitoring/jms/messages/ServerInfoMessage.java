@@ -54,7 +54,7 @@ public class ServerInfoMessage extends MetricMessage {
 
 	@Override
 	public String toString() {
-		return "ServerExecutionTimeMessage [getTimestamp()=" + getTimestamp() + ", getIpAddress()=" + getIpAddress() + ", getTarget()=" + getTarget()
+		return "ServerExecutionTimeMessage [getTimestamp()=" + String.valueOf(getTimestamp().getTime()) + ", getIpAddress()=" + getIpAddress() + ", getTarget()=" + getTarget()
 				+ ", getMethod()=" + getMethod() + ", getExecutionTime()=" + getExecutionTime() + "]";
 	}
 

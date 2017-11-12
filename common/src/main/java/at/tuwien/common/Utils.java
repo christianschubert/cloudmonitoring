@@ -56,7 +56,7 @@ public class Utils {
 			Mac mac = Mac.getInstance(alg);
 			mac.init(secretKey);
 
-			hmacData = mac.doFinal(message.getBytes("ASCII"));
+			hmacData = mac.doFinal(message.getBytes("UTF-8"));
 
 		} catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
 			e.printStackTrace();
